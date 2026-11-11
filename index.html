@@ -17,14 +17,14 @@
     <!-- Header App Bar -->
     <header class="bg-gray-800 p-4 rounded-2xl shadow-lg mb-6 border border-gray-700 flex items-center justify-between">
         <div class="flex items-center space-x-3">
-            <div class="relative group cursor-pointer" onclick="triggerHeaderUpload()">
+            <div class="relative group cursor-pointer" onclick="triggerHeaderUpload()" title="लोगो बदलें">
                 <img id="app-logo" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=200" class="w-14 h-14 rounded-full object-cover border-2 border-yellow-500 shadow-md">
                 <input type="file" id="header-file-input" accept="image/*" class="hidden" onchange="uploadHeaderLogo(event)">
             </div>
             <div>
                 <h1 id="app-title-text" onclick="editAppHeader()" class="text-xl font-bold text-yellow-400 cursor-pointer flex items-center gap-2">
                     <span id="app-title-display">रेसिपी और कॉस्ट मैनेजर</span>
-                    <i class="fa-solid fa-pen-to-square text-xs text-gray-400"></i>
+                    <i class="fa-solid fa-pen-to-square text-xs text-gray-400 hover:text-yellow-400"></i>
                 </h1>
                 <p id="app-sub-text" onclick="editAppHeader()" class="text-xs text-gray-300 cursor-pointer">
                     <span id="app-sub-display">भोग प्रसादी सामग्री</span>
@@ -80,6 +80,39 @@
         </div>
     </div>
 
+    <!-- Edit Ingredient Modal -->
+    <div id="edit-ing-modal" class="modal fixed inset-0 bg-black/70 backdrop-blur-sm z-50 justify-center items-center p-4">
+        <div class="bg-gray-800 border border-gray-700 p-5 rounded-2xl max-w-xs w-full space-y-4 shadow-xl">
+            <h3 class="text-lg font-bold text-yellow-400 flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-sm"></i> सामग्री में सुधार करें
+            </h3>
+            <input type="hidden" id="edit-ing-rec-id">
+            <input type="hidden" id="edit-ing-id">
+            <div>
+                <label class="text-xs text-gray-400">सामग्री का नाम</label>
+                <input type="text" id="edit-ing-name" class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-sm mt-1 focus:outline-none focus:border-yellow-500">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="text-xs text-gray-400">ग्राम (gm)</label>
+                    <input type="number" step="any" id="edit-ing-gram" class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-sm mt-1 focus:outline-none focus:border-yellow-500">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400">किलो (kg)</label>
+                    <input type="number" step="any" id="edit-ing-kg" class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-sm mt-1 focus:outline-none focus:border-yellow-500">
+                </div>
+            </div>
+            <div>
+                <label class="text-xs text-gray-400">रेट (₹/kg)</label>
+                <input type="number" step="any" id="edit-ing-rate" class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-sm mt-1 focus:outline-none focus:border-yellow-500">
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeEditIngModal()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-xl text-sm">रद्द करें</button>
+                <button onclick="saveIngredientEdit()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-sm">सेव करें</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Initial Data setup
         const defaultRecipes = [
@@ -131,7 +164,7 @@
         ];
 
         let recipes = JSON.parse(localStorage.getItem('food_recipes_db_v3')) || defaultRecipes;
-        let activeRecipeId = recipes[1] ? recipes[1].id : (recipes[0] ? recipes[0].id : null);
+        let activeRecipeId = recipes[0] ? recipes[0].id : null;
         let confirmCallback = null;
 
         // Load Header Data
@@ -199,19 +232,19 @@
                             <!-- Photo & Title Edit Header -->
                             <div class="flex items-center justify-between bg-gray-900 p-3 rounded-xl border border-gray-750">
                                 <div class="flex items-center space-x-3">
-                                    <div class="relative cursor-pointer" onclick="triggerRecipePhotoUpload('${rec.id}')">
+                                    <div class="relative cursor-pointer" onclick="triggerRecipePhotoUpload('${rec.id}')" title="रेसिपी फोटो बदलें">
                                         <img src="${rec.photo}" class="w-16 h-16 rounded-xl object-cover border border-yellow-500 shadow">
                                         <input type="file" id="photo-input-${rec.id}" accept="image/*" class="hidden" onchange="uploadRecipePhoto(event, '${rec.id}')">
                                     </div>
                                     <div>
                                         <h3 class="font-bold text-white flex items-center gap-2">
                                             ${rec.title}
-                                            <i onclick="editRecipeTitle('${rec.id}')" class="fa-solid fa-pen-to-square text-xs text-gray-400 cursor-pointer"></i>
+                                            <i onclick="editRecipeTitle('${rec.id}')" class="fa-solid fa-pen-to-square text-xs text-gray-400 hover:text-yellow-400 cursor-pointer" title="शीर्षक बदलें"></i>
                                         </h3>
                                         <p class="text-xs text-gray-400">${rec.subtitle}</p>
                                     </div>
                                 </div>
-                                <button onclick="confirmDeleteRecipe('${rec.id}')" class="text-red-400 hover:text-red-300 p-2">
+                                <button onclick="confirmDeleteRecipe('${rec.id}')" class="text-red-400 hover:text-red-300 p-2" title="रेसिपी हटाएँ">
                                     <i class="fa-solid fa-trash-can text-lg"></i>
                                 </button>
                             </div>
@@ -260,16 +293,24 @@
                         
                         let weightStr = ing.gramQty > 0 ? `${ing.gramQty} gm` : '';
                         if (ing.kgQty > 0) weightStr += (weightStr ? ' + ' : '') + `${ing.kgQty} kg`;
+                        if (!weightStr) weightStr = '0 gm';
 
                         html += `
-                            <div onclick="openZoomModal('${rec.photo}', '${ing.name}', 'मात्रा: ${weightStr} | दर: ₹${ing.ratePerKg}/kg | कुल: ₹${ingCost.toFixed(2)}')" class="bg-gray-900 hover:bg-gray-750 p-2.5 rounded-xl border border-gray-750 flex items-center justify-between cursor-pointer transition">
-                                <div>
-                                    <h5 class="text-xs font-bold text-gray-200">${ing.name}</h5>
+                            <div class="bg-gray-900 hover:bg-gray-750 p-2.5 rounded-xl border border-gray-750 flex items-center justify-between transition">
+                                <div class="flex-1 cursor-pointer" onclick="openZoomModal('${rec.photo}', '${ing.name}', 'मात्रा: ${weightStr} | दर: ₹${ing.ratePerKg}/kg | कुल: ₹${ingCost.toFixed(2)}')">
+                                    <h5 class="text-xs font-bold text-gray-200 flex items-center gap-1.5">
+                                        ${ing.name}
+                                    </h5>
                                     <p class="text-[11px] text-yellow-400 font-semibold">${weightStr} <span class="text-gray-500">• ₹${ing.ratePerKg}/kg</span></p>
                                 </div>
-                                <div class="flex items-center space-x-3">
-                                    <span class="text-xs font-bold text-emerald-400">₹${ingCost.toFixed(2)}</span>
-                                    <i onclick="event.stopPropagation(); confirmDeleteIngredient('${rec.id}', '${ing.id}', '${ing.name}')" class="fa-solid fa-trash-can text-gray-500 hover:text-red-400 text-xs p-1"></i>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-bold text-emerald-400 mr-1">₹${ingCost.toFixed(2)}</span>
+                                    <button onclick="openEditIngModal('${rec.id}', '${ing.id}')" class="text-gray-400 hover:text-yellow-400 text-xs p-1.5 rounded-lg hover:bg-gray-800 transition" title="सामग्री एडिट करें">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button onclick="confirmDeleteIngredient('${rec.id}', '${ing.id}', '${ing.name}')" class="text-gray-500 hover:text-red-400 text-xs p-1.5 rounded-lg hover:bg-gray-800 transition" title="सामग्री हटाएँ">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
                                 </div>
                             </div>
                         `;
@@ -361,6 +402,52 @@
             }
         }
 
+        // Edit Ingredient Modal Handlers
+        function openEditIngModal(recId, ingId) {
+            const rec = recipes.find(r => r.id === recId);
+            if (!rec) return;
+            const ing = rec.ingredients.find(i => i.id === ingId);
+            if (!ing) return;
+
+            document.getElementById('edit-ing-rec-id').value = recId;
+            document.getElementById('edit-ing-id').value = ingId;
+            document.getElementById('edit-ing-name').value = ing.name;
+            document.getElementById('edit-ing-gram').value = ing.gramQty || '';
+            document.getElementById('edit-ing-kg').value = ing.kgQty || '';
+            document.getElementById('edit-ing-rate').value = ing.ratePerKg || '';
+
+            document.getElementById('edit-ing-modal').classList.add('active');
+        }
+
+        function closeEditIngModal() {
+            document.getElementById('edit-ing-modal').classList.remove('active');
+        }
+
+        function saveIngredientEdit() {
+            const recId = document.getElementById('edit-ing-rec-id').value;
+            const ingId = document.getElementById('edit-ing-id').value;
+
+            const rec = recipes.find(r => r.id === recId);
+            if (!rec) return;
+            const ing = rec.ingredients.find(i => i.id === ingId);
+            if (!ing) return;
+
+            const newName = document.getElementById('edit-ing-name').value.trim();
+            const newGram = parseFloat(document.getElementById('edit-ing-gram').value) || 0;
+            const newKg = parseFloat(document.getElementById('edit-ing-kg').value) || 0;
+            const newRate = parseFloat(document.getElementById('edit-ing-rate').value) || 0;
+
+            if (newName && (newGram >= 0 || newKg >= 0) && newRate >= 0) {
+                ing.name = newName;
+                ing.gramQty = newGram;
+                ing.kgQty = newKg;
+                ing.ratePerKg = newRate;
+
+                saveRecipes();
+                closeEditIngModal();
+            }
+        }
+
         // Add New Recipe Modal
         function openAddRecipeModal() { document.getElementById('add-recipe-modal').classList.add('active'); }
         function closeAddRecipeModal() { document.getElementById('add-recipe-modal').classList.remove('active'); }
@@ -431,4 +518,4 @@
         renderRecipes();
     </script>
 </body>
-</html>
+    </html>
