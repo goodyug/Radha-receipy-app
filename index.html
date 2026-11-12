@@ -1,923 +1,145 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>भोग प्रसादी मास्टर मैनेजर</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-main, #0f172a);
-            color: var(--text-main, #f8fafc);
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        .theme-card {
-            background-color: var(--bg-card, #1e293b);
-            border-color: var(--border-card, #334155);
-        }
-        .theme-accent-text { color: var(--accent-color, #eab308); }
-        .theme-accent-bg { background-color: var(--accent-color, #eab308); }
-        .modal { display: none; }
-        .modal.active { display: flex; }
-        /* Custom scrollbars */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #1e293b; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>रेसिपी और कॉस्ट मैनेजर — शुद्ध सात्विक भोग प्रसादी</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      opacity: 1;
+    }
+    .card-dark {
+      background: #1e293b;
+      border: 1px solid #334155;
+    }
+    .input-dark {
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #f8fafc;
+    }
+    .input-dark:focus {
+      outline: none;
+      border-color: #eab308;
+    }
+  </style>
 </head>
-<body class="min-h-screen p-3 md:p-6 pb-24">
+<body class="min-h-screen pb-24">
 
-    <!-- Top Header App Bar -->
-    <header id="main-header" class="theme-card border p-4 rounded-2xl shadow-xl mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center space-x-3">
-            <!-- App Logo with Edit Badge -->
-            <div class="relative group cursor-pointer" onclick="triggerHeaderUpload()" title="लोगो बदलें">
-                <img id="app-logo" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=200" class="w-14 h-14 rounded-full object-cover border-2 border-yellow-500 shadow-md transition transform group-hover:scale-105">
-                <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                    <i class="fa-solid fa-camera text-white text-xs"></i>
-                </div>
-                <input type="file" id="header-file-input" accept="image/*" class="hidden" onchange="uploadHeaderLogo(event)">
-            </div>
-            <div>
-                <h1 id="app-title-text" onclick="editAppHeader()" class="text-xl font-bold theme-accent-text cursor-pointer flex items-center gap-2 group">
-                    <span id="app-title-display">रेसिपी और कॉस्ट मैनेजर</span>
-                    <i class="fa-solid fa-pen-to-square text-xs text-gray-400 group-hover:text-yellow-400"></i>
-                </h1>
-                <p id="app-sub-text" onclick="editAppHeader()" class="text-xs text-gray-400 cursor-pointer flex items-center gap-1 group">
-                    <span id="app-sub-display">भोग प्रसादी सामग्री</span>
-                    <i class="fa-solid fa-pen text-[10px] text-gray-500 group-hover:text-gray-300"></i>
-                </p>
-            </div>
+  <!-- Top Header (Pure Sattvik Theme - Embedded URL Ready) -->
+  <header class="sticky top-0 z-30 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 px-4 py-3">
+    <div class="max-w-3xl mx-auto flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg border-2 border-amber-200 shrink-0">
+          <svg class="w-7 h-7 text-slate-950" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C9.5 6 7 8.5 7 12c0 2.8 2.2 5 5 5s5-2.2 5-5c0-3.5-2.5-6-5-10zm-7 9c-1.5 1.5-2 3.5-1 5.5 1 2 3.5 3 6 2.5-2.5-1.5-4.2-4.3-5-8zm14 0c-.8 3.7-2.5 6.5-5 8 2.5.5 5-.5 6-2.5 1-2 .5-4-1-5.5zM4 20h16v2H4v-2z"/>
+          </svg>
         </div>
-        
-        <!-- Action Buttons -->
-        <div class="flex items-center space-x-2">
-            <!-- Theme Manager Button -->
-            <button onclick="openThemeModal()" class="bg-gray-700 hover:bg-gray-600 text-gray-200 p-2.5 rounded-xl text-sm shadow transition flex items-center gap-1.5" title="कलर व थीम सेटिंग्स">
-                <i class="fa-solid fa-palette text-yellow-400"></i>
-                <span class="hidden sm:inline">थीम बदलें</span>
-            </button>
-            
-            <!-- Add Recipe Button -->
-            <button onclick="openAddRecipeModal()" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2.5 px-3.5 rounded-xl text-sm shadow transition flex items-center gap-1.5">
-                <i class="fa-solid fa-plus"></i> 
-                <span>नई रेसिपी</span>
-            </button>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold text-amber-400 leading-tight">रेसिपी और कॉस्ट मैनेजर</h1>
+          <p class="text-xs text-slate-400">शुद्ध सात्विक भोग प्रसादी सामग्री • श्री राधे</p>
         </div>
-    </header>
+      </div>
 
-    <!-- Recipe Cards Main Container -->
-    <main id="recipes-container" class="space-y-4 max-w-4xl mx-auto"></main>
+      <div class="flex items-center gap-2">
+        <button onclick="loadFromGoogleSheet()" id="syncBtn" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 flex items-center gap-1.5 transition">
+          <span>🔄 सिंक करें</span>
+        </button>
+        <button onclick="saveToGoogleSheet()" id="saveSheetBtn" class="px-3 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition">
+          ☁️ सेव करें
+        </button>
+      </div>
+    </div>
+  </header>
 
-    <!-- Full-Screen / Page View Modal for Detailed View -->
-    <div id="full-page-modal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 justify-center items-center p-2 sm:p-4 overflow-y-auto">
-        <div class="theme-card border max-w-2xl w-full rounded-2xl overflow-hidden shadow-2xl relative my-auto max-h-[92vh] flex flex-col">
-            <!-- Modal Top Header Bar -->
-            <div class="p-3 border-b border-gray-700 flex items-center justify-between bg-black/30">
-                <span class="text-xs font-semibold uppercase tracking-wider text-yellow-400 flex items-center gap-1.5">
-                    <i class="fa-solid fa-book-open"></i> विस्तृत विवरण पेज
-                </span>
-                <button onclick="closeFullPageModal()" class="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition">
-                    ✕
-                </button>
-            </div>
+  <main class="max-w-3xl mx-auto px-4 pt-4 space-y-4">
 
-            <!-- Page Body Scrollable Content -->
-            <div class="p-4 sm:p-6 space-y-5 overflow-y-auto">
-                <!-- Large Image Display with Quick Change -->
-                <div class="relative group rounded-2xl overflow-hidden border border-gray-700 shadow-xl bg-gray-900 h-64 sm:h-80 flex items-center justify-center">
-                    <img id="page-view-img" src="" class="w-full h-full object-cover">
-                    <button onclick="triggerModalPhotoUpload()" class="absolute bottom-3 right-3 bg-black/70 hover:bg-black/90 text-white text-xs px-3 py-2 rounded-xl flex items-center gap-2 border border-gray-600 transition">
-                        <i class="fa-solid fa-camera text-yellow-400"></i> फोटो बदलें
-                    </button>
-                    <input type="file" id="modal-file-input" accept="image/*" class="hidden" onchange="uploadModalPhoto(event)">
-                </div>
-
-                <!-- Title & Meta Info -->
-                <div class="flex items-start justify-between gap-3 border-b border-gray-700/60 pb-4">
-                    <div>
-                        <h2 id="page-view-title" class="text-2xl font-extrabold theme-accent-text"></h2>
-                        <p id="page-view-subtitle" class="text-sm text-gray-300 mt-1"></p>
-                    </div>
-                    <button id="page-edit-btn" class="bg-gray-700 hover:bg-gray-600 text-yellow-400 p-2.5 rounded-xl text-sm flex items-center gap-1.5 transition" title="इसे एडिट करें">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                        <span class="text-xs text-white">एडिट</span>
-                    </button>
-                </div>
-
-                <!-- Detailed Text & Description Area -->
-                <div class="bg-black/25 p-4 rounded-xl border border-gray-700/50 space-y-2">
-                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
-                        <i class="fa-solid fa-align-left text-yellow-400"></i> विवरण व विधि नोट्स (Description / Method)
-                    </h4>
-                    <p id="page-view-desc" class="text-sm text-gray-200 leading-relaxed whitespace-pre-line"></p>
-                </div>
-
-                <!-- Custom Stats / Breakdown List -->
-                <div id="page-view-extra-content" class="space-y-3"></div>
-            </div>
-
-            <!-- Page View Footer -->
-            <div class="p-3 border-t border-gray-700 bg-black/30 flex justify-end">
-                <button onclick="closeFullPageModal()" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold px-5 py-2 rounded-xl text-sm transition">
-                    बंद करें
-                </button>
-            </div>
-        </div>
+    <!-- Connection Status Bar -->
+    <div id="statusBanner" class="rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 text-emerald-200">
+      <span id="statusText">✓ Google Sheet ऑटो-कनेक्टेड है। लाइव डेटा सिंक चालू है।</span>
+      <span class="font-semibold text-emerald-400">श्री राधे</span>
     </div>
 
-    <!-- Theme & Color Customizer Modal -->
-    <div id="theme-modal" class="modal fixed inset-0 bg-black/75 backdrop-blur-sm z-50 justify-center items-center p-4">
-        <div class="theme-card border p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
-            <div class="flex items-center justify-between border-b border-gray-700 pb-2">
-                <h3 class="text-lg font-bold text-yellow-400 flex items-center gap-2">
-                    <i class="fa-solid fa-palette"></i> कलर व स्टाइल मैनेजर
-                </h3>
-                <button onclick="closeThemeModal()" class="text-gray-400 hover:text-white">✕</button>
-            </div>
-            
-            <div class="space-y-3 text-xs">
-                <div class="flex justify-between items-center">
-                    <label class="text-gray-300">मुख्य बैकग्राउंड (Body BG)</label>
-                    <input type="color" id="theme-bg-main" onchange="applyCustomTheme()" class="w-10 h-8 rounded border border-gray-600 bg-transparent cursor-pointer">
-                </div>
-                <div class="flex justify-between items-center">
-                    <label class="text-gray-300">कार्ड बैकग्राउंड (Card BG)</label>
-                    <input type="color" id="theme-bg-card" onchange="applyCustomTheme()" class="w-10 h-8 rounded border border-gray-600 bg-transparent cursor-pointer">
-                </div>
-                <div class="flex justify-between items-center">
-                    <label class="text-gray-300">हाईलाइट/एक्सेंट रंग (Accent)</label>
-                    <input type="color" id="theme-accent" onchange="applyCustomTheme()" class="w-10 h-8 rounded border border-gray-600 bg-transparent cursor-pointer">
-                </div>
-                <div class="flex justify-between items-center">
-                    <label class="text-gray-300">मुख्य टेक्स्ट रंग (Text Main)</label>
-                    <input type="color" id="theme-text" onchange="applyCustomTheme()" class="w-10 h-8 rounded border border-gray-600 bg-transparent cursor-pointer">
-                </div>
-                <div class="flex justify-between items-center">
-                    <label class="text-gray-300">बॉर्डर रंग (Border Color)</label>
-                    <input type="color" id="theme-border" onchange="applyCustomTheme()" class="w-10 h-8 rounded border border-gray-600 bg-transparent cursor-pointer">
-                </div>
-            </div>
+    <!-- Main KPI Summary Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="card-dark rounded-2xl p-3.5">
+        <div class="text-xs text-slate-400">कुल लागत (Total Cost)</div>
+        <div id="grandTotalCost" class="text-2xl font-bold text-amber-400 mt-1">₹1147.25</div>
+        <div id="perKgRate" class="text-[11px] text-slate-400 mt-0.5">₹104.08 / kg औसत</div>
+      </div>
 
-            <div class="flex justify-between items-center pt-2">
-                <button onclick="resetTheme()" class="text-xs text-red-400 hover:underline">डिफ़ॉल्ट रीसेट करें</button>
-                <button onclick="closeThemeModal()" class="bg-yellow-500 text-gray-900 font-bold px-4 py-1.5 rounded-xl text-xs">लागू करें</button>
-            </div>
-        </div>
+      <div class="card-dark rounded-2xl p-3.5">
+        <div class="text-xs text-slate-400">कुल वजन (नॉन-पैकिंग)</div>
+        <div id="totalWeightKg" class="text-2xl font-bold text-emerald-400 mt-1">10.434 kg</div>
+        <div id="totalWeightGm" class="text-[11px] text-slate-400 mt-0.5">10434 ग्राम</div>
+      </div>
+
+      <div class="card-dark rounded-2xl p-3.5">
+        <div class="text-xs text-slate-400">नॉन-पैकिंग खर्च</div>
+        <div id="nonPackingCost" class="text-xl font-bold text-slate-100 mt-1">₹1086.00</div>
+        <div id="nonPackingCount" class="text-[11px] text-slate-400 mt-0.5">48 सामग्री</div>
+      </div>
+
+      <div class="card-dark rounded-2xl p-3.5">
+        <div class="text-xs text-slate-400">पैकिंग खर्च (काउंट)</div>
+        <div id="packingCost" class="text-xl font-bold text-sky-400 mt-1">₹61.25</div>
+        <div id="packingCount" class="text-[11px] text-slate-400 mt-0.5">4 आइटम</div>
+      </div>
     </div>
 
-    <!-- Edit Ingredient Modal -->
-    <div id="edit-ing-modal" class="modal fixed inset-0 bg-black/75 backdrop-blur-sm z-50 justify-center items-center p-4">
-        <div class="theme-card border p-5 rounded-2xl max-w-xs w-full space-y-4 shadow-2xl">
-            <div class="flex items-center justify-between border-b border-gray-700 pb-2">
-                <h3 class="text-base font-bold text-yellow-400 flex items-center gap-2">
-                    <i class="fa-solid fa-pen-to-square"></i> सामग्री में सुधार करें
-                </h3>
-                <button onclick="closeEditIngModal()" class="text-gray-400 hover:text-white">✕</button>
-            </div>
-            
-            <input type="hidden" id="edit-ing-rec-id">
-            <input type="hidden" id="edit-ing-id">
-            
-            <div class="space-y-3">
-                <div>
-                    <label class="text-xs text-gray-400">सामग्री का नाम</label>
-                    <input type="text" id="edit-ing-name" class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-sm mt-1 focus:outline-none focus:border-yellow-500">
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="text-xs text-gray-400">ग्राम (gm)</label>
-                        <input type="number" step="any" id="edit-ing-gram" class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-sm mt-1 focus:outline-none focus:border-yellow-500">
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-400">किलो (kg)</label>
-                        <input type="number" step="any" id="edit-ing-kg" class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-sm mt-1 focus:outline-none focus:border-yellow-500">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-xs text-gray-400">रेट (₹/kg)</label>
-                    <input type="number" step="any" id="edit-ing-rate" class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-sm mt-1 focus:outline-none focus:border-yellow-500">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-400">सामग्री नोट्स/विवरण</label>
-                    <textarea id="edit-ing-notes" rows="2" placeholder="जैसे: ब्रांड या विशेष प्रयोग..." class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-xs mt-1 focus:outline-none focus:border-yellow-500"></textarea>
-                </div>
-            </div>
-
-            <div class="flex justify-end space-x-2 pt-2 border-t border-gray-700">
-                <button onclick="closeEditIngModal()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-xl text-sm">रद्द करें</button>
-                <button onclick="saveIngredientEdit()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-sm">सेव करें</button>
-            </div>
-        </div>
+    <!-- Sub-Recipe Filter Tabs -->
+    <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar" id="filterTabs">
+      <button onclick="setFilter('ALL')" data-filter="ALL" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-amber-500 text-slate-950 shrink-0">सभी (52)</button>
+      <button onclick="setFilter('आलू बड़ा')" data-filter="आलू बड़ा" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 shrink-0">आलू बड़ा</button>
+      <button onclick="setFilter('इमली चटनी')" data-filter="इमली चटनी" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 shrink-0">इमली चटनी</button>
+      <button onclick="setFilter('हरी मिर्च चटनी')" data-filter="हरी मिर्च चटनी" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 shrink-0">हरी मिर्च चटनी</button>
+      <button onclick="setFilter('पैकिंग सामग्री')" data-filter="पैकिंग सामग्री" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 shrink-0">📦 पैकिंग सामग्री</button>
     </div>
 
-    <!-- Edit Recipe Modal -->
-    <div id="edit-recipe-modal" class="modal fixed inset-0 bg-black/75 backdrop-blur-sm z-50 justify-center items-center p-4">
-        <div class="theme-card border p-5 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
-            <div class="flex items-center justify-between border-b border-gray-700 pb-2">
-                <h3 class="text-base font-bold text-yellow-400 flex items-center gap-2">
-                    <i class="fa-solid fa-pen-to-square"></i> रेसिपी एडिट करें
-                </h3>
-                <button onclick="closeEditRecipeModal()" class="text-gray-400 hover:text-white">✕</button>
-            </div>
-            
-            <input type="hidden" id="edit-rec-id">
-            
-            <div class="space-y-3">
-                <div>
-                    <label class="text-xs text-gray-400">रेसिपी का नाम</label>
-                    <input type="text" id="edit-rec-title" class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-sm mt-1 focus:outline-none focus:border-yellow-500">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-400">सब-टाइटल (विवरण)</label>
-                    <input type="text" id="edit-rec-subtitle" class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-sm mt-1 focus:outline-none focus:border-yellow-500">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-400">फोटो यूआरएल (Image URL)</label>
-                    <input type="text" id="edit-rec-photo" class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-xs mt-1 focus:outline-none focus:border-yellow-500">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-400">पूर्ण विवरण व विधि नोट्स</label>
-                    <textarea id="edit-rec-notes" rows="3" class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-xs mt-1 focus:outline-none focus:border-yellow-500"></textarea>
-                </div>
-            </div>
-
-            <div class="flex justify-end space-x-2 pt-2 border-t border-gray-700">
-                <button onclick="closeEditRecipeModal()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-xl text-sm">रद्द करें</button>
-                <button onclick="saveRecipeEdit()" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold px-4 py-2 rounded-xl text-sm">अपडेट करें</button>
-            </div>
+    <!-- Add New Ingredient Box -->
+    <div class="card-dark rounded-2xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-bold text-amber-400">+ नई सामग्री शामिल करें</h2>
+        <div class="flex bg-slate-900 rounded-lg p-0.5 border border-slate-700 text-xs">
+          <button type="button" id="modeNonPackingBtn" onclick="switchAddMode('non-packing')" class="px-2.5 py-1 rounded-md bg-amber-500 text-slate-950 font-semibold">ग्राम / रेट (Non-Packing)</button>
+          <button type="button" id="modePackingBtn" onclick="switchAddMode('packing')" class="px-2.5 py-1 rounded-md text-slate-300">काउंट (Packing)</button>
         </div>
-    </div>
+      </div>
 
-    <!-- Confirmation Modal -->
-    <div id="confirm-modal" class="modal fixed inset-0 bg-black/75 backdrop-blur-sm z-50 justify-center items-center p-4">
-        <div class="theme-card border p-5 rounded-2xl max-w-xs w-full text-center space-y-4 shadow-2xl">
-            <i class="fa-solid fa-triangle-exclamation text-yellow-400 text-3xl"></i>
-            <h3 id="confirm-text" class="text-sm font-semibold text-gray-100">क्या आप वाकई इसे हटाना चाहते हैं?</h3>
-            <div class="flex justify-center space-x-3">
-                <button onclick="closeConfirmModal(false)" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-xl text-sm">नहीं, रद्द करें</button>
-                <button id="confirm-yes-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-xl text-sm font-bold">हाँ, हटाएँ</button>
-            </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-2.5">
+        <input id="newName" type="text" placeholder="सामग्री का नाम (जैसे: धनिया पत्ती)" class="input-dark rounded-xl px-3 py-2 text-sm" />
+        <select id="newSubRecipe" class="input-dark rounded-xl px-3 py-2 text-sm">
+          <option value="आलू बड़ा">आलू बड़ा</option>
+          <option value="इमली चटनी">इमली चटनी</option>
+          <option value="हरी मिर्च चटनी">हरी मिर्च चटनी</option>
+          <option value="पैकिंग सामग्री">पैकिंग सामग्री</option>
+        </select>
+      </div>
+
+      <!-- Non-Packing Inputs: ONLY Grams and Rate/kg -->
+      <div id="nonPackingFields" class="grid grid-cols-2 gap-2.5 mb-3">
+        <div>
+          <label class="text-[11px] text-slate-400 block mb-1">मात्रा केवल ग्राम में (gm)</label>
+          <input id="newGrams" type="number" step="any" placeholder="जैसे: 250" class="input-dark w-full rounded-xl px-3 py-2 text-sm" />
         </div>
-    </div>
-
-    <!-- Add Recipe Modal -->
-    <div id="add-recipe-modal" class="modal fixed inset-0 bg-black/75 backdrop-blur-sm z-50 justify-center items-center p-4">
-        <div class="theme-card border p-5 rounded-2xl max-w-xs w-full space-y-4 shadow-2xl">
-            <h3 class="text-lg font-bold text-yellow-400 flex items-center gap-2">
-                <i class="fa-solid fa-plus-circle"></i> नई रेसिपी जोड़ें
-            </h3>
-            <div>
-                <label class="text-xs text-gray-400">रेसिपी का नाम</label>
-                <input type="text" id="new-rec-name" placeholder="जैसे: समोसा मसाला" class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-sm mt-1 focus:outline-none focus:border-yellow-500">
-            </div>
-            <div>
-                <label class="text-xs text-gray-400">उप-शीर्षक (विवरण)</label>
-                <input type="text" id="new-rec-sub" placeholder="जैसे: 5kg बैच प्रसादी" class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-sm mt-1 focus:outline-none focus:border-yellow-500">
-            </div>
-            <div>
-                <label class="text-xs text-gray-400">विवरण या बनाने की विधि</label>
-                <textarea id="new-rec-notes" placeholder="रेसिपी से जुड़े मुख्य नोट्स..." class="w-full bg-gray-900 border border-gray-700 p-2 rounded-xl text-xs mt-1 focus:outline-none focus:border-yellow-500" rows="2"></textarea>
-            </div>
-            <div class="flex justify-end space-x-2 pt-2 border-t border-gray-700">
-                <button onclick="closeAddRecipeModal()" class="bg-gray-700 px-4 py-2 rounded-xl text-sm">रद्द करें</button>
-                <button onclick="createNewRecipe()" class="bg-yellow-500 text-gray-900 font-bold px-4 py-2 rounded-xl text-sm">जोड़ें</button>
-            </div>
+        <div>
+          <label class="text-[11px] text-slate-400 block mb-1">रेट (₹ / kg)</label>
+          <input id="newRate" type="number" step="any" placeholder="जैसे: 120" class="input-dark w-full rounded-xl px-3 py-2 text-sm" />
         </div>
-    </div>
-
-    <script>
-        // Default initial data
-        const defaultRecipes = [
-            {
-                id: 'rec-1',
-                title: 'इमली-गुड़ मीठी चटनी',
-                subtitle: 'भोग प्रसादी रेसिपी • 5kg बैच',
-                photo: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600',
-                notes: 'यह प्रसिद्ध इमली गुड़ चटनी शुद्ध सात्विक है। बिना प्याज और लहसुन के बनाई जाती है। इसमें जीरा पाउडर और काला नमक का विशेष संतुलन रहता है।',
-                ingredients: [
-                    { id: '1', name: 'इमली', gramQty: 400, kgQty: 0, ratePerKg: 100, notes: 'अच्छी गुणवत्ता वाली इमली पल्प हेतु' },
-                    { id: '2', name: 'गुड़', gramQty: 0, kgQty: 1, ratePerKg: 70, notes: 'देसी ऑर्गेनिक गुड़' },
-                    { id: '3', name: 'काला नमक', gramQty: 24, kgQty: 0, ratePerKg: 100, notes: 'स्वाद एवं पाचन हेतु' },
-                    { id: '4', name: 'सफेद नमक', gramQty: 24, kgQty: 0, ratePerKg: 20, notes: 'स्वादानुसार' },
-                    { id: '5', name: 'भुना जीरा पाउडर', gramQty: 12, kgQty: 0, ratePerKg: 400, notes: 'घर का पिसा ताजा जीरा' }
-                ]
-            },
-            {
-                id: 'rec-2',
-                title: 'आलू बड़ा कुक',
-                subtitle: '4kg-5kg आलू की रेसिपी',
-                photo: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=600',
-                notes: 'स्वादिष्ट आलू बड़ा (सात्विक प्रसादी)। इसमें विशेष खड़े मसालों, अजवायन और हींग का तड़का लगाया जाता है।',
-                ingredients: [
-                    { id: '101', name: 'Refined oil (तले जाने के बाद)', gramQty: 750, kgQty: 0, ratePerKg: 200, notes: 'मूंगफली या तिल का तेल' },
-                    { id: '102', name: 'जीरा', gramQty: 24, kgQty: 0, ratePerKg: 666.67, notes: 'तड़के हेतु' },
-                    { id: '103', name: 'राई / सरसों के दाने', gramQty: 24, kgQty: 0, ratePerKg: 833.33, notes: 'महीन राई' },
-                    { id: '104', name: 'Ajvaain', gramQty: 12, kgQty: 0, ratePerKg: 1666.67, notes: 'पाचन के लिए आवश्यक' },
-                    { id: '105', name: 'धुले हुए कड़ी पत्ता', gramQty: 12, kgQty: 0, ratePerKg: 166.67, notes: 'ताजा पत्ता' },
-                    { id: '106', name: 'काली मिर्च', gramQty: 12, kgQty: 0, ratePerKg: 333.33, notes: 'दरदरी पिसी' },
-                    { id: '107', name: 'पत्थर के फूल', gramQty: 3, kgQty: 0, ratePerKg: 1000, notes: 'विशेष खुशबू के लिए' },
-                    { id: '108', name: 'तेज पत्ते', gramQty: 2, kgQty: 0, ratePerKg: 1000, notes: 'साबुत' },
-                    { id: '109', name: '1 बड़ी इलायची', gramQty: 2, kgQty: 0, ratePerKg: 1000, notes: 'कुटी हुई' },
-                    { id: '110', name: 'हरी मिर्च, अदरक व नींबू पेस्ट', gramQty: 320, kgQty: 0, ratePerKg: 203.13, notes: 'तीखा सात्विक पेस्ट' },
-                    { id: '111', name: 'इमली पल्प (तैयार)', gramQty: 200, kgQty: 0, ratePerKg: 50, notes: 'खटास के लिए' },
-                    { id: '112', name: 'उबले meshed आलू', gramQty: 0, kgQty: 4, ratePerKg: 20, notes: 'अच्छी तरह मैश किया हुआ' },
-                    { id: '113', name: 'उबली साबुत सफेद मटर', gramQty: 250, kgQty: 0, ratePerKg: 60, notes: 'बाइंडिंग हेतु' },
-                    { id: '114', name: 'सफेद नमक', gramQty: 60, kgQty: 0, ratePerKg: 50, notes: 'स्वादानुसार' },
-                    { id: '115', name: 'काला नमक', gramQty: 24, kgQty: 0, ratePerKg: 166.67, notes: '' },
-                    { id: '116', name: 'भुना हुआ धनिया पाउडर', gramQty: 24, kgQty: 0, ratePerKg: 333.33, notes: '' },
-                    { id: '117', name: 'भुना हुआ जीरा पाउडर', gramQty: 24, kgQty: 0, ratePerKg: 333.33, notes: '' },
-                    { id: '118', name: 'स्पेशल भुना धनिया जीरा पाउडर', gramQty: 24, kgQty: 0, ratePerKg: 833.33, notes: 'सीक्रेट गरम मसाला' },
-                    { id: '119', name: 'Baking soda (मसाला)', gramQty: 4, kgQty: 0, ratePerKg: 250, notes: '' },
-                    { id: '120', name: 'बेसन', gramQty: 0, kgQty: 1, ratePerKg: 110, notes: 'घोल बनाने हेतु' },
-                    { id: '121', name: 'चावल का आटा', gramQty: 100, kgQty: 0, ratePerKg: 70, notes: 'करकरेपन हेतु' },
-                    { id: '122', name: 'नमक (घोल हेतु)', gramQty: 12, kgQty: 0, ratePerKg: 83.33, notes: '' },
-                    { id: '123', name: 'Ajvaain (घोल हेतु)', gramQty: 10, kgQty: 0, ratePerKg: 300, notes: '' },
-                    { id: '124', name: 'बेकिंग सोडा (घोल हेतु)', gramQty: 3, kgQty: 0, ratePerKg: 333.33, notes: '' }
-                ]
-            }
-        ];
-
-        let recipes = JSON.parse(localStorage.getItem('food_recipes_db_v4')) || defaultRecipes;
-        let activeRecipeId = recipes[0] ? recipes[0].id : null;
-        let confirmCallback = null;
-        let currentModalTarget = null; // { type: 'recipe' | 'ingredient', recId, ingId }
-
-        // --- Custom Theme System ---
-        const defaultTheme = {
-            bgMain: '#0f172a',
-            bgCard: '#1e293b',
-            accent: '#eab308',
-            text: '#f8fafc',
-            border: '#334155'
-        };
-
-        function getSavedTheme() {
-            return JSON.parse(localStorage.getItem('app_custom_theme')) || defaultTheme;
-        }
-
-        function applyCustomTheme() {
-            const theme = {
-                bgMain: document.getElementById('theme-bg-main').value,
-                bgCard: document.getElementById('theme-bg-card').value,
-                accent: document.getElementById('theme-accent').value,
-                text: document.getElementById('theme-text').value,
-                border: document.getElementById('theme-border').value
-            };
-            
-            document.documentElement.style.setProperty('--bg-main', theme.bgMain);
-            document.documentElement.style.setProperty('--bg-card', theme.bgCard);
-            document.documentElement.style.setProperty('--accent-color', theme.accent);
-            document.documentElement.style.setProperty('--text-main', theme.text);
-            document.documentElement.style.setProperty('--border-card', theme.border);
-
-            localStorage.setItem('app_custom_theme', JSON.stringify(theme));
-        }
-
-        function initTheme() {
-            const theme = getSavedTheme();
-            document.getElementById('theme-bg-main').value = theme.bgMain;
-            document.getElementById('theme-bg-card').value = theme.bgCard;
-            document.getElementById('theme-accent').value = theme.accent;
-            document.getElementById('theme-text').value = theme.text;
-            document.getElementById('theme-border').value = theme.border;
-
-            document.documentElement.style.setProperty('--bg-main', theme.bgMain);
-            document.documentElement.style.setProperty('--bg-card', theme.bgCard);
-            document.documentElement.style.setProperty('--accent-color', theme.accent);
-            document.documentElement.style.setProperty('--text-main', theme.text);
-            document.documentElement.style.setProperty('--border-card', theme.border);
-        }
-
-        function resetTheme() {
-            localStorage.removeItem('app_custom_theme');
-            initTheme();
-        }
-
-        function openThemeModal() { document.getElementById('theme-modal').classList.add('active'); }
-        function closeThemeModal() { document.getElementById('theme-modal').classList.remove('active'); }
-
-        // Load Header Data
-        document.getElementById('app-title-display').innerText = localStorage.getItem('app_header_title') || 'रेसिपी और कॉस्ट मैनेजर';
-        document.getElementById('app-sub-display').innerText = localStorage.getItem('app_header_sub') || 'भोग प्रसादी सामग्री';
-        document.getElementById('app-logo').src = localStorage.getItem('app_header_logo') || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=200';
-
-        function saveRecipes() {
-            localStorage.setItem('food_recipes_db_v4', JSON.stringify(recipes));
-            renderRecipes();
-        }
-
-        function toggleRecipe(id) {
-            activeRecipeId = activeRecipeId === id ? null : id;
-            renderRecipes();
-        }
-
-        function calculateTotals(ingredients) {
-            let totalWeightKg = 0;
-            let totalCost = 0;
-            ingredients.forEach(item => {
-                const itemKg = (Number(item.gramQty) || 0) / 1000 + (Number(item.kgQty) || 0);
-                const itemCost = itemKg * (Number(item.ratePerKg) || 0);
-                totalWeightKg += itemKg;
-                totalCost += itemCost;
-            });
-            return { totalWeightKg, totalCost };
-        }
-
-        // Render Main Recipe Cards
-        function renderRecipes() {
-            const container = document.getElementById('recipes-container');
-            container.innerHTML = '';
-
-            recipes.forEach(rec => {
-                const isOpen = rec.id === activeRecipeId;
-                const { totalWeightKg, totalCost } = calculateTotals(rec.ingredients);
-
-                const card = document.createElement('div');
-                card.className = 'theme-card rounded-2xl border shadow-lg overflow-hidden transition-all';
-                
-                let html = `
-                    <!-- Accordion Bar -->
-                    <div class="p-4 flex items-center justify-between cursor-pointer hover:bg-black/20" onclick="toggleRecipe('${rec.id}')">
-                        <div class="flex items-center space-x-3">
-                            <div class="relative group cursor-pointer" onclick="event.stopPropagation(); triggerRecipePhotoUpload('${rec.id}')" title="फोटो बदलें">
-                                <img src="${rec.photo}" class="w-12 h-12 rounded-xl object-cover border border-gray-600 shadow-sm">
-                                <div class="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                                    <i class="fa-solid fa-camera text-white text-[10px]"></i>
-                                </div>
-                                <input type="file" id="photo-input-${rec.id}" accept="image/*" class="hidden" onchange="uploadRecipePhoto(event, '${rec.id}')">
-                            </div>
-                            
-                            <!-- Middle Clickable Area to open Full Page Modal View -->
-                            <div class="flex-1 cursor-pointer" onclick="event.stopPropagation(); openFullPageRecipeView('${rec.id}')" title="क्लिक करके पूरा पेज विवरण देखें">
-                                <h2 class="font-bold text-gray-100 flex items-center gap-2 hover:text-yellow-400 transition">
-                                    ${rec.title}
-                                    <i class="fa-solid fa-up-right-from-square text-[10px] text-gray-500"></i>
-                                </h2>
-                                <p class="text-xs text-gray-400">${rec.subtitle} • ${rec.ingredients.length} सामग्री</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center space-x-3">
-                            <div class="text-right">
-                                <span class="block text-sm font-bold theme-accent-text">₹${totalCost.toFixed(2)}</span>
-                                <span class="block text-xs text-gray-400">${totalWeightKg.toFixed(2)} kg</span>
-                            </div>
-                            <i class="fa-solid ${isOpen ? 'fa-chevron-up' : 'fa-chevron-down'} text-gray-400 text-sm"></i>
-                        </div>
-                    </div>
-                `;
-
-                if (isOpen) {
-                    html += `
-                        <div class="border-t border-gray-700/70 p-4 bg-black/20 space-y-4">
-                            <!-- Card Header & Direct Clickable Page View -->
-                            <div class="flex items-center justify-between bg-black/40 p-3 rounded-xl border border-gray-700">
-                                <div class="flex items-center space-x-3 flex-1 cursor-pointer" onclick="openFullPageRecipeView('${rec.id}')" title="पूरा पेज व्यू खोलें">
-                                    <div class="relative cursor-pointer group" onclick="event.stopPropagation(); triggerRecipePhotoUpload('${rec.id}')">
-                                        <img src="${rec.photo}" class="w-16 h-16 rounded-xl object-cover border border-yellow-500 shadow">
-                                        <div class="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                                            <i class="fa-solid fa-camera text-white text-xs"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-white text-base flex items-center gap-2 hover:text-yellow-400 transition">
-                                            ${rec.title}
-                                            <i class="fa-solid fa-expand text-xs text-yellow-400" title="पेज व्यू"></i>
-                                        </h3>
-                                        <p class="text-xs text-gray-400">${rec.subtitle}</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <button onclick="openEditRecipeModal('${rec.id}')" class="text-yellow-400 hover:text-yellow-300 p-2 bg-gray-800 rounded-xl border border-gray-700" title="रेसिपी टेक्स्ट व नोट्स एडिट करें">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </button>
-                                    <button onclick="confirmDeleteRecipe('${rec.id}')" class="text-red-400 hover:text-red-300 p-2 bg-gray-800 rounded-xl border border-gray-700" title="रेसिपी हटाएँ">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Total Cost Cards -->
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="bg-black/40 p-3 rounded-xl border border-gray-700/80">
-                                    <span class="text-xs text-gray-400">कुल लागत (Total Cost)</span>
-                                    <p class="text-xl font-bold theme-accent-text">₹${totalCost.toFixed(2)}</p>
-                                    <span class="text-[10px] text-gray-400">₹${totalWeightKg > 0 ? (totalCost/totalWeightKg).toFixed(1) : 0} / kg दर</span>
-                                </div>
-                                <div class="bg-black/40 p-3 rounded-xl border border-gray-700/80">
-                                    <span class="text-xs text-gray-400">कुल वजन (Total Weight)</span>
-                                    <p class="text-xl font-bold text-emerald-400">${totalWeightKg.toFixed(3)} kg</p>
-                                    <span class="text-[10px] text-gray-400">${(totalWeightKg*1000).toFixed(0)} ग्राम</span>
-                                </div>
-                            </div>
-
-                            <!-- Add Ingredient Form -->
-                            <form onsubmit="addIngredient(event, '${rec.id}')" class="bg-black/30 p-3.5 rounded-xl border border-gray-700 space-y-3">
-                                <span class="text-xs font-bold theme-accent-text flex items-center gap-1.5">
-                                    <i class="fa-solid fa-plus text-[10px]"></i> नई सामग्री शामिल करें
-                                </span>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                    <input type="text" id="ing-name-${rec.id}" placeholder="सामग्री का नाम" required class="bg-gray-900 border border-gray-700 p-2 rounded-lg text-xs focus:outline-none focus:border-yellow-500">
-                                    <div class="flex space-x-1">
-                                        <input type="number" step="any" id="ing-gram-${rec.id}" placeholder="ग्राम (gm)" class="w-1/2 bg-gray-900 border border-gray-700 p-2 rounded-lg text-xs focus:outline-none focus:border-yellow-500">
-                                        <input type="number" step="any" id="ing-kg-${rec.id}" placeholder="किलो (kg)" class="w-1/2 bg-gray-900 border border-gray-700 p-2 rounded-lg text-xs focus:outline-none focus:border-yellow-500">
-                                    </div>
-                                    <input type="number" step="any" id="ing-rate-${rec.id}" placeholder="रेट ₹/kg" required class="bg-gray-900 border border-gray-700 p-2 rounded-lg text-xs focus:outline-none focus:border-yellow-500">
-                                </div>
-                                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-xs transition flex items-center justify-center gap-1">
-                                    <i class="fa-solid fa-check text-[10px]"></i> सामग्री शामिल करें
-                                </button>
-                            </form>
-
-                            <!-- Ingredients List -->
-                            <div class="space-y-2">
-                                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider flex justify-between items-center">
-                                    <span>सामग्री विवरण (${rec.ingredients.length})</span>
-                                    <span class="text-[10px] text-gray-500 font-normal">बीच में क्लिक करके बड़ा पेज देखें</span>
-                                </h4>
-                                <div class="space-y-1.5">
-                    `;
-
-                    rec.ingredients.forEach(ing => {
-                        const ingKg = (Number(ing.gramQty)||0)/1000 + (Number(ing.kgQty)||0);
-                        const ingCost = ingKg * (Number(ing.ratePerKg)||0);
-                        
-                        let weightStr = ing.gramQty > 0 ? `${ing.gramQty} gm` : '';
-                        if (ing.kgQty > 0) weightStr += (weightStr ? ' + ' : '') + `${ing.kgQty} kg`;
-                        if (!weightStr) weightStr = '0 gm';
-
-                        html += `
-                            <div class="bg-black/40 hover:bg-gray-800 p-2.5 rounded-xl border border-gray-700 flex items-center justify-between transition group">
-                                <!-- Middle Clickable Link area to open Page view for ingredient -->
-                                <div class="flex-1 cursor-pointer pr-2" onclick="openFullPageIngView('${rec.id}', '${ing.id}')" title="पूरा पेज विवरण देखें">
-                                    <h5 class="text-xs font-bold text-gray-200 group-hover:text-yellow-400 transition flex items-center gap-1.5">
-                                        ${ing.name}
-                                        <i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-0 group-hover:opacity-100 transition text-yellow-400"></i>
-                                    </h5>
-                                    <p class="text-[11px] theme-accent-text font-semibold">${weightStr} <span class="text-gray-500">• ₹${ing.ratePerKg}/kg</span></p>
-                                </div>
-                                
-                                <!-- Side Edit Buttons -->
-                                <div class="flex items-center space-x-1.5">
-                                    <span class="text-xs font-bold text-emerald-400 mr-1.5">₹${ingCost.toFixed(2)}</span>
-                                    <button onclick="openEditIngModal('${rec.id}', '${ing.id}')" class="text-gray-400 hover:text-yellow-400 p-1.5 rounded-lg hover:bg-gray-700 transition" title="सामग्री सुधारें (Edit)">
-                                        <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                    </button>
-                                    <button onclick="confirmDeleteIngredient('${rec.id}', '${ing.id}', '${ing.name}')" class="text-gray-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-gray-700 transition" title="सामग्री हटाएँ">
-                                        <i class="fa-solid fa-trash-can text-xs"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    html += `
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                card.innerHTML = html;
-                container.appendChild(card);
-            });
-        }
-
-        // --- Full Page View (Modal) Logic ---
-        function openFullPageRecipeView(recId) {
-            const rec = recipes.find(r => r.id === recId);
-            if (!rec) return;
-
-            const { totalWeightKg, totalCost } = calculateTotals(rec.ingredients);
-            currentModalTarget = { type: 'recipe', recId };
-
-            document.getElementById('page-view-img').src = rec.photo;
-            document.getElementById('page-view-title').innerText = rec.title;
-            document.getElementById('page-view-subtitle').innerText = `${rec.subtitle} • कुल सामग्री: ${rec.ingredients.length}`;
-            document.getElementById('page-view-desc').innerText = rec.notes || 'कोई विस्तृत नोट्स या विधि उपलब्ध नहीं है।';
-
-            // Extra Content Breakdown
-            let extraHtml = `
-                <div class="grid grid-cols-2 gap-3 mt-4">
-                    <div class="bg-gray-900/80 p-3 rounded-xl border border-gray-700">
-                        <span class="text-xs text-gray-400 block">कुल रेसिपी लागत</span>
-                        <span class="text-lg font-bold theme-accent-text">₹${totalCost.toFixed(2)}</span>
-                    </div>
-                    <div class="bg-gray-900/80 p-3 rounded-xl border border-gray-700">
-                        <span class="text-xs text-gray-400 block">कुल वजन</span>
-                        <span class="text-lg font-bold text-emerald-400">${totalWeightKg.toFixed(3)} kg</span>
-                    </div>
-                </div>
-
-                <div class="mt-4">
-                    <h5 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">शामिल सामग्रियां</h5>
-                    <div class="space-y-1 max-h-48 overflow-y-auto pr-1">
-            `;
-
-            rec.ingredients.forEach(ing => {
-                const ingKg = (Number(ing.gramQty)||0)/1000 + (Number(ing.kgQty)||0);
-                const cost = ingKg * (Number(ing.ratePerKg)||0);
-                extraHtml += `
-                    <div class="flex justify-between items-center text-xs bg-gray-900/50 p-2 rounded-lg border border-gray-800">
-                        <span class="text-gray-200">${ing.name}</span>
-                        <span class="text-gray-400">${ing.gramQty ? ing.gramQty+'gm' : ''} ${ing.kgQty ? ing.kgQty+'kg' : ''} @ ₹${ing.ratePerKg}/kg = <b class="text-emerald-400">₹${cost.toFixed(2)}</b></span>
-                    </div>
-                `;
-            });
-
-            extraHtml += `</div></div>`;
-            document.getElementById('page-view-extra-content').innerHTML = extraHtml;
-
-            // Wire Page Edit Button
-            document.getElementById('page-edit-btn').onclick = () => {
-                closeFullPageModal();
-                openEditRecipeModal(recId);
-            };
-
-            document.getElementById('full-page-modal').classList.add('active');
-        }
-
-        function openFullPageIngView(recId, ingId) {
-            const rec = recipes.find(r => r.id === recId);
-            if (!rec) return;
-            const ing = rec.ingredients.find(i => i.id === ingId);
-            if (!ing) return;
-
-            currentModalTarget = { type: 'ingredient', recId, ingId };
-
-            const ingKg = (Number(ing.gramQty)||0)/1000 + (Number(ing.kgQty)||0);
-            const totalCost = ingKg * (Number(ing.ratePerKg)||0);
-
-            document.getElementById('page-view-img').src = rec.photo; // Use parent recipe photo for ingredient context
-            document.getElementById('page-view-title').innerText = ing.name;
-            document.getElementById('page-view-subtitle').innerText = `रेसिपी: ${rec.title}`;
-            document.getElementById('page-view-desc').innerText = ing.notes || 'इस सामग्री के लिए कोई विशेष टिप्पणी दर्ज नहीं है।';
-
-            let extraHtml = `
-                <div class="bg-gray-900/80 p-4 rounded-xl border border-gray-700 space-y-3 mt-4">
-                    <h5 class="text-xs font-bold text-yellow-400 uppercase tracking-wide">मात्रा एवं लागत गणना (Calculation)</h5>
-                    <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div class="bg-gray-800 p-2 rounded-lg"><span class="text-gray-400 block">मात्रा (ग्राम):</span> <b class="text-white">${ing.gramQty || 0} gm</b></div>
-                        <div class="bg-gray-800 p-2 rounded-lg"><span class="text-gray-400 block">मात्रा (किलो):</span> <b class="text-white">${ing.kgQty || 0} kg</b></div>
-                        <div class="bg-gray-800 p-2 rounded-lg"><span class="text-gray-400 block">दर (Rate):</span> <b class="text-white">₹${ing.ratePerKg} / kg</b></div>
-                        <div class="bg-gray-800 p-2 rounded-lg"><span class="text-gray-400 block">कुल लागत:</span> <b class="text-emerald-400 text-sm">₹${totalCost.toFixed(2)}</b></div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('page-view-extra-content').innerHTML = extraHtml;
-
-            // Wire Page Edit Button
-            document.getElementById('page-edit-btn').onclick = () => {
-                closeFullPageModal();
-                openEditIngModal(recId, ingId);
-            };
-
-            document.getElementById('full-page-modal').classList.add('active');
-        }
-
-        function closeFullPageModal() {
-            document.getElementById('full-page-modal').classList.remove('active');
-            currentModalTarget = null;
-        }
-
-        // Upload Photo from Page View Modal
-        function triggerModalPhotoUpload() {
-            document.getElementById('modal-file-input').click();
-        }
-
-        function uploadModalPhoto(e) {
-            const file = e.target.files[0];
-            if (file && currentModalTarget) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    const newUrl = evt.target.result;
-                    document.getElementById('page-view-img').src = newUrl;
-                    
-                    if (currentModalTarget.type === 'recipe') {
-                        const rec = recipes.find(r => r.id === currentModalTarget.recId);
-                        if (rec) rec.photo = newUrl;
-                    }
-                    saveRecipes();
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // --- App Header Handlers ---
-        function triggerHeaderUpload() { document.getElementById('header-file-input').click(); }
-        function uploadHeaderLogo(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    document.getElementById('app-logo').src = evt.target.result;
-                    localStorage.setItem('app_header_logo', evt.target.result);
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-        function editAppHeader() {
-            const currentTitle = localStorage.getItem('app_header_title') || 'रेसिपी और कॉस्ट मैनेजर';
-            const currentSub = localStorage.getItem('app_header_sub') || 'भोग प्रसादी सामग्री';
-            const newTitle = prompt('नया टाइटल दर्ज करें:', currentTitle);
-            if (newTitle !== null) {
-                const newSub = prompt('नया सब-टाइटल दर्ज करें:', currentSub);
-                localStorage.setItem('app_header_title', newTitle);
-                if (newSub !== null) localStorage.setItem('app_header_sub', newSub);
-                document.getElementById('app-title-display').innerText = newTitle;
-                document.getElementById('app-sub-display').innerText = newSub || '';
-            }
-        }
-
-        // --- Recipe Edit Handlers ---
-        function triggerRecipePhotoUpload(recId) { document.getElementById(`photo-input-${recId}`).click(); }
-        function uploadRecipePhoto(e, recId) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    const rec = recipes.find(r => r.id === recId);
-                    if (rec) {
-                        rec.photo = evt.target.result;
-                        saveRecipes();
-                    }
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function openEditRecipeModal(recId) {
-            const rec = recipes.find(r => r.id === recId);
-            if (!rec) return;
-
-            document.getElementById('edit-rec-id').value = recId;
-            document.getElementById('edit-rec-title').value = rec.title;
-            document.getElementById('edit-rec-subtitle').value = rec.subtitle;
-            document.getElementById('edit-rec-photo').value = rec.photo;
-            document.getElementById('edit-rec-notes').value = rec.notes || '';
-
-            document.getElementById('edit-recipe-modal').classList.add('active');
-        }
-
-        function closeEditRecipeModal() {
-            document.getElementById('edit-recipe-modal').classList.remove('active');
-        }
-
-        function saveRecipeEdit() {
-            const recId = document.getElementById('edit-rec-id').value;
-            const rec = recipes.find(r => r.id === recId);
-            if (!rec) return;
-
-            const title = document.getElementById('edit-rec-title').value.trim();
-            const subtitle = document.getElementById('edit-rec-subtitle').value.trim();
-            const photo = document.getElementById('edit-rec-photo').value.trim();
-            const notes = document.getElementById('edit-rec-notes').value.trim();
-
-            if (title) {
-                rec.title = title;
-                rec.subtitle = subtitle;
-                if (photo) rec.photo = photo;
-                rec.notes = notes;
-
-                saveRecipes();
-                closeEditRecipeModal();
-            }
-        }
-
-        // --- Ingredient Add / Edit Handlers ---
-        function addIngredient(e, recId) {
-            e.preventDefault();
-            const rec = recipes.find(r => r.id === recId);
-            if (!rec) return;
-
-            const name = document.getElementById(`ing-name-${recId}`).value.trim();
-            const gramQty = parseFloat(document.getElementById(`ing-gram-${recId}`).value) || 0;
-            const kgQty = parseFloat(document.getElementById(`ing-kg-${recId}`).value) || 0;
-            const ratePerKg = parseFloat(document.getElementById(`ing-rate-${recId}`).value) || 0;
-
-            if (name && (gramQty > 0 || kgQty > 0) && ratePerKg >= 0) {
-                rec.ingredients.push({
-                    id: Date.now().toString(),
-                    name, gramQty, kgQty, ratePerKg, notes: ''
-                });
-                saveRecipes();
-            }
-        }
-
-        function openEditIngModal(recId, ingId) {
-            const rec = recipes.find(r => r.id === recId);
-            if (!rec) return;
-            const ing = rec.ingredients.find(i => i.id === ingId);
-            if (!ing) return;
-
-            document.getElementById('edit-ing-rec-id').value = recId;
-            document.getElementById('edit-ing-id').value = ingId;
-            document.getElementById('edit-ing-name').value = ing.name;
-            document.getElementById('edit-ing-gram').value = ing.gramQty || '';
-            document.getElementById('edit-ing-kg').value = ing.kgQty || '';
-            document.getElementById('edit-ing-rate').value = ing.ratePerKg || '';
-            document.getElementById('edit-ing-notes').value = ing.notes || '';
-
-            document.getElementById('edit-ing-modal').classList.add('active');
-        }
-
-        function closeEditIngModal() {
-            document.getElementById('edit-ing-modal').classList.remove('active');
-        }
-
-        function saveIngredientEdit() {
-            const recId = document.getElementById('edit-ing-rec-id').value;
-            const ingId = document.getElementById('edit-ing-id').value;
-
-            const rec = recipes.find(r => r.id === recId);
-            if (!rec) return;
-            const ing = rec.ingredients.find(i => i.id === ingId);
-            if (!ing) return;
-
-            const newName = document.getElementById('edit-ing-name').value.trim();
-            const newGram = parseFloat(document.getElementById('edit-ing-gram').value) || 0;
-            const newKg = parseFloat(document.getElementById('edit-ing-kg').value) || 0;
-            const newRate = parseFloat(document.getElementById('edit-ing-rate').value) || 0;
-            const newNotes = document.getElementById('edit-ing-notes').value.trim();
-
-            if (newName && (newGram >= 0 || newKg >= 0) && newRate >= 0) {
-                ing.name = newName;
-                ing.gramQty = newGram;
-                ing.kgQty = newKg;
-                ing.ratePerKg = newRate;
-                ing.notes = newNotes;
-
-                saveRecipes();
-                closeEditIngModal();
-            }
-        }
-
-        // --- Add New Recipe Handlers ---
-        function openAddRecipeModal() { document.getElementById('add-recipe-modal').classList.add('active'); }
-        function closeAddRecipeModal() { document.getElementById('add-recipe-modal').classList.remove('active'); }
-        function createNewRecipe() {
-            const name = document.getElementById('new-rec-name').value.trim();
-            const sub = document.getElementById('new-rec-sub').value.trim();
-            const notes = document.getElementById('new-rec-notes').value.trim();
-            if (name) {
-                const newRec = {
-                    id: 'rec-' + Date.now(),
-                    title: name,
-                    subtitle: sub || 'स्वादिष्ट प्रसादी',
-                    photo: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600',
-                    notes: notes || 'नई रेसिपी प्रविष्टि।',
-                    ingredients: []
-                };
-                recipes.push(newRec);
-                activeRecipeId = newRec.id;
-                saveRecipes();
-                closeAddRecipeModal();
-                document.getElementById('new-rec-name').value = '';
-                document.getElementById('new-rec-sub').value = '';
-                document.getElementById('new-rec-notes').value = '';
-            }
-        }
-
-        // --- Confirmation Modal Handlers ---
-        function openConfirmModal(text, onYes) {
-            document.getElementById('confirm-text').innerText = text;
-            confirmCallback = onYes;
-            document.getElementById('confirm-modal').classList.add('active');
-        }
-        function closeConfirmModal(isYes) {
-            document.getElementById('confirm-modal').classList.remove('active');
-            if (isYes && confirmCallback) confirmCallback();
-            confirmCallback = null;
-        }
-        document.getElementById('confirm-yes-btn').onclick = () => closeConfirmModal(true);
-
-        function confirmDeleteRecipe(recId) {
-            const rec = recipes.find(r => r.id === recId);
-            openConfirmModal(`क्या आप वाकई पूरी "${rec ? rec.title : ''}" रेसिपी को हटाना चाहते हैं?`, () => {
-                recipes = recipes.filter(r => r.id !== recId);
-                if (activeRecipeId === recId) activeRecipeId = recipes[0] ? recipes[0].id : null;
-                saveRecipes();
-            });
-        }
-
-        function confirmDeleteIngredient(recId, ingId, ingName) {
-            openConfirmModal(`क्या आप "${ingName}" सामग्री को हटाना चाहते हैं?`, () => {
-                const rec = recipes.find(r => r.id === recId);
-                if (rec) {
-                    rec.ingredients = rec.ingredients.filter(i => i.id !== ingId);
-                    saveRecipes();
-                }
-            });
-        }
-
-        // Initialize Theme & Render App
-        initTheme();
-        renderRecipes();
-    </script>
-</body>
-                    </html> 
+      </div>
+
+      <!-- Packing Inputs: Purchase Price, Obtained Count, Used Count -->
+      <div id="packingFields" class="hidden grid-cols-3 gap-2.5 mb-3">
+        <div>
+          <label class="text-[11px] text-slate-400 block mb-1">खरीद मूल्य (₹)</label>
+          <input id="newPurchasePrice" type="number" step="any" placeholder="जैसे: 50" class="input-dark w-full rounded-xl px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="text-[11px] text-slate-40
