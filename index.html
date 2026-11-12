@@ -63,7 +63,7 @@
 
     <!-- Status Bar -->
     <div id="statusBanner" class="rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-amber-500/10 border border-amber-500/30 text-amber-200">
-      <span id="statusText">Google Sheet लिंक सेट करें ताकि डेटा क्लाउड पर सेव हो सके।</span>
+      <span id="statusText">Google Sheet लिंक सेट करें ताकि डेटा क्लाउड पर सिंक हो सके।</span>
       <button onclick="openSheetModal()" class="underline font-semibold text-amber-400 ml-2 shrink-0">लिंक जोड़ें</button>
     </div>
 
@@ -113,8 +113,9 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-2.5">
-        <input id="newName" type="text" placeholder="सामग्री का नाम (जैसे: धनिया पत्ती)" class="input-dark rounded-xl px-3 py-2 text-sm" />
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-2.5">
+        <input id="newStep" type="text" placeholder="स्टेप/सीरियल (जैसे: 1)" class="input-dark rounded-xl px-3 py-2 text-sm" />
+        <input id="newName" type="text" placeholder="सामग्री का नाम" class="input-dark rounded-xl px-3 py-2 text-sm" />
         <select id="newSubRecipe" class="input-dark rounded-xl px-3 py-2 text-sm">
           <option value="आलू बड़ा">आलू बड़ा</option>
           <option value="इमली चटनी">इमली चटनी</option>
@@ -191,15 +192,14 @@
 
   <script>
     const DEFAULT_ITEMS = [
-      { id: 1, name: "Refined oil", subRecipe: "आलू बड़ा", category: "non-packing", grams: 750, ratePerKg: 180 },
-      { id: 2, name: "जीरा", subRecipe: "आलू बड़ा", category: "non-packing", grams: 24, ratePerKg: 360 },
-      { id: 3, name: "उबले meshed आलू", subRecipe: "आलू बड़ा", category: "non-packing", grams: 4000, ratePerKg: 80 },
-      { id: 4, name: "बेसन", subRecipe: "आलू बड़ा", category: "non-packing", grams: 1000, ratePerKg: 120 },
-      { id: 5, name: "इमली", subRecipe: "इमली चटनी", category: "non-packing", grams: 400, ratePerKg: 90 },
-      { id: 6, name: "गुड़", subRecipe: "इमली चटनी", category: "non-packing", grams: 1000, ratePerKg: 70 },
-      { id: 7, name: "हरी मिर्च", subRecipe: "हरी मिर्च चटनी", category: "non-packing", grams: 500, ratePerKg: 80 },
-      { id: 8, name: "दौना", subRecipe: "पैकिंग सामग्री", category: "packing", obtainedCount: 80, purchasePrice: 50, usedCount: 50 },
-      { id: 9, name: "चम्मच", subRecipe: "पैकिंग सामग्री", category: "packing", obtainedCount: 150, purchasePrice: 30, usedCount: 50 }
+      { id: 1, step: "1", name: "Refined oil", subRecipe: "आलू बड़ा", category: "non-packing", grams: 750, ratePerKg: 180 },
+      { id: 2, step: "2", name: "जीरा", subRecipe: "आलू बड़ा", category: "non-packing", grams: 24, ratePerKg: 360 },
+      { id: 3, step: "3", name: "उबले meshed आलू", subRecipe: "आलू बड़ा", category: "non-packing", grams: 4000, ratePerKg: 80 },
+      { id: 4, step: "1", name: "इमली", subRecipe: "इमली चटनी", category: "non-packing", grams: 400, ratePerKg: 90 },
+      { id: 5, step: "2", name: "गुड़", subRecipe: "इमली चटनी", category: "non-packing", grams: 1000, ratePerKg: 70 },
+      { id: 6, step: "1", name: "हरी मिर्च", subRecipe: "हरी मिर्च चटनी", category: "non-packing", grams: 500, ratePerKg: 80 },
+      { id: 7, step: "1", name: "दौना", subRecipe: "पैकिंग सामग्री", category: "packing", obtainedCount: 80, purchasePrice: 50, usedCount: 50 },
+      { id: 8, step: "2", name: "चम्मच", subRecipe: "पैकिंग सामग्री", category: "packing", obtainedCount: 150, purchasePrice: 30, usedCount: 50 }
     ];
 
     let items = [...DEFAULT_ITEMS];
@@ -256,7 +256,7 @@
 
       const filtered = items.filter(item => {
         const matchTab = activeFilter === "ALL" || item.subRecipe === activeFilter;
-        const matchSearch = !query || item.name.toLowerCase().includes(query);
+        const matchSearch = !query || item.name.toLowerCase().includes(query) || (item.subRecipe && item.subRecipe.toLowerCase().includes(query));
         return matchTab && matchSearch;
       });
 
@@ -268,14 +268,19 @@
 
       container.innerHTML = filtered.map(item => {
         const val = calcItemValue(item);
+        const stepBadge = item.step ? `<span class="text-[10px] text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded mr-1">Step: ${item.step}</span>` : '';
+        
         if (item.category === "packing") {
           const unitRate = item.obtainedCount > 0 ? (item.purchasePrice / item.obtainedCount) : 0;
           return `
             <div class="card-dark rounded-2xl p-3.5">
               <div class="flex items-start justify-between gap-2 mb-2.5">
                 <div>
-                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold">${item.subRecipe} • काउंट</span>
-                  <h3 class="text-sm font-bold text-slate-100 mt-1">${item.name}</h3>
+                  <div class="flex items-center gap-1 mb-1">
+                    ${stepBadge}
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold">${item.subRecipe} • काउंट</span>
+                  </div>
+                  <h3 class="text-sm font-bold text-slate-100">${item.name}</h3>
                   <div class="text-[11px] text-slate-400">1 पीस रेट: ₹${unitRate.toFixed(3)}</div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -306,8 +311,11 @@
             <div class="card-dark rounded-2xl p-3.5">
               <div class="flex items-start justify-between gap-2 mb-2.5">
                 <div>
-                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 font-semibold">${item.subRecipe}</span>
-                  <h3 class="text-sm font-bold text-slate-100 mt-1">${item.name}</h3>
+                  <div class="flex items-center gap-1 mb-1">
+                    ${stepBadge}
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 font-semibold">${item.subRecipe}</span>
+                  </div>
+                  <h3 class="text-sm font-bold text-slate-100">${item.name}</h3>
                 </div>
                 <div class="flex items-center gap-2">
                   <div class="text-right">
@@ -385,15 +393,17 @@
     }
 
     function addNewItem() {
+      const step = document.getElementById("newStep").value.trim();
       const name = document.getElementById("newName").value.trim();
       const subRecipe = document.getElementById("newSubRecipe").value;
-      if (!name) { alert("कृपया नाम लिखें"); return; }
+      if (!name) { alert("कृपया सामग्री का नाम लिखें"); return; }
 
       const newId = items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1;
 
       if (addMode === "packing") {
         items.unshift({
           id: newId,
+          step: step || "1",
           name,
           subRecipe: "पैकिंग सामग्री",
           category: "packing",
@@ -404,6 +414,7 @@
       } else {
         items.unshift({
           id: newId,
+          step: step || "1",
           name,
           subRecipe,
           category: "non-packing",
@@ -412,13 +423,14 @@
         });
       }
 
+      document.getElementById("newStep").value = "";
       document.getElementById("newName").value = "";
       renderList();
       if (sheetWebAppUrl) saveToGoogleSheet();
     }
 
     function deleteItem(id) {
-      if (!confirm("हटाना चाहते हैं?")) return;
+      if (!confirm("क्या आप इसे हटाना चाहते हैं?")) return;
       items = items.filter(x => x.id !== id);
       renderList();
       if (sheetWebAppUrl) saveToGoogleSheet();
@@ -441,7 +453,7 @@
 
     async function connectAndLoadSheet() {
       const url = document.getElementById("sheetUrlInput").value.trim();
-      if (!url) { alert("यूआरएल डालें"); return; }
+      if (!url) { alert("कृपया Web App URL डालें"); return; }
       sheetWebAppUrl = url;
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set("sheet", url);
@@ -461,6 +473,7 @@
         } else if (data.status === "ok" && Array.isArray(data.items)) {
           items = data.items.map((r, i) => ({
             id: Number(r.id) || (i + 1),
+            step: String(r.step || ""),
             name: String(r.name || ""),
             subRecipe: String(r.subRecipe || "आलू बड़ा"),
             category: String(r.category || "non-packing"),
@@ -487,7 +500,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ items })
         });
-        setStatus("✓ गूगल शीट में डेटा सेव हो गया!", true);
+        setStatus("✓ गूगल शीट में डेटा सुरक्षित सेव हो गया!", true);
       } catch (e) {
         setStatus("सेव करने में समस्या आई।", false);
       }
