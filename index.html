@@ -52,7 +52,7 @@
         <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)" />
 
         <div>
-          <h1 id="editableTitle" contenteditable="true" onblur="saveCustomHeader()" class="text-lg sm:text-xl font-bold text-amber-400 leading-tight outline-none focus:ring-1 focus:ring-amber-400 rounded px-1" title="क्लिक करके नाम बदलें">रेसिपी और कॉस्ट मैनेजर</h1>
+          <h1 id="editableTitle" contenteditable="true" onblur="saveCustomHeader()" class="text-lg sm:text-xl font-bold text-amber-400 leading-tight outline-none focus:ring-1 focus:ring-amber-400 rounded px-1" title="क्लिक करके नाम बदलें">राधा भोग प्रसादी costing</h1>
           <p id="editableSubtitle" contenteditable="true" onblur="saveCustomHeader()" class="text-xs text-slate-400 outline-none focus:ring-1 focus:ring-slate-400 rounded px-1 mt-0.5" title="क्लिक करके विवरण बदलें">शुद्ध सात्विक भोग प्रसादी सामग्री • श्री राधे</p>
         </div>
       </div>
@@ -310,9 +310,10 @@
       
       subs.forEach(sub => {
         const isActive = activeFilter === sub;
-        html += `<div class="inline-flex items-center gap-1 shrink-0">
-          <button onclick="setFilter('${sub}')" data-filter="${sub}" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold ${isActive ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300 border border-slate-700'}">${sub}</button>
-          <button onclick="promptRenameRecipe('${sub}')" class="text-[10px] text-slate-400 hover:text-amber-400 px-1" title="नाम बदलें">✏️</button>
+        html += `<div class="inline-flex items-center gap-1 shrink-0 bg-slate-800 border border-slate-700 rounded-full px-2.5 py-1">
+          <button onclick="setFilter('${sub}')" data-filter="${sub}" class="filter-btn text-xs font-semibold ${isActive ? 'text-amber-400 font-bold' : 'text-slate-300'}">${sub}</button>
+          <button onclick="promptRenameRecipe('${sub}')" class="text-[10px] text-slate-400 hover:text-amber-400 px-0.5" title="नाम बदलें">✏️</button>
+          <button onclick="handleDeleteRecipe('${sub}')" class="text-[10px] text-rose-400 hover:text-rose-300 px-0.5" title="रेसिपी डिलीट करें">🗑️</button>
         </div>`;
       });
 
@@ -336,7 +337,6 @@
       
       const subs = getSubRecipes();
       if (!subs.includes(cleanName)) {
-        // Add a default placeholder item so the recipe is immediately visible and functional
         const newId = items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1;
         items.unshift({
           id: newId,
@@ -363,6 +363,16 @@
       });
       if (activeFilter === oldName) activeFilter = cleanName;
       renderFilterTabs();
+      renderList();
+      if (sheetWebAppUrl) saveToGoogleSheet();
+    }
+
+    function handleDeleteRecipe(recipeName) {
+      if (!confirm(`क्या आप वाकई '${recipeName}' रेसिपी और इसके सभी आइटम्स को हटाना चाहते हैं?`)) return;
+      items = items.filter(i => i.subRecipe !== recipeName);
+      if (activeFilter === recipeName) {
+        activeFilter = "ALL";
+      }
       renderList();
       if (sheetWebAppUrl) saveToGoogleSheet();
     }
