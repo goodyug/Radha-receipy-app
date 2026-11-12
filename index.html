@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>रेसिपी और कॉस्ट मैनेजर — शुद्ध सात्विक भोग प्रसादी</title>
+  <title>राधा भोग प्रसादी costing</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -43,7 +43,7 @@
     <div class="max-w-3xl mx-auto flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <!-- Clickable Logo Avatar for Upload & Zoom -->
-        <div onclick="triggerImageUpload()" id="logoContainer" class="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg border-2 border-amber-200 shrink-0 cursor-pointer overflow-hidden relative group" title="फोटो बदलने के लिए टैप करें, बड़ा देखने के लिए क्लिक करें">
+        <div onclick="triggerImageUpload()" id="logoContainer" class="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg border-2 border-amber-200 shrink-0 cursor-pointer overflow-hidden relative group" title="फोटो बदलने के लिए टैप करें">
           <img id="logoImg" src="" alt="Logo" class="w-full h-full object-cover hidden" />
           <svg id="logoDefaultIcon" class="w-7 h-7 text-slate-950" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2C9.5 6 7 8.5 7 12c0 2.8 2.2 5 5 5s5-2.2 5-5c0-3.5-2.5-6-5-10zm-7 9c-1.5 1.5-2 3.5-1 5.5 1 2 3.5 3 6 2.5-2.5-1.5-4.2-4.3-5-8zm14 0c-.8 3.7-2.5 6.5-5 8 2.5.5 5-.5 6-2.5 1-2 .5-4-1-5.5zM4 20h16v2H4v-2z"/>
@@ -309,7 +309,7 @@
         html += `<div class="inline-flex items-center gap-1 shrink-0 bg-slate-800 border border-slate-700 rounded-full px-2 py-1">
           <button onclick="setFilter('${sub}')" data-filter="${sub}" class="filter-btn text-xs font-semibold ${isActive ? 'text-amber-400 font-bold' : 'text-slate-300'}">${sub}</button>
           <button onclick="promptRenameRecipe('${sub}')" class="text-[10px] text-slate-400 hover:text-amber-400 px-0.5" title="नाम बदलें">✏️</button>
-          <button onclick="promptDeleteRecipe('${sub}')" class="text-[10px] text-rose-400 hover:text-rose-300 px-0.5" title="रेसिपी डिलीट करें">🗑️</button>
+          <button onclick="handleDeleteRecipe('${sub}')" class="text-[10px] text-rose-400 hover:text-rose-300 px-0.5" title="रेसिपी डिलीट करें">🗑️</button>
         </div>`;
       });
 
@@ -363,7 +363,7 @@
       if (sheetWebAppUrl) saveToGoogleSheet();
     }
 
-    function promptDeleteRecipe(recipeName) {
+    function handleDeleteRecipe(recipeName) {
       if (!confirm(`क्या आप वाकई '${recipeName}' रेसिपी और इसके सभी आइटम्स को हटाना चाहते हैं?`)) return;
       items = items.filter(i => i.subRecipe !== recipeName);
       if (activeFilter === recipeName) {
@@ -440,10 +440,14 @@
       const container = document.getElementById("itemsContainer");
       const query = document.getElementById("searchInput").value.trim().toLowerCase();
 
+      // Stable sorting by numeric step value
       let sortedItems = [...items].sort((a, b) => {
-        let sA = parseFloat(a.step) || 999;
-        let sB = parseFloat(b.step) || 999;
-        return sA - sB;
+        let sA = parseFloat(a.step);
+        let sB = parseFloat(b.step);
+        if (isNaN(sA)) sA = 999;
+        if (isNaN(sB)) sB = 999;
+        if (sA !== sB) return sA - sB;
+        return a.id - b.id;
       });
 
       const filtered = sortedItems.filter(item => {
