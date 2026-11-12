@@ -52,8 +52,8 @@
         <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)" />
 
         <div>
-          <h1 class="text-lg sm:text-xl font-bold text-amber-400 leading-tight">रेसिपी और कॉस्ट मैनेजर</h1>
-          <p class="text-xs text-slate-400">शुद्ध सात्विक भोग प्रसादी सामग्री • श्री राधे</p>
+          <h1 id="editableTitle" contenteditable="true" onblur="saveCustomHeader()" class="text-lg sm:text-xl font-bold text-amber-400 leading-tight outline-none focus:ring-1 focus:ring-amber-400 rounded px-1" title="क्लिक करके नाम बदलें">रेसिपी और कॉस्ट मैनेजर</h1>
+          <p id="editableSubtitle" contenteditable="true" onblur="saveCustomHeader()" class="text-xs text-slate-400 outline-none focus:ring-1 focus:ring-slate-400 rounded px-1 mt-0.5" title="क्लिक करके विवरण बदलें">शुद्ध सात्विक भोग प्रसादी सामग्री • श्री राधे</p>
         </div>
       </div>
 
@@ -242,17 +242,30 @@
     let addMode = "non-packing";
     let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "";
 
-    // Logo Upload & Closeup Logic
-    function initLogo() {
+    // Load custom header & logo on startup
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedTitle = localStorage.getItem("bhog_custom_title");
+      const savedSub = localStorage.getItem("bhog_custom_sub");
       const savedLogo = localStorage.getItem("bhog_custom_logo");
+
+      if (savedTitle) document.getElementById("editableTitle").textContent = savedTitle;
+      if (savedSub) document.getElementById("editableSubtitle").textContent = savedSub;
       if (savedLogo) {
         const img = document.getElementById("logoImg");
         img.src = savedLogo;
         img.classList.remove("hidden");
         document.getElementById("logoDefaultIcon").classList.add("hidden");
       }
+    });
+
+    function saveCustomHeader() {
+      const title = document.getElementById("editableTitle").textContent.trim();
+      const sub = document.getElementById("editableSubtitle").textContent.trim();
+      localStorage.setItem("bhog_custom_title", title);
+      localStorage.setItem("bhog_custom_sub", sub);
     }
 
+    // Logo Upload & Closeup Logic
     function handleLogoTap() {
       const savedLogo = localStorage.getItem("bhog_custom_logo");
       if (savedLogo) {
@@ -282,8 +295,6 @@
     function closeImageZoom() {
       document.getElementById("imageZoomModal").classList.add("hidden");
     }
-
-    initLogo();
 
     function getSubRecipes() {
       const set = new Set(["आलू बड़ा", "इमली चटनी", "हरी मिर्च चटनी", "पैकिंग सामग्री"]);
