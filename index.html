@@ -95,7 +95,7 @@
       <div class="card-dark rounded-2xl p-3.5">
         <div class="text-xs text-slate-400">पैकिंग खर्च (काउंट)</div>
         <div id="packingCost" class="text-xl font-bold text-sky-400 mt-1">₹0.00</div>
-        <div id="packingCount" class="text-[11px] text-slate-400 mt-0.5">0 आइटम</div>
+        <div id="packingCount" class="text-[11px] text-slate-400 mt-0.5">4 आइटम</div>
       </div>
     </div>
 
@@ -104,10 +104,10 @@
       <!-- Dynamic Filter Buttons inserted via JS -->
     </div>
 
-    <!-- Sub-Recipe SubTotal Bar (Appears only when a specific recipe is selected) -->
+    <!-- Sub-Recipe SubTotal Bar -->
     <div id="subTotalBanner" class="hidden rounded-2xl p-3.5 bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-xs">
       <div>
-        <span id="subTotalTitle" class="font-bold text-emerald-400 text-sm">आलू बड़ा - सब टोटल</span>
+        <span id="subTotalTitle" class="font-bold text-emerald-400 text-sm">सब टोटल</span>
         <div id="subTotalDesc" class="text-slate-300 text-[11px] mt-0.5">सामग्री: 0 | वजन: 0 ग्राम</div>
       </div>
       <div class="text-right">
@@ -249,17 +249,35 @@
       // Update dropdown options
       const select = document.getElementById("newSubRecipe");
       select.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join("");
-      select.value = activeFilter !== "ALL" ? activeFilter : subs[0];
+      if (subs.includes(activeFilter)) {
+        select.value = activeFilter;
+      } else {
+        select.value = subs[0];
+      }
     }
 
     function promptAddNewRecipe() {
       const name = prompt("नई रेसिपी या सब-रेसिपी का नाम लिखें (जैसे: रायता, सलाद):");
       if (!name || !name.trim()) return;
       const cleanName = name.trim();
+      
       const subs = getSubRecipes();
       if (!subs.includes(cleanName)) {
-        setFilter(cleanName);
+        // Add a default placeholder item so the recipe is immediately visible and functional
+        const newId = items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1;
+        items.unshift({
+          id: newId,
+          step: "1",
+          name: "नया आइटम जोड़ें",
+          subRecipe: cleanName,
+          category: "non-packing",
+          grams: 100,
+          ratePerKg: 50,
+          checked: false
+        });
       }
+      setFilter(cleanName);
+      if (sheetWebAppUrl) saveToGoogleSheet();
     }
 
     function promptRenameRecipe(oldName) {
