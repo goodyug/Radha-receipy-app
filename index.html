@@ -83,6 +83,52 @@
     </div>
   </div>
 
+  <!-- Floating Mini Add-to-Cart Popup Button -->
+  <button id="floatingCartBtn" onclick="openCartModal()" class="hidden fixed bottom-5 right-4 z-40 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-full shadow-2xl border-2 border-emerald-300 flex items-center gap-2 text-xs font-bold transition transform active:scale-95">
+    <span>🛒 कार्ट</span>
+    <span id="floatingCartCount" class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded-full text-[11px]">0</span>
+  </button>
+
+  <!-- Separate Cart View Page / Modal -->
+  <div id="cartModal" class="fixed inset-0 z-50 hidden bg-[#0f172a] overflow-y-auto pb-20">
+    <div class="sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 px-4 py-3">
+      <div class="max-w-3xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🛒</span>
+          <div>
+            <h2 class="text-base font-bold text-emerald-400 leading-tight">खरीदारी कार्ट (Selected Items)</h2>
+            <p class="text-[11px] text-slate-400">सभी रेसिपी से टिक की गई सामग्री</p>
+          </div>
+        </div>
+        <button onclick="closeCartModal()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-amber-300">
+          ← वापस जाएं
+        </button>
+      </div>
+    </div>
+
+    <div class="max-w-3xl mx-auto px-4 pt-4 space-y-4">
+      <!-- Cart Totals Summary -->
+      <div class="grid grid-cols-3 gap-2.5">
+        <div class="card-dark rounded-2xl p-3 border-emerald-500/40 bg-emerald-950/20">
+          <div class="text-[11px] text-slate-400">कार्ट कुल खर्च</div>
+          <div id="cartTotalCost" class="text-xl font-bold text-amber-400 mt-0.5">₹0.00</div>
+        </div>
+        <div class="card-dark rounded-2xl p-3 border-emerald-500/40 bg-emerald-950/20">
+          <div class="text-[11px] text-slate-400">कुल वजन (ग्राम)</div>
+          <div id="cartTotalWeight" class="text-lg font-bold text-emerald-400 mt-0.5">0 ग्राम</div>
+          <div id="cartTotalWeightKg" class="text-[10px] text-slate-400">0.000 kg</div>
+        </div>
+        <div class="card-dark rounded-2xl p-3 border-emerald-500/40 bg-emerald-950/20">
+          <div class="text-[11px] text-slate-400">कुल आइटम</div>
+          <div id="cartTotalCount" class="text-xl font-bold text-sky-400 mt-0.5">0</div>
+        </div>
+      </div>
+
+      <!-- Cart Items List -->
+      <div id="cartItemsContainer" class="space-y-2.5"></div>
+    </div>
+  </div>
+
   <main class="max-w-3xl mx-auto px-4 pt-4 space-y-4">
 
     <!-- Status Bar -->
@@ -296,6 +342,92 @@
       document.getElementById("imageZoomModal").classList.add("hidden");
     }
 
+    // Cart View Logic
+    function updateCartIndicator() {
+      const checkedItems = items.filter(i => i.checked === true);
+      const btn = document.getElementById("floatingCartBtn");
+      const countEl = document.getElementById("floatingCartCount");
+      if (checkedItems.length > 0) {
+        btn.classList.remove("hidden");
+        countEl.textContent = checkedItems.length;
+      } else {
+        btn.classList.add("hidden");
+      }
+      if (!document.getElementById("cartModal").classList.contains("hidden")) {
+        renderCartItems();
+      }
+    }
+
+    function openCartModal() {
+      renderCartItems();
+      document.getElementById("cartModal").classList.remove("hidden");
+    }
+
+    function closeCartModal() {
+      document.getElementById("cartModal").classList.add("hidden");
+    }
+
+    function uncheckFromCart(id) {
+      const item = items.find(x => x.id === id);
+      if (!item) return;
+      item.checked = false;
+      renderList();
+      renderCartItems();
+      if (sheetWebAppUrl) saveToGoogleSheet();
+    }
+
+    function renderCartItems() {
+      const checkedItems = items.filter(i => i.checked === true);
+      const container = document.getElementById("cartItemsContainer");
+
+      let totalCost = 0;
+      let totalGrams = 0;
+
+      checkedItems.forEach(item => {
+        totalCost += calcItemValue(item);
+        if (item.category !== "packing") {
+          totalGrams += (parseFloat(item.grams) || 0);
+        }
+      });
+
+      document.getElementById("cartTotalCost").textContent = "₹" + totalCost.toFixed(2);
+      document.getElementById("cartTotalWeight").textContent = Math.round(totalGrams) + " ग्राम";
+      document.getElementById("cartTotalWeightKg").textContent = (totalGrams / 1000).toFixed(3) + " kg";
+      document.getElementById("cartTotalCount").textContent = checkedItems.length;
+
+      if (checkedItems.length === 0) {
+        container.innerHTML = `<div class="card-dark rounded-2xl p-6 text-center text-sm text-slate-400">कार्ट खाली है। मुख्य लिस्ट से खरीदने वाले आइटम टिक करें।</div>`;
+        return;
+      }
+
+      container.innerHTML = checkedItems.map(item => {
+        const val = calcItemValue(item);
+        const qtyText = item.category === "packing"
+          ? `${item.usedCount} पीस (कुल ${item.obtainedCount} में से)`
+          : `${item.grams} ग्राम (₹${item.ratePerKg}/kg)`;
+
+        return `
+          <div class="card-dark card-checked rounded-2xl p-3.5 flex items-center justify-between gap-3">
+            <div class="flex items-start gap-2.5">
+              <input type="checkbox" checked onchange="uncheckFromCart(${item.id})" class="w-4 h-4 mt-1 accent-emerald-500 rounded cursor-pointer" title="अनचेक करके वापस भेजें" />
+              <div>
+                <div class="flex items-center gap-1.5 mb-0.5">
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold">${item.subRecipe}</span>
+                  <span class="text-[10px] text-slate-400">क्रम: ${item.step || '-'}</span>
+                </div>
+                <h3 class="text-sm font-bold text-slate-100">${item.name}</h3>
+                <div class="text-xs text-emerald-300 mt-0.5">${qtyText}</div>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <div class="text-base font-bold text-amber-400">₹${val.toFixed(2)}</div>
+              <button onclick="uncheckFromCart(${item.id})" class="text-[10px] text-rose-300 underline mt-1">हटाएं</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
     function getSubRecipes() {
       const set = new Set(["आलू बड़ा", "इमली चटनी", "हरी मिर्च चटनी", "पैकिंग सामग्री"]);
       items.forEach(i => { if (i.subRecipe) set.add(i.subRecipe); });
@@ -437,6 +569,8 @@
         document.getElementById("subTotalDesc").textContent = `सामग्री: ${subCount} | वजन: ${subWt} ग्राम (${(subWt/1000).toFixed(3)} kg)`;
         document.getElementById("subTotalCost").textContent = "₹" + subCost.toFixed(2);
       }
+
+      updateCartIndicator();
     }
 
     function renderList() {
