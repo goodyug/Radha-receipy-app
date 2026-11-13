@@ -445,6 +445,7 @@
         html += `<div class="inline-flex items-center gap-1 shrink-0 bg-slate-800 border border-slate-700 rounded-full px-2.5 py-1">
           <button onclick="setFilter('${sub}')" data-filter="${sub}" class="filter-btn text-xs font-semibold ${isActive ? 'text-amber-400 font-bold' : 'text-slate-300'}">${sub}</button>
           <button onclick="promptRenameRecipe('${sub}')" class="text-[10px] text-slate-400 hover:text-amber-400 px-0.5" title="नाम बदलें">✏️</button>
+          <button onclick="duplicateRecipe('${sub}')" class="text-[10px] text-sky-400 hover:text-sky-300 px-0.5" title="रेसिपी डुप्लीकेट (कॉपी) करें">📋</button>
           <button onclick="handleDeleteRecipe('${sub}')" class="text-[10px] text-rose-400 hover:text-rose-300 px-0.5" title="रेसिपी डिलीट करें">🗑️</button>
         </div>`;
       });
@@ -496,6 +497,35 @@
       if (activeFilter === oldName) activeFilter = cleanName;
       renderFilterTabs();
       renderList();
+      if (sheetWebAppUrl) saveToGoogleSheet();
+    }
+
+    function duplicateRecipe(recipeName) {
+      const subs = getSubRecipes();
+      // Generate unique name like 'आलू बड़ा (1)'
+      let copyNum = 1;
+      let newRecipeName = `${recipeName} (${copyNum})`;
+      while (subs.includes(newRecipeName)) {
+        copyNum++;
+        newRecipeName = `${recipeName} (${copyNum})`;
+      }
+
+      // Copy all items belonging to this recipe
+      const recipeItems = items.filter(i => i.subRecipe === recipeName);
+      let maxId = items.length > 0 ? Math.max(...items.map(i => i.id)) : 0;
+
+      recipeItems.forEach(orig => {
+        maxId++;
+        const duplicatedItem = {
+          ...orig,
+          id: maxId,
+          subRecipe: newRecipeName,
+          checked: false
+        };
+        items.push(duplicatedItem);
+      });
+
+      setFilter(newRecipeName);
       if (sheetWebAppUrl) saveToGoogleSheet();
     }
 
@@ -614,7 +644,7 @@
                     ${checkboxEl}
                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold">${item.subRecipe} • काउंट</span>
                   </div>
-                  <h3 class="text-sm font-bold text-slate-100">${item.name}</h3>
+                  <h3 contenteditable="true" onblur="updateName(${item.id}, this.textContent)" class="text-sm font-bold text-slate-100 outline-none focus:ring-1 focus:ring-amber-400 rounded px-1" title="क्लिक करके नाम बदलें">${item.name}</h3>
                   <div class="text-[11px] text-slate-400">1 पीस रेट: ₹${unitRate.toFixed(3)}</div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -650,7 +680,7 @@
                     ${checkboxEl}
                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 font-semibold">${item.subRecipe}</span>
                   </div>
-                  <h3 class="text-sm font-bold text-slate-100">${item.name}</h3>
+                  <h3 contenteditable="true" onblur="updateName(${item.id}, this.textContent)" class="text-sm font-bold text-slate-100 outline-none focus:ring-1 focus:ring-amber-400 rounded px-1" title="क्लिक करके नाम बदलें">${item.name}</h3>
                 </div>
                 <div class="flex items-center gap-2">
                   <div class="text-right">
@@ -691,6 +721,16 @@
       item.step = String(val).trim() || "1";
       renderList();
       if (sheetWebAppUrl) saveToGoogleSheet();
+    }
+
+    function updateName(id, newNameVal) {
+      const item = items.find(x => x.id === id);
+      if (!item) return;
+      const cleanName = newNameVal.trim();
+      if (cleanName && cleanName !== item.name) {
+        item.name = cleanName;
+        if (sheetWebAppUrl) saveToGoogleSheet();
+      }
     }
 
     function updateField(id, field, val) {
@@ -853,7 +893,7 @@
       if (!sheetWebAppUrl) { openSheetModal(); return; }
       try {
         await fetch(sheetWebAppUrl, {
-          method: "POST",
+          method: "mode-no-cors" ? "POST" : "POST",
           mode: "no-cors",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ items })
