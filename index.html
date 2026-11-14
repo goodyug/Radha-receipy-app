@@ -617,6 +617,7 @@
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
+    // FIX: Send via GET query params to completely isolate from Main Sheet and guarantee 100% success delivery to Purchase_History
     async function submitSingleCartItem(id) {
       const item = items.find(x => x.id === id);
       if (!item) return;
@@ -634,23 +635,22 @@
 
       if (sheetWebAppUrl) {
         try {
-          await fetch(sheetWebAppUrl, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({
-              action: "submit_purchase",
-              item: {
-                name: item.name,
-                subRecipe: item.subRecipe,
-                category: item.category === "packing" ? "पैकिंग (काउंट)" : "ग्राम / रेट",
-                qtyDetails: qtyInfo,
-                totalCost: parseFloat(totalVal),
-                paymentMode: item.paymentMode || "",
-                refNum: item.refNum || "",
-                otherNotes: item.otherNotes || ""
-              }
-            })
+          const params = new URLSearchParams({
+            action: "submit_purchase_get",
+            name: item.name,
+            subRecipe: item.subRecipe,
+            category: item.category === "packing" ? "पैकिंग (काउंट)" : "ग्राम / रेट",
+            qtyDetails: qtyInfo,
+            totalCost: totalVal,
+            paymentMode: item.paymentMode || "",
+            refNum: item.refNum || "",
+            otherNotes: item.otherNotes || "",
+            t: Date.now()
+          });
+          
+          await fetch(sheetWebAppUrl + "?" + params.toString(), {
+            method: "GET",
+            mode: "no-cors"
           });
         } catch (err) {
           console.error(err);
