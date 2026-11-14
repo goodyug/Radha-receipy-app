@@ -133,7 +133,7 @@
 
     <!-- Status Bar -->
     <div id="statusBanner" class="rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-amber-500/10 border border-amber-500/30 text-amber-200">
-      <span id="statusText">Google Sheet लिंक सेट करें ताकि डेटा क्लाउड पर सिंक हो सके।</span>
+      <span id="statusText">Google Sheet से डेटा सिंक हो रहा है...</span>
       <button onclick="openSheetModal()" class="underline font-semibold text-amber-400 ml-2 shrink-0">लिंक जोड़ें</button>
     </div>
 
@@ -272,18 +272,7 @@
   </div>
 
   <script>
-    const DEFAULT_ITEMS = [
-      { id: 1, step: "1", name: "Refined oil", subRecipe: "आलू बड़ा", category: "non-packing", grams: 750, ratePerKg: 180, checked: false },
-      { id: 2, step: "2", name: "जीरा", subRecipe: "आलू बड़ा", category: "non-packing", grams: 24, ratePerKg: 360, checked: false },
-      { id: 3, step: "3", name: "उबले meshed आलू", subRecipe: "आलू बड़ा", category: "non-packing", grams: 4000, ratePerKg: 80, checked: false },
-      { id: 4, step: "1", name: "इमली", subRecipe: "इमली चटनी", category: "non-packing", grams: 400, ratePerKg: 90, checked: false },
-      { id: 5, step: "2", name: "गुड़", subRecipe: "इमली चटनी", category: "non-packing", grams: 1000, ratePerKg: 70, checked: false },
-      { id: 6, step: "1", name: "हरी मिर्च", subRecipe: "हरी मिर्च चटनी", category: "non-packing", grams: 500, ratePerKg: 80, checked: false },
-      { id: 7, step: "1", name: "दौना", subRecipe: "पैकिंग सामग्री", category: "packing", obtainedCount: 80, purchasePrice: 50, usedCount: 50, checked: false },
-      { id: 8, step: "2", name: "चम्मच", subRecipe: "पैकिंग सामग्री", category: "packing", obtainedCount: 150, purchasePrice: 30, usedCount: 50, checked: false }
-    ];
-
-    let items = [...DEFAULT_ITEMS];
+    let items = [];
     let activeFilter = "ALL";
     let addMode = "non-packing";
     let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "";
@@ -301,6 +290,12 @@
         img.src = savedLogo;
         img.classList.remove("hidden");
         document.getElementById("logoDefaultIcon").classList.add("hidden");
+      }
+
+      if (sheetWebAppUrl) {
+        loadFromGoogleSheet();
+      } else {
+        openSheetModal();
       }
     });
 
@@ -455,11 +450,13 @@
 
       // Update dropdown options
       const select = document.getElementById("newSubRecipe");
-      select.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join("");
-      if (subs.includes(activeFilter)) {
-        select.value = activeFilter;
-      } else {
-        select.value = subs[0];
+      if (select) {
+        select.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join("");
+        if (subs.includes(activeFilter)) {
+          select.value = activeFilter;
+        } else {
+          select.value = subs[0];
+        }
       }
     }
 
@@ -683,7 +680,7 @@
                 <div class="flex items-center gap-2">
                   <div class="flex items-center bg-slate-900/90 border border-emerald-500/40 rounded-lg px-2 py-1" title="सीधे कुल रुपए लिखकर रेट निकालें">
                     <span class="text-sm font-bold text-emerald-400 mr-0.5">₹</span>
-                    <input id="val_${item.id}" type="number" step="any" value="${val.toFixed(2)}" oninput="updateTotalRupees(${item.id}, this.value)" class="w-16 bg-transparent text-right text-sm font-bold text-emerald-400 focus:outline-none" />
+                    <input id="val_${item.id}" type="number" step="any" value="${val.toFixed(2)}" onchange="updateTotalRupees(${item.id}, this.value)" class="w-16 bg-transparent text-right text-sm font-bold text-emerald-400 focus:outline-none" />
                   </div>
                   <button onclick="deleteItem(${item.id})" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 text-xs">🗑️</button>
                 </div>
@@ -738,11 +735,7 @@
       item[field] = parseFloat(val) || 0;
       const el = document.getElementById("val_" + id);
       if (el) {
-        if (el.tagName === "INPUT") {
-          el.value = calcItemValue(item).toFixed(2);
-        } else {
-          el.textContent = "₹" + calcItemValue(item).toFixed(2);
-        }
+        el.value = calcItemValue(item).toFixed(2);
       }
       updateSummary();
       if (sheetWebAppUrl) saveToGoogleSheet();
@@ -885,9 +878,7 @@
       try {
         const res = await fetch(sheetWebAppUrl);
         const data = await res.json();
-        if (data.status === "empty") {
-          await saveToGoogleSheet();
-        } else if (data.status === "ok" && Array.isArray(data.items) && data.items.length > 0) {
+        if (data.status === "ok" && Array.isArray(data.items) && data.items.length > 0) {
           items = data.items.map((r, i) => ({
             id: Number(r.id) || (i + 1),
             step: String(r.step || "1"),
@@ -903,9 +894,11 @@
           }));
           renderList();
           setStatus("✓ Google Sheet से लाइव डेटा कनेक्ट है (" + items.length + " आइटम)", true);
+        } else {
+          setStatus("शीट खाली है या डेटा नहीं मिला।", false);
         }
       } catch (err) {
-        setStatus("कनेक्शन त्रुटि। URL जांचें।", false);
+        setStatus("कनेक्शन त्रुटि। URL जांचें या इंटरनेट देखें।", false);
       }
     }
 
@@ -925,17 +918,10 @@
     }
 
     function loadDefaultData() {
-      items = [...DEFAULT_ITEMS];
+      items = [];
       renderList();
       closeSheetModal();
-      setStatus("डिफ़ॉल्ट डेटा लोड हो गया।", false);
-    }
-
-    renderList();
-    if (sheetWebAppUrl) {
-      loadFromGoogleSheet();
-    } else {
-      openSheetModal();
+      setStatus("डेटा रीसेट कर दिया गया है।", false);
     }
   </script>
 </body>
