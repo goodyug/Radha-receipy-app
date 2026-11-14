@@ -283,7 +283,7 @@
       </p>
       <div>
         <label class="text-xs text-slate-400 block mb-1">Web App URL</label>
-        <input id="sheetUrlInput" type="url" value="https://script.google.com/macros/s/AKfycbzdSKDnCmJ5cv-qrdW5_zyS36eAafbf3q5LIiQh60o9ky0VaYBd4MSvNfERr2aww3XyBA/exec" class="input-dark w-full rounded-xl px-3 py-2 text-xs" />
+        <input id="sheetUrlInput" type="url" value="https://script.google.com/macros/s/AKfycbzbpIFBfaJc5ACzyFGDV6KilI8CGDpA_3-8xrDnfUde_qYy7UVJ95Pkb3cK7hwvcRVKXg/exec" class="input-dark w-full rounded-xl px-3 py-2 text-xs" />
       </div>
       <div class="flex gap-2">
         <button onclick="connectAndLoadSheet()" class="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
@@ -313,7 +313,7 @@
     
     let activeFilter = "ALL";
     let addMode = "non-packing";
-    let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "https://script.google.com/macros/s/AKfycbzdSKDnCmJ5cv-qrdW5_zyS36eAafbf3q5LIiQh60o9ky0VaYBd4MSvNfERr2aww3XyBA/exec";
+    let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "https://script.google.com/macros/s/AKfycbzbpIFBfaJc5ACzyFGDV6KilI8CGDpA_3-8xrDnfUde_qYy7UVJ95Pkb3cK7hwvcRVKXg/exec";
 
     let recentRecipes = [];
     try {
