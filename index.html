@@ -116,7 +116,6 @@
     </div>
 
     <div class="max-w-3xl mx-auto px-4 pt-4 space-y-4">
-      <!-- Toast / Confirmation Banner inside Cart -->
       <div id="cartToastBanner" class="hidden rounded-xl px-4 py-2.5 text-xs font-semibold bg-emerald-500/20 border border-emerald-400 text-emerald-200 flex items-center justify-between">
         <span id="cartToastText"></span>
         <button onclick="document.getElementById('cartToastBanner').classList.add('hidden')" class="ml-2 text-emerald-300 font-bold">✕</button>
@@ -143,22 +142,6 @@
   </div>
 
   <main class="max-w-3xl mx-auto px-4 pt-4 space-y-4">
-
-    <!-- Direct Sheet Test Demo Box (Added for Quick Verification) -->
-    <div class="card-dark rounded-2xl p-4 border-amber-500/50 bg-amber-950/10 space-y-3">
-      <div class="flex items-center justify-between">
-        <h2 class="text-sm font-bold text-amber-400">🧪 गूगल शीट डायरेक्ट टेस्ट डेमो (Live Test Box)</h2>
-        <span class="text-[10px] text-slate-400">बिना कार्ट के सीधे शीट चेक करें</span>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        <input id="testItemName" type="text" placeholder="आइटम का नाम" value="टेस्ट भोग सामग्री" class="input-dark w-full rounded-xl px-3 py-2 text-sm" />
-        <input id="testItemCost" type="number" placeholder="खर्च (₹)" value="151" class="input-dark w-full rounded-xl px-3 py-2 text-sm" />
-      </div>
-      <button onclick="runDirectSheetTest()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition">
-        🚀 तुरंत Google Sheet में भेजें (Test Submit)
-      </button>
-      <div id="testStatusMsg" class="text-xs text-center text-slate-300"></div>
-    </div>
 
     <!-- Status Bar & Import/Export Toolbar -->
     <div class="space-y-2">
@@ -299,7 +282,7 @@
       </p>
       <div>
         <label class="text-xs text-slate-400 block mb-1">Web App URL</label>
-        <input id="sheetUrlInput" type="url" value="https://script.google.com/macros/s/AKfycbzbpIFBfaJc5ACzyFGDV6KilI8CGDpA_3-8xrDnfUde_qYy7UVJ95Pkb3cK7hwvcRVKXg/exec" class="input-dark w-full rounded-xl px-3 py-2 text-xs" />
+        <input id="sheetUrlInput" type="url" value="https://script.google.com/macros/s/AKfycbxfUJpLHQ8nhX5x4R2rt627pDpFSsNBosElNiwuFhjU6ffSAwMJxkczCmgK9wFZIp2jFA/exec" class="input-dark w-full rounded-xl px-3 py-2 text-xs" />
       </div>
       <div class="flex gap-2">
         <button onclick="connectAndLoadSheet()" class="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
@@ -329,7 +312,7 @@
     
     let activeFilter = "ALL";
     let addMode = "non-packing";
-    let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "https://script.google.com/macros/s/AKfycbzbpIFBfaJc5ACzyFGDV6KilI8CGDpA_3-8xrDnfUde_qYy7UVJ95Pkb3cK7hwvcRVKXg/exec";
+    let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "https://script.google.com/macros/s/AKfycbxfUJpLHQ8nhX5x4R2rt627pDpFSsNBosElNiwuFhjU6ffSAwMJxkczCmgK9wFZIp2jFA/exec";
 
     let recentRecipes = [];
     try {
@@ -358,48 +341,6 @@
         loadFromGoogleSheet();
       }
     });
-
-    // --- DIRECT SHEET TEST DEMO FUNCTION ---
-    async function runDirectSheetTest() {
-      const name = document.getElementById("testItemName").value.trim() || "टेस्ट आइटम";
-      const cost = document.getElementById("testItemCost").value.trim() || "100";
-      const statusEl = document.getElementById("testStatusMsg");
-      
-      statusEl.textContent = "डेटा भेजा जा रहा है...";
-      statusEl.className = "text-xs text-center text-amber-400 font-semibold";
-
-      if (!sheetWebAppUrl) {
-        alert("शीट यूआरएल सेट नहीं है!");
-        return;
-      }
-
-      try {
-        const params = new URLSearchParams({
-          action: "submit_purchase_get",
-          name: name,
-          subRecipe: "टेस्ट सब-रेसिपी",
-          category: "ग्राम / रेट",
-          qtyDetails: "100 ग्राम (टेस्ट डेमो)",
-          totalCost: cost,
-          paymentMode: "Cash (Test)",
-          refNum: "TEST-001",
-          otherNotes: "डायरेक्ट टेस्ट डेमो",
-          t: Date.now()
-        });
-
-        await fetch(sheetWebAppUrl + "?" + params.toString(), {
-          method: "GET",
-          mode: "no-cors"
-        });
-
-        statusEl.textContent = "✓ रिक्वेस्ट भेज दी गई है! अपनी Google Sheet का 'Purchase_History' टैब चेक करें।";
-        statusEl.className = "text-xs text-center text-emerald-400 font-semibold";
-        alert("टेस्ट रिक्वेस्ट भेज दी गई है!\nकृपया अपनी Google Sheet खोलकर 'Purchase_History' टैब चेक करें कि वहां नई एंट्री आई या नहीं।");
-      } catch (err) {
-        statusEl.textContent = "एरर: " + err.message;
-        statusEl.className = "text-xs text-center text-rose-400 font-semibold";
-      }
-    }
 
     function isChecked(item) {
       return item.checked === true || item.checked === "true" || item.checked === 1;
