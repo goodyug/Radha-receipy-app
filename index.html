@@ -56,23 +56,15 @@
         </div>
       </div>
 
-      <!-- Action Buttons Toolbar -->
+      <!-- Action Buttons Toolbar (CSV & Local Focus) -->
       <div class="flex flex-wrap items-center gap-1.5">
-        <button onclick="openSheetModal()" id="syncBtn" class="px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 transition" title="Google Sheet सेटिंग्स">
-          ⚙️
+        <button onclick="exportDataCSV()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition flex items-center gap-1" title="CSV फाइल डाउनलोड करें">
+          <span>📤 एक्सपोर्ट (CSV)</span>
         </button>
-        <button onclick="saveToGoogleSheet()" id="saveSheetBtn" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition" title="शीट में सेव करें">
-          ☁️ सेव करें
+        <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white shadow transition flex items-center gap-1" title="CSV फाइल अपलोड करें">
+          <span>📥 इम्पोर्ट (CSV)</span>
         </button>
-        <button onclick="triggerBackup()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white shadow transition" title="अलग शीट में बैकअप लें">
-          🛡️ बैकअप
-        </button>
-        <button onclick="triggerRestore()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white shadow transition" title="बैकअप से डेटा वापस लाएं">
-          🔄 रिस्टोर
-        </button>
-        <button onclick="loadFromGoogleSheet()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow transition" title="Google Sheet से ताज़ा डेटा लोड करें">
-          📥 शीट से लोड
-        </button>
+        <input type="file" id="importFileInput" accept=".csv,.json" class="hidden" onchange="handleFileImport(event)" />
       </div>
     </div>
   </header>
@@ -143,25 +135,10 @@
 
   <main class="max-w-3xl mx-auto px-4 pt-4 space-y-4">
 
-    <!-- Status Bar & Import/Export Toolbar -->
+    <!-- Status Bar -->
     <div class="space-y-2">
       <div id="statusBanner" class="rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 text-emerald-200">
-        <span id="statusText">डेटा लोकल सुरक्षित है। शीट से लोड करने के लिए ऊपर '📥 शीट से लोड' दबाएं।</span>
-        <button onclick="openSheetModal()" class="underline font-semibold text-amber-400 ml-2 shrink-0">लिंक सेटिंग्स</button>
-      </div>
-
-      <!-- Direct File Import & Export Buttons -->
-      <div class="flex items-center justify-between gap-2 bg-slate-900/80 border border-slate-800 rounded-xl p-2">
-        <span class="text-[11px] text-slate-400 pl-1">फाइल बैकअप / लिस्टिंग:</span>
-        <div class="flex items-center gap-2">
-          <button onclick="exportDataCSV()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 transition">
-            <span>📤 एक्सपोर्ट (CSV)</span>
-          </button>
-          <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-emerald-500/30 flex items-center gap-1 transition">
-            <span>📥 इम्पोर्ट (CSV/JSON)</span>
-          </button>
-          <input type="file" id="importFileInput" accept=".csv,.json" class="hidden" onchange="handleFileImport(event)" />
-        </div>
+        <span id="statusText">डेटा पूरी तरह सुरक्षित है। बदलाव होने पर ऑटोमैटिक लोकल सेव हो रहा है।</span>
       </div>
     </div>
 
@@ -270,31 +247,6 @@
 
   </main>
 
-  <!-- Google Sheet Modal -->
-  <div id="sheetModal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="card-dark rounded-2xl max-w-md w-full p-5 space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-base font-bold text-amber-400">Google Sheet कनेक्शन सेटअप</h3>
-        <button onclick="closeSheetModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
-      </div>
-      <p class="text-xs text-slate-300 leading-relaxed">
-        अपना Google Apps Script <b>Web App URL</b> यहाँ पेस्ट करें ताकि सारा डेटा सीधे आपकी Google Sheet में सिंक हो।
-      </p>
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">Web App URL</label>
-        <input id="sheetUrlInput" type="url" value="https://script.google.com/macros/s/AKfycbxfUJpLHQ8nhX5x4R2rt627pDpFSsNBosElNiwuFhjU6ffSAwMJxkczCmgK9wFZIp2jFA/exec" class="input-dark w-full rounded-xl px-3 py-2 text-xs" />
-      </div>
-      <div class="flex gap-2">
-        <button onclick="connectAndLoadSheet()" class="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
-          कनेक्ट करें और लोड करें
-        </button>
-        <button onclick="loadDefaultData()" class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs">
-          लोकल रीसेट
-        </button>
-      </div>
-    </div>
-  </div>
-
   <script>
     let items = [];
     try {
@@ -312,8 +264,6 @@
     
     let activeFilter = "ALL";
     let addMode = "non-packing";
-    let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "https://script.google.com/macros/s/AKfycbxfUJpLHQ8nhX5x4R2rt627pDpFSsNBosElNiwuFhjU6ffSAwMJxkczCmgK9wFZIp2jFA/exec";
-
     let recentRecipes = [];
     try {
       const savedRecents = localStorage.getItem("bhog_recent_recipes");
@@ -337,9 +287,6 @@
       }
 
       renderList();
-      if (items.length === 0 && sheetWebAppUrl) {
-        loadFromGoogleSheet();
-      }
     });
 
     function isChecked(item) {
@@ -384,9 +331,10 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      setStatus("✓ CSV फाइल डाउनलोड हो गई है!", true);
+      setStatus("✓ CSV फाइल सफलतापूर्वक डाउनलोड हो गई है!", true);
     }
 
+    // --- CSV IMPORT FUNCTION ---
     function handleFileImport(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -440,9 +388,7 @@
               });
 
               const itemName = String(obj.name || "").replace(/^"+|"+$/g, '').trim();
-              if (!itemName || itemName === "" || itemName === "undefined") {
-                continue;
-              }
+              if (!itemName || itemName === "" || itemName === "undefined") continue;
 
               importedItems.push({
                 id: Number(obj.id) || i,
@@ -466,8 +412,8 @@
           }
 
           saveLocallyOnly();
-          setStatus(`✓ फाइल से ${items.length} आइटम्स इम्पोर्ट हो गए! (शीट में डालने के लिए '☁️ सेव करें' दबाएं)`, true);
-          alert(`सफल! ${items.length} आइटम्स ऐप में लोड हो गए हैं। अब ऊपर हरा '☁️ सेव करें' बटन दबाकर इन्हें Google Sheet में भी पक्का सेव कर लें।`);
+          setStatus(`✓ ${items.length} आइटम्स सफलतापूर्वक इम्पोर्ट हो गए!`, true);
+          alert(`सफल! ${items.length} आइटम्स ऐप में लोड हो गए हैं।`);
         } catch (err) {
           alert("फाइल पढ़ने में त्रुटि: " + err.message);
         }
@@ -488,7 +434,7 @@
         localStorage.setItem("bhog_local_backup", JSON.stringify(items));
       } catch (e) {}
       renderList();
-      setStatus("बदलाव लोकल सुरक्षित हैं (शीट में भेजने के लिए '☁️ सेव करें' दबाएं)", false);
+      setStatus("डेटा लोकल सुरक्षित है।", true);
     }
 
     function handleLogoTap() {
@@ -550,11 +496,7 @@
       const item = items.find(x => x.id === id);
       if (!item) return;
       item.checked = false;
-      
-      try {
-        localStorage.setItem("bhog_local_backup", JSON.stringify(items));
-      } catch (e) {}
-      setStatus("बदलाव लोकल सुरक्षित हैं (शीट में भेजने के लिए '☁️ सेव करें' दबाएं)", false);
+      saveLocallyOnly();
 
       const cardEl = document.getElementById("cart_card_" + id);
       if (cardEl) {
@@ -579,10 +521,7 @@
       const cleanName = newNameVal.trim();
       if (cleanName && cleanName !== item.name) {
         item.name = cleanName;
-        try {
-          localStorage.setItem("bhog_local_backup", JSON.stringify(items));
-        } catch (e) {}
-        setStatus("नाम अपडेट हो गया (शीट में भेजने के लिए '☁️ सेव करें' दबाएं)", false);
+        saveLocallyOnly();
       }
     }
 
@@ -590,9 +529,7 @@
       const item = items.find(x => x.id === id);
       if (!item) return;
       item[field] = val;
-      try {
-        localStorage.setItem("bhog_local_backup", JSON.stringify(items));
-      } catch (e) {}
+      saveLocallyOnly();
     }
 
     function shareItemWhatsApp(id) {
@@ -616,67 +553,35 @@
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    async function submitSingleCartItem(id) {
+    // Local Cart Submit (Instant confirmation with proper state)
+    function submitSingleCartItem(id) {
       const item = items.find(x => x.id === id);
       if (!item) return;
 
       const totalVal = calcItemValue(item).toFixed(2);
-      const qtyInfo = item.category === "packing"
-        ? `${item.usedCount} पीस (कुल ${item.obtainedCount} पीस / ₹${item.purchasePrice})`
-        : `${item.grams} ग्राम @ ₹${item.ratePerKg}/kg`;
-
       const submitBtn = document.getElementById("cart_submit_btn_" + id);
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = "भेजा जा रहा है...";
+        submitBtn.textContent = "सफलतापूर्वक सबमिट हुआ ✓";
       }
-
-      if (sheetWebAppUrl) {
-        try {
-          const params = new URLSearchParams({
-            action: "submit_purchase_get",
-            name: item.name,
-            subRecipe: item.subRecipe,
-            category: item.category === "packing" ? "पैकिंग (काउंट)" : "ग्राम / रेट",
-            qtyDetails: qtyInfo,
-            totalCost: totalVal,
-            paymentMode: item.paymentMode || "",
-            refNum: item.refNum || "",
-            otherNotes: item.otherNotes || "",
-            t: Date.now()
-          });
-          
-          await fetch(sheetWebAppUrl + "?" + params.toString(), {
-            method: "GET",
-            mode: "no-cors"
-          });
-        } catch (err) {
-          console.error(err);
-        }
-      }
-
-      item.paymentMode = "";
-      item.refNum = "";
-      item.otherNotes = "";
-      uncheckFromCart(id);
 
       const toast = document.getElementById("cartToastBanner");
       const toastText = document.getElementById("cartToastText");
       if (toast && toastText) {
-        toastText.textContent = `✓ '${item.name}' (₹${totalVal}) सफलतापूर्वक 'Purchase_History' शीट में सेव हो गया और कार्ट से हटा दिया गया!`;
+        toastText.textContent = `✓ '${item.name}' (₹${totalVal}) की खरीद दर्ज हो गई!`;
         toast.classList.remove("hidden");
       }
-      setStatus(`✓ '${item.name}' परचेज शीट में सेव हो गया!`, true);
+
+      setTimeout(() => {
+        uncheckFromCart(id);
+      }, 800);
     }
 
     function updateCartField(id, field, val) {
       const item = items.find(x => x.id === id);
       if (!item) return;
       item[field] = val === "" ? 0 : parseFloat(val);
-      try {
-        localStorage.setItem("bhog_local_backup", JSON.stringify(items));
-      } catch (e) {}
-      setStatus("बदलाव लोकल सुरक्षित हैं (शीट में भेजने के लिए '☁️ सेव करें' दबाएं)", false);
+      saveLocallyOnly();
 
       const itemVal = calcItemValue(item);
       const priceInputEl = document.getElementById("cart_item_price_input_" + id);
@@ -690,10 +595,7 @@
       const item = items.find(x => x.id === id);
       if (!item) return;
       item[field] = val === "" ? 0 : parseFloat(val);
-      try {
-        localStorage.setItem("bhog_local_backup", JSON.stringify(items));
-      } catch (e) {}
-      setStatus("बदलाव लोकल सुरक्षित हैं (शीट में भेजने के लिए '☁️ सेव करें' दबाएं)", false);
+      saveLocallyOnly();
 
       const itemVal = calcItemValue(item);
       const priceInputEl = document.getElementById("cart_item_price_input_" + id);
@@ -712,10 +614,7 @@
         const calculatedRate = (rupees / gm) * 1000;
         item.ratePerKg = parseFloat(calculatedRate.toFixed(2));
       }
-      try {
-        localStorage.setItem("bhog_local_backup", JSON.stringify(items));
-      } catch (e) {}
-      setStatus("बदलाव लोकल सुरक्षित हैं (शीट में भेजने के लिए '☁️ सेव करें' दबाएं)", false);
+      saveLocallyOnly();
       updateCartSummaryOnly();
     }
 
@@ -782,7 +681,7 @@
               <button onclick="shareItemWhatsApp(${item.id})" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold shadow transition flex items-center gap-1" title="WhatsApp पर शेयर करें">
                 <span>📤 WhatsApp</span>
               </button>
-              <button id="cart_submit_btn_${item.id}" onclick="submitSingleCartItem(${item.id})" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow transition" title="परचेज शीट में सेव करें और हटाएं">
+              <button id="cart_submit_btn_${item.id}" onclick="submitSingleCartItem(${item.id})" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow transition" title="सबमिट करें">
                 ✓ सबमिट
               </button>
             </div>
@@ -1199,9 +1098,7 @@
         el.value = calcItemValue(item).toFixed(2);
       }
       updateSummary();
-      try {
-        localStorage.setItem("bhog_local_backup", JSON.stringify(items));
-      } catch (e) {}
+      saveLocallyOnly();
     }
 
     function updateTotalRupees(id, totalRupeesVal) {
@@ -1227,9 +1124,7 @@
       const el = document.getElementById("val_" + id);
       if (el) el.textContent = "₹" + calcItemValue(item).toFixed(2);
       updateSummary();
-      try {
-        localStorage.setItem("bhog_local_backup", JSON.stringify(items));
-      } catch (e) {}
+      saveLocallyOnly();
     }
 
     function setFilter(name) {
@@ -1317,159 +1212,12 @@
       saveLocallyOnly();
     }
 
-    function openSheetModal() {
-      const urlInput = document.getElementById("sheetUrlInput");
-      if (urlInput) urlInput.value = sheetWebAppUrl;
-      const modal = document.getElementById("sheetModal");
-      if (modal) modal.classList.remove("hidden");
-    }
-
-    function closeSheetModal() {
-      const modal = document.getElementById("sheetModal");
-      if (modal) modal.classList.add("hidden");
-    }
-
     function setStatus(msg, ok) {
       const banner = document.getElementById("statusBanner");
       if (!banner) return;
       banner.className = ok ? "rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 text-emerald-200" : "rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-amber-500/10 border border-amber-500/30 text-amber-200";
       const textEl = document.getElementById("statusText");
       if (textEl) textEl.textContent = msg;
-    }
-
-    async function connectAndLoadSheet() {
-      const urlInput = document.getElementById("sheetUrlInput");
-      const url = urlInput ? urlInput.value.trim() : "";
-      if (!url) { alert("यूआरएल डालें"); return; }
-      sheetWebAppUrl = url;
-      localStorage.setItem("bhog_sheet_url", url);
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.set("sheet", url);
-      window.history.replaceState({}, "", newUrl);
-      closeSheetModal();
-      await loadFromGoogleSheet();
-    }
-
-    async function loadFromGoogleSheet() {
-      if (!sheetWebAppUrl) { openSheetModal(); return; }
-      setStatus("Google Sheet से ताज़ा डेटा लोड हो रहा है...", false);
-      try {
-        const freshUrl = sheetWebAppUrl + (sheetWebAppUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
-        const res = await fetch(freshUrl);
-        const data = await res.json();
-        if (data.status === "ok" && Array.isArray(data.items) && data.items.length > 0) {
-          items = data.items.map((r, i) => ({
-            id: Number(r.id) || (i + 1),
-            step: String(r.step || "1"),
-            name: String(r.name || ""),
-            subRecipe: String(r.subRecipe || "आलू बड़ा"),
-            category: String(r.category || "non-packing"),
-            grams: parseFloat(r.grams) || 0,
-            ratePerKg: parseFloat(r.ratePerKg) || 0,
-            obtainedCount: parseFloat(r.obtainedCount) || 0,
-            purchasePrice: parseFloat(r.purchasePrice) || 0,
-            usedCount: parseFloat(r.usedCount) || 0,
-            checked: r.checked === true || r.checked === "true"
-          }));
-          try {
-            localStorage.setItem("bhog_local_backup", JSON.stringify(items));
-          } catch (e) {}
-          renderList();
-          setStatus("✓ Google Sheet से डेटा सफलतापूर्वक लोड हो गया (" + items.length + " आइटम)", true);
-          alert("सफल! Google Sheet से " + items.length + " आइटम्स लोड हो गए हैं।");
-        } else {
-          setStatus("शीट खाली है या डेटा नहीं मिला।", false);
-        }
-      } catch (err) {
-        setStatus("लोड करने में समस्या। इंटरनेट या लिंक जांचें।", false);
-      }
-    }
-
-    async function saveToGoogleSheet() {
-      if (!sheetWebAppUrl) { openSheetModal(); return; }
-      setStatus("मुख्य शीट में सेव किया जा रहा है...", false);
-      try {
-        await fetch(sheetWebAppUrl, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "save", items })
-        });
-        setStatus("✓ मुख्य Google Sheet में डेटा सुरक्षित सेव हो गया!", true);
-        alert("सफल! वर्तमान आइटम्स मुख्य Google Sheet में हमेशा के लिए सेव हो गए हैं।");
-      } catch (e) {
-        setStatus("सेव करने में समस्या आई।", false);
-      }
-    }
-
-    async function triggerBackup() {
-      if (!sheetWebAppUrl) { openSheetModal(); return; }
-      if (!confirm("क्या आप अभी के डेटा का अलग 'Latest_Backup' शीट में नया बैकअप बनाना चाहते हैं?")) return;
-      
-      setStatus("अलग शीट में बैकअप लिया जा रहा है...", false);
-      try {
-        await fetch(sheetWebAppUrl, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "backup", items })
-        });
-        const nowStr = new Date().toLocaleString("hi-IN");
-        setStatus("✓ 'Latest_Backup' शीट में समय (" + nowStr + ") के साथ नया बैकअप बन गया!", true);
-        alert("बैकअप सफल! आपकी Google Sheet में 'Latest_Backup' नामक अलग टैब में आज की तारीख व समय (" + nowStr + ") के साथ बैकअप सेव हो गया है।");
-      } catch (e) {
-        setStatus("बैकअप लेने में त्रुटि।", false);
-      }
-    }
-
-    async function triggerRestore() {
-      if (!sheetWebAppUrl) { openSheetModal(); return; }
-      if (!confirm("क्या आप वाकई 'Latest_Backup' वाली शीट से डेटा वापस लाना (Restore) चाहते हैं?")) return;
-      
-      setStatus("बैकअप शीट से ताज़ा डेटा रिस्टोर किया जा रहा है...", false);
-      try {
-        const restoreUrl = sheetWebAppUrl + (sheetWebAppUrl.includes("?") ? "&" : "?") + "action=restore&t=" + Date.now();
-        const res = await fetch(restoreUrl);
-        const data = await res.json();
-        
-        if (data.status === "ok" && Array.isArray(data.items) && data.items.length > 0) {
-          items = data.items.map((r, i) => ({
-            id: Number(r.id) || (i + 1),
-            step: String(r.step || "1"),
-            name: String(r.name || ""),
-            subRecipe: String(r.subRecipe || "आलू बड़ा"),
-            category: String(r.category || "non-packing"),
-            grams: parseFloat(r.grams) || 0,
-            ratePerKg: parseFloat(r.ratePerKg) || 0,
-            obtainedCount: parseFloat(r.obtainedCount) || 0,
-            purchasePrice: parseFloat(r.purchasePrice) || 0,
-            usedCount: parseFloat(r.usedCount) || 0,
-            checked: r.checked === true || r.checked === "true"
-          }));
-          try {
-            localStorage.setItem("bhog_local_backup", JSON.stringify(items));
-          } catch (e) {}
-          renderList();
-          await saveToGoogleSheet();
-          setStatus("✓ रिस्टोर सफल! बैकअप समय (" + (data.timestamp || "") + ") का डेटा वापस आ गया है।", true);
-          alert("रिस्टोर पूरा हुआ! बैकअप दिनांक/समय: " + (data.timestamp || "") + " का डेटा मुख्य शीट और ऐप में वापस आ गया है।");
-        } else {
-          setStatus("कोई बैकअप डेटा नहीं मिला।", false);
-          alert(data.message || "बैकअप शीट में कोई डेटा नहीं मिला।");
-        }
-      } catch (err) {
-        setStatus("रिस्टोर करने में समस्या आई। इंटरनेट या लिंक जांचें।", false);
-      }
-    }
-
-    function loadDefaultData() {
-      if (confirm("क्या आप लोकल कैशे रीसेट करना चाहते हैं?")) {
-        localStorage.removeItem("bhog_local_backup");
-        items = [];
-        renderList();
-        closeSheetModal();
-        setStatus("लोकल डेटा रीसेट कर दिया गया है।", false);
-      }
     }
   </script>
 </body>
