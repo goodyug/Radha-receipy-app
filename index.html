@@ -107,7 +107,7 @@
     <span id="floatingCartCount" class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded-full text-[11px]">0</span>
   </button>
 
-  <!-- Separate Cart View Page / Modal (With Working Up/Down Move Buttons) -->
+  <!-- Separate Cart View Page / Modal (Instant DOM Swap Up/Down) -->
   <div id="cartModal" class="fixed inset-0 z-50 hidden bg-[#0f172a] overflow-y-auto pb-20">
     <div class="sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 px-4 py-3">
       <div class="max-w-3xl mx-auto flex items-center justify-between">
@@ -115,7 +115,7 @@
           <span class="text-lg">🛒</span>
           <div>
             <h2 class="text-base font-bold text-emerald-400 leading-tight">खरीदारी कार्ट (Editable Cart)</h2>
-            <p class="text-[11px] text-slate-400">▲ / ▼ बटन से आइटम ऊपर-नीचे खिसकाएं</p>
+            <p class="text-[11px] text-slate-400">▲ / ▼ बटन से तुरंत ऊपर-नीचे खिसकाएं</p>
           </div>
         </div>
         <button onclick="closeCartModal()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-amber-300">
@@ -318,7 +318,7 @@
     let addMode = "non-packing";
     let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "https://script.google.com/macros/s/AKfycbz_4Lb4A1iYg8b0G4Qp1HtYNh_W6u6e9hShH9-BoOfMJZJSyArjyZsuFQMl3iK91NP07w/exec";
 
-    // Cart order array for robust custom ordering
+    // Cart order array for custom card ordering
     let cartOrderIds = [];
     try {
       const savedCartOrder = localStorage.getItem("bhog_cart_order");
@@ -601,6 +601,7 @@
       return cartOrderIds.map(id => checked.find(i => Number(i.id) === Number(id))).filter(Boolean);
     }
 
+    // --- INSTANT DOM REORDER FOR CART ITEMS (SMOOTH & GUARANTEED) ---
     function moveCartItem(id, direction) {
       const numId = Number(id);
       const checked = items.filter(i => isChecked(i));
@@ -629,6 +630,8 @@
       try {
         localStorage.setItem("bhog_cart_order", JSON.stringify(cartOrderIds));
       } catch(e) {}
+
+      // Instantly re-render cart items so DOM updates immediately
       renderCartItems();
     }
 
