@@ -70,14 +70,13 @@
         <button onclick="triggerRestore()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white shadow transition" title="आख़िरी बैकअप से डेटा वापस लाएं">
           🔄 रिस्टोर
         </button>
-        <!-- Download Code & URL Buttons -->
-        <button onclick="downloadAppsScriptCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="Apps Script बैकएंड कोड डाउनलोड करें">
+        <button onclick="downloadAppsScriptCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="Apps Script कोड डाउनलोड करें">
           📜 Apps Script कोड
         </button>
-        <button onclick="downloadHtmlCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML फ्रंटएंड कोड डाउनलोड करें">
+        <button onclick="downloadHtmlCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML कोड डाउनलोड करें">
           🌐 HTML कोड
         </button>
-        <button onclick="downloadWebUrlFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow transition" title="वेब यूआरएल लिंक टेक्स्ट फाइल डाउनलोड करें">
+        <button onclick="downloadWebUrlFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow transition" title="वेब यूआरएल डाउनलोड करें">
           🔗 वेब यूआरएल
         </button>
       </div>
@@ -105,15 +104,15 @@
     <span id="floatingCartCount" class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded-full text-[11px]">0</span>
   </button>
 
-  <!-- Separate Cart View Page / Modal -->
+  <!-- Separate Cart View Page / Modal with Full Editing Options -->
   <div id="cartModal" class="fixed inset-0 z-50 hidden bg-[#0f172a] overflow-y-auto pb-20">
     <div class="sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 px-4 py-3">
       <div class="max-w-3xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="text-lg">🛒</span>
           <div>
-            <h2 class="text-base font-bold text-emerald-400 leading-tight">खरीदारी कार्ट (Selected Items)</h2>
-            <p class="text-[11px] text-slate-400">सभी रेसिपी से टिक की गई सामग्री</p>
+            <h2 class="text-base font-bold text-emerald-400 leading-tight">खरीदारी कार्ट (Selected Items & Editing)</h2>
+            <p class="text-[11px] text-slate-400">यहाँ किए गए बदलाव मुख्य लिस्ट में भी अपडेट हो जाएंगे</p>
           </div>
         </div>
         <button onclick="closeCartModal()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-amber-300">
@@ -725,6 +724,7 @@ function doGet(e) {
       renderCartItems();
     }
 
+    // --- RENDER CART ITEMS WITH FULL EDITING CONTROLS ---
     function renderCartItems() {
       const checkedItems = items.filter(i => i.checked === true);
       const container = document.getElementById("cartItemsContainer");
@@ -751,30 +751,116 @@ function doGet(e) {
 
       container.innerHTML = checkedItems.map(item => {
         const val = calcItemValue(item);
-        const qtyText = item.category === "packing"
-          ? `${item.usedCount} पीस (कुल ${item.obtainedCount} में से)`
-          : `${item.grams} ग्राम (₹${item.ratePerKg}/kg)`;
+        const cardClass = "card-dark card-checked rounded-2xl p-3.5";
+        const stepInput = `<label class="inline-flex items-center gap-1 text-[10px] text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded font-bold">क्रम: <input type="number" step="any" value="${item.step || ''}" onchange="updateStep(${item.id}, this.value)" class="w-10 bg-slate-900/90 border border-amber-500/40 rounded px-1 text-center text-amber-300 font-bold focus:outline-none focus:border-amber-400" /></label>`;
+        const checkboxEl = `<label class="inline-flex items-center gap-1 text-xs text-slate-300 cursor-pointer"><input type="checkbox" checked onchange="uncheckFromCart(${item.id})" class="w-3.5 h-3.5 accent-emerald-500 rounded cursor-pointer" /> टिक</label>`;
 
-        return `
-          <div class="card-dark card-checked rounded-2xl p-3.5 flex items-center justify-between gap-3">
-            <div class="flex items-start gap-2.5">
-              <input type="checkbox" checked onchange="uncheckFromCart(${item.id})" class="w-4 h-4 mt-1 accent-emerald-500 rounded cursor-pointer" title="अनचेक करके वापस भेजें" />
-              <div>
-                <div class="flex items-center gap-1.5 mb-0.5">
-                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold">${item.subRecipe}</span>
-                  <span class="text-[10px] text-slate-400">क्रम: ${item.step || '-'}</span>
+        if (item.category === "packing") {
+          const unitRate = item.obtainedCount > 0 ? (item.purchasePrice / item.obtainedCount) : 0;
+          return `
+            <div class="${cardClass}">
+              <div class="flex items-start justify-between gap-2 mb-2.5">
+                <div>
+                  <div class="flex items-center gap-2 mb-1">
+                    ${stepInput}
+                    ${checkboxEl}
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold">${item.subRecipe} • काउंट</span>
+                  </div>
+                  <h3 contenteditable="true" onblur="updateName(${item.id}, this.textContent)" class="text-sm font-bold text-slate-100 outline-none focus:ring-1 focus:ring-amber-400 rounded px-1" title="क्लिक करके नाम बदलें">${item.name}</h3>
+                  <div class="text-[11px] text-slate-400">1 पीस रेट: ₹${unitRate.toFixed(3)}</div>
                 </div>
-                <h3 class="text-sm font-bold text-slate-100">${item.name}</h3>
-                <div class="text-xs text-emerald-300 mt-0.5">${qtyText}</div>
+                <div class="flex items-center gap-2">
+                  <div class="text-right">
+                    <div id="cart_val_${item.id}" class="text-base font-bold text-sky-400">₹${val.toFixed(2)}</div>
+                  </div>
+                  <button onclick="uncheckFromCart(${item.id})" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 text-xs" title="कार्ट से हटाएं">🗑️</button>
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <div>
+                  <label class="text-[10px] text-slate-400 block">खरीद मूल्य (₹)</label>
+                  <input type="number" step="any" value="${item.purchasePrice}" oninput="updateCartPackingField(${item.id}, 'purchasePrice', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300" />
+                </div>
+                <div>
+                  <label class="text-[10px] text-slate-400 block">कुल पीस मिले</label>
+                  <input type="number" step="any" value="${item.obtainedCount}" oninput="updateCartPackingField(${item.id}, 'obtainedCount', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold" />
+                </div>
+                <div>
+                  <label class="text-[10px] text-slate-400 block">आज लगे पीस</label>
+                  <input type="number" step="any" value="${item.usedCount}" oninput="updateCartPackingField(${item.id}, 'usedCount', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-300" />
+                </div>
               </div>
             </div>
-            <div class="text-right shrink-0">
-              <div class="text-base font-bold text-amber-400">₹${val.toFixed(2)}</div>
-              <button onclick="uncheckFromCart(${item.id})" class="text-[10px] text-rose-300 underline mt-1">हटाएं</button>
+          `;
+        } else {
+          return `
+            <div class="${cardClass}">
+              <div class="flex items-start justify-between gap-2 mb-2.5">
+                <div>
+                  <div class="flex items-center gap-2 mb-1">
+                    ${stepInput}
+                    ${checkboxEl}
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 font-semibold">${item.subRecipe}</span>
+                  </div>
+                  <h3 contenteditable="true" onblur="updateName(${item.id}, this.textContent)" class="text-sm font-bold text-slate-100 outline-none focus:ring-1 focus:ring-amber-400 rounded px-1" title="क्लिक करके नाम बदलें">${item.name}</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="flex items-center bg-slate-900/90 border border-emerald-500/40 rounded-lg px-2 py-1" title="सीधे कुल रुपए लिखकर रेट निकालें">
+                    <span class="text-sm font-bold text-emerald-400 mr-0.5">₹</span>
+                    <input id="cart_val_rupee_${item.id}" type="number" step="any" value="${val.toFixed(2)}" onchange="updateCartTotalRupees(${item.id}, this.value)" class="w-16 bg-transparent text-right text-sm font-bold text-emerald-400 focus:outline-none" />
+                  </div>
+                  <button onclick="uncheckFromCart(${item.id})" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 text-xs" title="कार्ट से हटाएं">🗑️</button>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label class="text-[10px] text-slate-400 block">मात्रा (ग्राम / gm)</label>
+                  <input id="cart_grams_${item.id}" type="number" step="any" value="${item.grams}" oninput="updateCartField(${item.id}, 'grams', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-300" />
+                </div>
+                <div>
+                  <label class="text-[10px] text-slate-400 block">रेट (₹ / kg)</label>
+                  <input id="cart_rate_${item.id}" type="number" step="any" value="${item.ratePerKg}" oninput="updateCartField(${item.id}, 'ratePerKg', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300" />
+                </div>
+              </div>
             </div>
-          </div>
-        `;
+          `;
+        }
       }).join("");
+    }
+
+    function updateCartField(id, field, val) {
+      const item = items.find(x => x.id === id);
+      if (!item) return;
+      item[field] = parseFloat(val) || 0;
+      saveLocallyOnly();
+      const rupeeEl = document.getElementById("cart_val_rupee_" + id);
+      if (rupeeEl) {
+        rupeeEl.value = calcItemValue(item).toFixed(2);
+      }
+    }
+
+    function updateCartTotalRupees(id, totalRupeesVal) {
+      const item = items.find(x => x.id === id);
+      if (!item) return;
+      const rupees = parseFloat(totalRupeesVal) || 0;
+      const gm = parseFloat(item.grams) || 0;
+      if (gm > 0) {
+        const calculatedRate = (rupees / gm) * 1000;
+        item.ratePerKg = parseFloat(calculatedRate.toFixed(2));
+      }
+      saveLocallyOnly();
+      renderCartItems();
+    }
+
+    function updateCartPackingField(id, field, val) {
+      const item = items.find(x => x.id === id);
+      if (!item) return;
+      item[field] = parseFloat(val) || 0;
+      saveLocallyOnly();
+      const valEl = document.getElementById("cart_val_" + id);
+      if (valEl) {
+        valEl.textContent = "₹" + calcItemValue(item).toFixed(2);
+      }
     }
 
     function getSubRecipes() {
@@ -794,7 +880,7 @@ function doGet(e) {
         html += `<div class="inline-flex items-center gap-1 shrink-0 bg-slate-800 border border-slate-700 rounded-full px-2.5 py-1">
           <button onclick="setFilter('${sub}')" data-filter="${sub}" class="filter-btn text-xs font-semibold ${isActive ? 'text-amber-400 font-bold' : 'text-slate-300'}">${sub}</button>
           <button onclick="promptRenameRecipe('${sub}')" class="text-[10px] text-slate-400 hover:text-amber-400 px-0.5" title="नाम बदलें">✏️</button>
-          <button onclick="duplicateRecipe('${sub}')" class="text-[10px] text-sky-400 hover:text-sky-300 px-0.5" title="रेसिपी डुप्लीकेट (कॉपी) करें">📋</button>
+          <button onclick="duplicateRecipe('${sub}')" class="text-[10px] text-sky-400 hover:text-sky-300 px-0.5" title="रेसिपी डुप्लीकेट करें">📋</button>
           <button onclick="handleDeleteRecipe('${sub}')" class="text-[10px] text-rose-400 hover:text-rose-300 px-0.5" title="रेसिपी डिलीट करें">🗑️</button>
         </div>`;
       });
