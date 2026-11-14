@@ -76,7 +76,7 @@
         <button onclick="downloadAppsScriptCodeFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="Apps Script कोड डाउनलोड करें">
           📜 AS कोड
         </button>
-        <button onclick="downloadHtmlCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML कोड डाउनलोड करें">
+        <button onclick="downloadHtmlCodeFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML कोड डाउनलोड करें">
           🌐 HTML कोड
         </button>
         <button onclick="downloadWebUrlFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-500 text-white shadow transition" title="वेब यूआरएल डाउनलोड करें">
@@ -107,7 +107,7 @@
     <span id="floatingCartCount" class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded-full text-[11px]">0</span>
   </button>
 
-  <!-- Separate Cart View Page / Modal (Smooth & Fully Editable Without Focus Loss) -->
+  <!-- Separate Cart View Page / Modal (Fully Editable & Direct Price Editable) -->
   <div id="cartModal" class="fixed inset-0 z-50 hidden bg-[#0f172a] overflow-y-auto pb-20">
     <div class="sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 px-4 py-3">
       <div class="max-w-3xl mx-auto flex items-center justify-between">
@@ -115,7 +115,7 @@
           <span class="text-lg">🛒</span>
           <div>
             <h2 class="text-base font-bold text-emerald-400 leading-tight">खरीदारी कार्ट (Editable Cart)</h2>
-            <p class="text-[11px] text-slate-400">यहाँ टाइप करते वक्त कीबोर्ड बंद नहीं होगा, सीधे सहज रूप से बदलें</p>
+            <p class="text-[11px] text-slate-400">चाहे मात्रा बदलें, चाहे ऊपर कुल कीमत (₹) सीधे एडिट करें</p>
           </div>
         </div>
         <button onclick="closeCartModal()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-amber-300">
@@ -582,7 +582,6 @@
         btn.classList.add("hidden");
       }
       if (!document.getElementById("cartModal").classList.contains("hidden")) {
-        // Only update cart summary/totals, do NOT rebuild HTML to prevent keyboard focus loss
         updateCartSummaryOnly();
       }
     }
@@ -594,7 +593,7 @@
 
     function closeCartModal() {
       document.getElementById("cartModal").classList.add("hidden");
-      renderList(); // Refresh main list when closing cart
+      renderList();
     }
 
     function uncheckFromCart(id) {
@@ -612,7 +611,7 @@
       setStatus("बदलाव लोकल सुरक्षित हैं (शीट में भेजने के लिए '☁️ सेव करें' दबाएं)", false);
     }
 
-    // --- SMOOTH TYPING CART FUNCTIONS (NO KEYBOARD LOSS) ---
+    // --- FULLY EDITABLE CART FUNCTIONS (INCLUDING TOTAL PRICE INPUT) ---
     function updateCartField(id, field, val) {
       const item = items.find(x => x.id === id);
       if (!item) return;
@@ -620,11 +619,10 @@
       
       saveLocallyOnlyWithoutRerenderingCart();
 
-      // Dynamically update only this item's price display without rebuilding DOM
       const itemVal = calcItemValue(item);
-      const priceEl = document.getElementById("cart_item_val_" + id);
-      if (priceEl) {
-        priceEl.textContent = "₹" + itemVal.toFixed(2);
+      const priceInputEl = document.getElementById("cart_item_price_input_" + id);
+      if (priceInputEl && document.activeElement !== priceInputEl) {
+        priceInputEl.value = itemVal.toFixed(2);
       }
 
       updateCartSummaryOnly();
@@ -638,11 +636,25 @@
       saveLocallyOnlyWithoutRerenderingCart();
 
       const itemVal = calcItemValue(item);
-      const priceEl = document.getElementById("cart_item_val_" + id);
-      if (priceEl) {
-        priceEl.textContent = "₹" + itemVal.toFixed(2);
+      const priceInputEl = document.getElementById("cart_item_price_input_" + id);
+      if (priceInputEl && document.activeElement !== priceInputEl) {
+        priceInputEl.value = itemVal.toFixed(2);
       }
 
+      updateCartSummaryOnly();
+    }
+
+    // Direct edit of Total Rupees in Cart -> auto updates ratePerKg
+    function updateCartTotalRupees(id, totalRupeesVal) {
+      const item = items.find(x => x.id === id);
+      if (!item) return;
+      const rupees = totalRupeesVal === "" ? 0 : parseFloat(totalRupeesVal);
+      const gm = parseFloat(item.grams) || 0;
+      if (gm > 0) {
+        const calculatedRate = (rupees / gm) * 1000;
+        item.ratePerKg = parseFloat(calculatedRate.toFixed(2));
+      }
+      saveLocallyOnlyWithoutRerenderingCart();
       updateCartSummaryOnly();
     }
 
@@ -699,7 +711,10 @@
                   </div>
                 </div>
                 <div class="text-right shrink-0">
-                  <div id="cart_item_val_${item.id}" class="text-base font-bold text-amber-400">₹${val.toFixed(2)}</div>
+                  <div class="flex items-center bg-slate-900/90 border border-sky-500/40 rounded-lg px-2 py-1" title="सीधे कुल मूल्य एडिट करें">
+                    <span class="text-xs font-bold text-sky-400 mr-0.5">₹</span>
+                    <input id="cart_item_price_input_${item.id}" type="number" step="any" value="${val.toFixed(2)}" oninput="updateCartTotalRupees(${item.id}, this.value)" class="w-16 bg-transparent text-right text-xs font-bold text-sky-400 focus:outline-none" />
+                  </div>
                   <button onclick="uncheckFromCart(${item.id})" class="text-[10px] text-rose-300 underline mt-1">हटाएं</button>
                 </div>
               </div>
@@ -733,7 +748,10 @@
                   </div>
                 </div>
                 <div class="text-right shrink-0">
-                  <div id="cart_item_val_${item.id}" class="text-base font-bold text-amber-400">₹${val.toFixed(2)}</div>
+                  <div class="flex items-center bg-slate-900/90 border border-amber-500/40 rounded-lg px-2 py-1" title="सीधे कुल मूल्य एडिट करें">
+                    <span class="text-xs font-bold text-amber-400 mr-0.5">₹</span>
+                    <input id="cart_item_price_input_${item.id}" type="number" step="any" value="${val.toFixed(2)}" oninput="updateCartTotalRupees(${item.id}, this.value)" class="w-20 bg-transparent text-right text-xs font-bold text-amber-400 focus:outline-none" />
+                  </div>
                   <button onclick="uncheckFromCart(${item.id})" class="text-[10px] text-rose-300 underline mt-1">हटाएं</button>
                 </div>
               </div>
@@ -744,7 +762,7 @@
                 </div>
                 <div>
                   <label class="text-[10px] text-slate-400 block">रेट (₹ / kg)</label>
-                  <input type="number" step="any" value="${item.ratePerKg}" oninput="updateCartField(${item.id}, 'ratePerKg', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-amber-300" />
+                  <input id="cart_rate_input_${item.id}" type="number" step="any" value="${item.ratePerKg}" oninput="updateCartField(${item.id}, 'ratePerKg', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-amber-300" />
                 </div>
               </div>
             </div>
