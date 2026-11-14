@@ -60,7 +60,7 @@
       <div class="flex flex-wrap items-center gap-1.5">
         <button onclick="openSheetModal()" class="px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 transition" title="शीट सेटिंग्स">⚙️</button>
         <button onclick="exportDataCSV()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="मुख्य CSV एक्सपोर्ट">📤 CSV</button>
-        <button onclick="exportSubmittedCSV()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-600 text-white shadow transition" title="सबमिट किया हुआ इतिहास CSV डाउनलोड">📥 सबमिटेड इतिहास</button>
+        <button onclick="exportSubmittedCSV()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-600 text-white shadow transition" title="सबमिट इतिहास CSV डाउनलोड">📥 सबमिटेड इतिहास</button>
         <button onclick="document.getElementById('importFileInput').click()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="CSV इम्पोर्ट">📥 इम्पोर्ट</button>
         <input type="file" id="importFileInput" accept=".csv,.json" class="hidden" onchange="handleFileImport(event)" />
       </div>
@@ -554,23 +554,18 @@
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    // --- SUBMIT SINGLE ITEM FROM CART (THE CORE REQUIREMENT) ---
+    // --- SUBMIT SINGLE ITEM FROM CART (FIXED & FULLY FUNCTIONAL) ---
     function submitSingleCartItem(id) {
       const itemIndex = items.findIndex(x => x.id === id);
       if (itemIndex === -1) return;
 
       const item = items[itemIndex];
-      // 1. Set timestamp & store in submitted history
       item.submittedAt = new Date().toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'medium' });
       submittedHistory.unshift(item);
-
-      // 2. Remove item from active list so it disappears from the active view permanently
       items.splice(itemIndex, 1);
 
-      // 3. Save state locally
       saveLocallyOnly();
 
-      // 4. Show success toast and refresh cart/list
       const toast = document.getElementById("cartToastBanner");
       const toastText = document.getElementById("cartToastText");
       if (toast && toastText) {
