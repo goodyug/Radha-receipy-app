@@ -76,7 +76,7 @@
         <button onclick="downloadAppsScriptCodeFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="Apps Script कोड डाउनलोड करें">
           📜 AS कोड
         </button>
-        <button onclick="downloadHtmlCodeFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML कोड डाउनलोड करें">
+        <button onclick="downloadHtmlCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML कोड डाउनलोड करें">
           🌐 HTML कोड
         </button>
         <button onclick="downloadWebUrlFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-500 text-white shadow transition" title="वेब यूआरएल डाउनलोड करें">
@@ -107,7 +107,7 @@
     <span id="floatingCartCount" class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded-full text-[11px]">0</span>
   </button>
 
-  <!-- Separate Cart View Page / Modal (Fully Editable & Direct Price Editable) -->
+  <!-- Separate Cart View Page / Modal (Instant Responsive Uncheck & Edit) -->
   <div id="cartModal" class="fixed inset-0 z-50 hidden bg-[#0f172a] overflow-y-auto pb-20">
     <div class="sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 px-4 py-3">
       <div class="max-w-3xl mx-auto flex items-center justify-between">
@@ -115,7 +115,7 @@
           <span class="text-lg">🛒</span>
           <div>
             <h2 class="text-base font-bold text-emerald-400 leading-tight">खरीदारी कार्ट (Editable Cart)</h2>
-            <p class="text-[11px] text-slate-400">चाहे मात्रा बदलें, चाहे ऊपर कुल कीमत (₹) सीधे एडिट करें</p>
+            <p class="text-[11px] text-slate-400">अनचेक करते ही आइटम तुरंत हटेगा, कोई रीलोड या कन्फ्यूजन नहीं</p>
           </div>
         </div>
         <button onclick="closeCartModal()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-amber-300">
@@ -596,12 +596,14 @@
       renderList();
     }
 
+    // --- INSTANT RESPONSIVE UNCHECK IN CART (NO STUTTER OR DELAY) ---
     function uncheckFromCart(id) {
       const item = items.find(x => x.id === id);
       if (!item) return;
       item.checked = false;
       saveLocallyOnlyWithoutRerenderingCart();
-      renderCartItems();
+      renderCartItems(); // Instantly re-renders cart to remove unchecked item
+      renderList();      // Updates background main list state instantly
     }
 
     function saveLocallyOnlyWithoutRerenderingCart() {
@@ -611,7 +613,6 @@
       setStatus("बदलाव लोकल सुरक्षित हैं (शीट में भेजने के लिए '☁️ सेव करें' दबाएं)", false);
     }
 
-    // --- FULLY EDITABLE CART FUNCTIONS (INCLUDING TOTAL PRICE INPUT) ---
     function updateCartField(id, field, val) {
       const item = items.find(x => x.id === id);
       if (!item) return;
@@ -644,7 +645,6 @@
       updateCartSummaryOnly();
     }
 
-    // Direct edit of Total Rupees in Cart -> auto updates ratePerKg
     function updateCartTotalRupees(id, totalRupeesVal) {
       const item = items.find(x => x.id === id);
       if (!item) return;
