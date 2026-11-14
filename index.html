@@ -73,15 +73,6 @@
         <button onclick="loadFromGoogleSheet()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow transition" title="Google Sheet से ताज़ा डेटा लोड करें">
           📥 शीट से लोड
         </button>
-        <button onclick="downloadAppsScriptCodeFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="Apps Script कोड डाउनलोड करें">
-          📜 AS कोड
-        </button>
-        <button onclick="downloadHtmlCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML कोड डाउनलोड करें">
-          🌐 HTML कोड
-        </button>
-        <button onclick="downloadWebUrlFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-500 text-white shadow transition" title="वेब यूआरएल डाउनलोड करें">
-          🔗 यूआरएल
-        </button>
       </div>
     </div>
   </header>
@@ -292,7 +283,7 @@
       </p>
       <div>
         <label class="text-xs text-slate-400 block mb-1">Web App URL</label>
-        <input id="sheetUrlInput" type="url" value="https://script.google.com/macros/s/AKfycbyt0XrH0F_mRMeSmTDduDsWzxkRkc8DMOgEWZeioOrHd3_FWsm7D1wZYhtMX4J6XLlJ3A/exec" class="input-dark w-full rounded-xl px-3 py-2 text-xs" />
+        <input id="sheetUrlInput" type="url" value="https://script.google.com/macros/s/AKfycbzdiOXU21-kNHp8IbtjGcqHVdpMudVrGCsNeAVz80VQpSAwm_1OsYLz682u346pRmb5qg/exec" class="input-dark w-full rounded-xl px-3 py-2 text-xs" />
       </div>
       <div class="flex gap-2">
         <button onclick="connectAndLoadSheet()" class="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
@@ -322,9 +313,8 @@
     
     let activeFilter = "ALL";
     let addMode = "non-packing";
-    let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "https://script.google.com/macros/s/AKfycbyt0XrH0F_mRMeSmTDduDsWzxkRkc8DMOgEWZeioOrHd3_FWsm7D1wZYhtMX4J6XLlJ3A/exec";
+    let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "https://script.google.com/macros/s/AKfycbzdiOXU21-kNHp8IbtjGcqHVdpMudVrGCsNeAVz80VQpSAwm_1OsYLz682u346pRmb5qg/exec";
 
-    // Recent recipe order list storage
     let recentRecipes = [];
     try {
       const savedRecents = localStorage.getItem("bhog_recent_recipes");
@@ -355,54 +345,6 @@
 
     function isChecked(item) {
       return item.checked === true || item.checked === "true" || item.checked === 1;
-    }
-
-    // --- DOWNLOAD WEB APP URL AS .TXT FILE ---
-    function downloadWebUrlFile() {
-      const urlContent = "Google Apps Script Web App URL:\n" + sheetWebAppUrl + "\n\nSaved Date & Time: " + new Date().toLocaleString("hi-IN");
-      const blob = new Blob([urlContent], { type: "text/plain;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const dateStr = new Date().toISOString().slice(0, 10);
-      a.href = url;
-      a.download = `Google_Sheet_WebApp_URL_${dateStr}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      setStatus("✓ वेब यूआरएल लिंक फाइल डाउनलोड हो गई!", true);
-    }
-
-    // --- DOWNLOAD APPS SCRIPT CODE AS .TXT FILE ---
-    function downloadAppsScriptCodeFile() {
-      const appsScriptCode = `// Apps Script Code already configured`;
-      const blob = new Blob([appsScriptCode], { type: "text/plain;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const dateStr = new Date().toISOString().slice(0, 10);
-      a.href = url;
-      a.download = `Apps_Script_Backend_Code_${dateStr}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      setStatus("✓ Apps Script कोड फाइल डाउनलोड हो गई!", true);
-    }
-
-    // --- DOWNLOAD HTML/GITHUB CODE AS .HTML FILE ---
-    function downloadHtmlCodeFile() {
-      const htmlContent = document.documentElement.outerHTML;
-      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const dateStr = new Date().toISOString().slice(0, 10);
-      a.href = url;
-      a.download = `GitHub_Frontend_Code_${dateStr}.html`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      setStatus("✓ HTML फ्रंटएंड कोड फाइल डाउनलोड हो गई!", true);
     }
 
     // --- CSV EXPORT FUNCTION ---
@@ -446,7 +388,6 @@
       setStatus("✓ CSV फाइल डाउनलोड हो गई है!", true);
     }
 
-    // --- FIXED CSV / JSON IMPORT FUNCTION ---
     function handleFileImport(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -633,7 +574,6 @@
       renderList();
     }
 
-    // --- UPDATE NAME DIRECTLY FROM CART (SYNCS WITH MAIN LIST) ---
     function updateCartName(id, newNameVal) {
       const item = items.find(x => x.id === id);
       if (!item) return;
@@ -647,7 +587,6 @@
       }
     }
 
-    // --- SAVE META FIELDS LOCALLY WHILE TYPING ---
     function updateCartMeta(id, field, val) {
       const item = items.find(x => x.id === id);
       if (!item) return;
@@ -657,7 +596,6 @@
       } catch (e) {}
     }
 
-    // --- SHARE ITEM VIA WHATSAPP ---
     function shareItemWhatsApp(id) {
       const item = items.find(x => x.id === id);
       if (!item) return;
@@ -679,7 +617,6 @@
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    // --- SUBMIT SINGLE PURCHASED ITEM TO PURCHASE_HISTORY SHEET ---
     async function submitSingleCartItem(id) {
       const item = items.find(x => x.id === id);
       if (!item) return;
@@ -700,7 +637,7 @@
           await fetch(sheetWebAppUrl, {
             method: "POST",
             mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({
               action: "submit_purchase",
               item: {
@@ -720,13 +657,11 @@
         }
       }
 
-      // Clear meta fields and uncheck/remove item from cart
       item.paymentMode = "";
       item.refNum = "";
       item.otherNotes = "";
       uncheckFromCart(id);
 
-      // Show confirmation banner inside cart
       const toast = document.getElementById("cartToastBanner");
       const toastText = document.getElementById("cartToastText");
       if (toast && toastText) {
@@ -740,7 +675,6 @@
       const item = items.find(x => x.id === id);
       if (!item) return;
       item[field] = val === "" ? 0 : parseFloat(val);
-      
       try {
         localStorage.setItem("bhog_local_backup", JSON.stringify(items));
       } catch (e) {}
@@ -751,7 +685,6 @@
       if (priceInputEl && document.activeElement !== priceInputEl) {
         priceInputEl.value = itemVal.toFixed(2);
       }
-
       updateCartSummaryOnly();
     }
 
@@ -759,7 +692,6 @@
       const item = items.find(x => x.id === id);
       if (!item) return;
       item[field] = val === "" ? 0 : parseFloat(val);
-      
       try {
         localStorage.setItem("bhog_local_backup", JSON.stringify(items));
       } catch (e) {}
@@ -770,7 +702,6 @@
       if (priceInputEl && document.activeElement !== priceInputEl) {
         priceInputEl.value = itemVal.toFixed(2);
       }
-
       updateCartSummaryOnly();
     }
 
@@ -1463,7 +1394,7 @@
         await fetch(sheetWebAppUrl, {
           method: "POST",
           mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({ action: "save", items })
         });
         setStatus("✓ मुख्य Google Sheet में डेटा सुरक्षित सेव हो गया!", true);
@@ -1482,7 +1413,7 @@
         await fetch(sheetWebAppUrl, {
           method: "POST",
           mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({ action: "backup", items })
         });
         const nowStr = new Date().toLocaleString("hi-IN");
