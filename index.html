@@ -76,7 +76,7 @@
         <button onclick="downloadAppsScriptCodeFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="Apps Script कोड डाउनलोड करें">
           📜 AS कोड
         </button>
-        <button onclick="downloadHtmlCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML कोड डाउनलोड करें">
+        <button onclick="downloadHtmlCodeFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML कोड डाउनलोड करें">
           🌐 HTML कोड
         </button>
         <button onclick="downloadWebUrlFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-500 text-white shadow transition" title="वेब यूआरएल डाउनलोड करें">
@@ -107,7 +107,7 @@
     <span id="floatingCartCount" class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded-full text-[11px]">0</span>
   </button>
 
-  <!-- Separate Cart View Page / Modal (With Up/Down Move Buttons) -->
+  <!-- Separate Cart View Page / Modal (With Working Up/Down Move Buttons) -->
   <div id="cartModal" class="fixed inset-0 z-50 hidden bg-[#0f172a] overflow-y-auto pb-20">
     <div class="sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 px-4 py-3">
       <div class="max-w-3xl mx-auto flex items-center justify-between">
@@ -318,12 +318,12 @@
     let addMode = "non-packing";
     let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "https://script.google.com/macros/s/AKfycbz_4Lb4A1iYg8b0G4Qp1HtYNh_W6u6e9hShH9-BoOfMJZJSyArjyZsuFQMl3iK91NP07w/exec";
 
-    // Separate custom order array for cart items only (doesn't touch main list steps)
+    // Cart order array for robust custom ordering
     let cartOrderIds = [];
     try {
       const savedCartOrder = localStorage.getItem("bhog_cart_order");
       if (savedCartOrder) {
-        cartOrderIds = JSON.parse(savedCartOrder);
+        cartOrderIds = JSON.parse(savedCartOrder).map(id => Number(id));
       }
     } catch(e) {}
 
@@ -586,9 +586,9 @@
 
     function getOrderedCartItems() {
       const checked = items.filter(i => isChecked(i));
-      // Sync cartOrderIds with currently checked items
-      const currentIds = checked.map(i => i.id);
-      cartOrderIds = cartOrderIds.filter(id => currentIds.includes(id));
+      const currentIds = checked.map(i => Number(i.id));
+      
+      cartOrderIds = cartOrderIds.map(id => Number(id)).filter(id => currentIds.includes(id));
       currentIds.forEach(id => {
         if (!cartOrderIds.includes(id)) {
           cartOrderIds.push(id);
@@ -598,12 +598,22 @@
         localStorage.setItem("bhog_cart_order", JSON.stringify(cartOrderIds));
       } catch(e) {}
 
-      return cartOrderIds.map(id => checked.find(i => i.id === id)).filter(Boolean);
+      return cartOrderIds.map(id => checked.find(i => Number(i.id) === Number(id))).filter(Boolean);
     }
 
     function moveCartItem(id, direction) {
-      getOrderedCartItems(); // ensure order array is synced
-      const idx = cartOrderIds.indexOf(id);
+      const numId = Number(id);
+      const checked = items.filter(i => isChecked(i));
+      const currentIds = checked.map(i => Number(i.id));
+      
+      cartOrderIds = cartOrderIds.map(x => Number(x)).filter(x => currentIds.includes(x));
+      currentIds.forEach(cid => {
+        if (!cartOrderIds.includes(cid)) {
+          cartOrderIds.push(cid);
+        }
+      });
+
+      const idx = cartOrderIds.indexOf(numId);
       if (idx === -1) return;
 
       if (direction === "up" && idx > 0) {
@@ -648,7 +658,7 @@
     }
 
     function uncheckFromCart(id) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => x.id === Number(id));
       if (!item) return;
       item.checked = false;
       
@@ -675,7 +685,7 @@
     }
 
     function updateCartField(id, field, val) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => x.id === Number(id));
       if (!item) return;
       item[field] = val === "" ? 0 : parseFloat(val);
       
@@ -694,7 +704,7 @@
     }
 
     function updateCartPackingField(id, field, val) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => x.id === Number(id));
       if (!item) return;
       item[field] = val === "" ? 0 : parseFloat(val);
       
@@ -713,7 +723,7 @@
     }
 
     function updateCartTotalRupees(id, totalRupeesVal) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => x.id === Number(id));
       if (!item) return;
       const rupees = totalRupeesVal === "" ? 0 : parseFloat(totalRupeesVal);
       const gm = parseFloat(item.grams) || 0;
@@ -1156,14 +1166,14 @@
     }
 
     function toggleCheck(id, status) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => x.id === Number(id));
       if (!item) return;
       item.checked = status;
       saveLocallyOnly();
     }
 
     function updateStep(id, val) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => x.id === Number(id));
       if (!item) return;
       item.step = String(val).trim() || "1";
       pushRecentRecipe(item.subRecipe);
@@ -1171,7 +1181,7 @@
     }
 
     function updateName(id, newNameVal) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => x.id === Number(id));
       if (!item) return;
       const cleanName = newNameVal.trim();
       if (cleanName && cleanName !== item.name) {
@@ -1182,7 +1192,7 @@
     }
 
     function updateField(id, field, val) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => x.id === Number(id));
       if (!item) return;
       item[field] = parseFloat(val) || 0;
       pushRecentRecipe(item.subRecipe);
@@ -1197,7 +1207,7 @@
     }
 
     function updateTotalRupees(id, totalRupeesVal) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => x.id === Number(id));
       if (!item) return;
       const rupees = parseFloat(totalRupeesVal) || 0;
       const gm = parseFloat(item.grams) || 0;
@@ -1212,7 +1222,7 @@
     }
 
     function updatePackingField(id, field, val) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => x.id === Number(id));
       if (!item) return;
       item[field] = parseFloat(val) || 0;
       pushRecentRecipe(item.subRecipe);
@@ -1301,11 +1311,11 @@
 
     function deleteItem(id) {
       if (!confirm("हटाना चाहते हैं?")) return;
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => x.id === Number(id));
       if (item) {
         pushRecentRecipe(item.subRecipe);
       }
-      items = items.filter(x => x.id !== id);
+      items = items.filter(x => x.id !== Number(id));
       saveLocallyOnly();
     }
 
