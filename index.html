@@ -76,10 +76,10 @@
         <button onclick="downloadAppsScriptCodeFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="Apps Script कोड डाउनलोड करें">
           📜 AS कोड
         </button>
-        <button onclick="downloadHtmlCodeFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML कोड डाउनलोड करें">
+        <button onclick="downloadHtmlCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML कोड डाउनलोड करें">
           🌐 HTML कोड
         </button>
-        <button onclick="downloadWebUrlFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-500 text-white shadow transition" title="वेब यूआरएल डाउनलोड करें">
+        <button onclick="downloadWebUrlFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-500 text-white shadow transition" title="वेब यूआरएल डाउनलोड करें">
           🔗 यूआरएल
         </button>
       </div>
@@ -107,7 +107,7 @@
     <span id="floatingCartCount" class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded-full text-[11px]">0</span>
   </button>
 
-  <!-- Separate Cart View Page / Modal (Clean & Instant Sync) -->
+  <!-- Separate Cart View Page / Modal -->
   <div id="cartModal" class="fixed inset-0 z-50 hidden bg-[#0f172a] overflow-y-auto pb-20">
     <div class="sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 px-4 py-3">
       <div class="max-w-3xl mx-auto flex items-center justify-between">
@@ -115,7 +115,7 @@
           <span class="text-lg">🛒</span>
           <div>
             <h2 class="text-base font-bold text-emerald-400 leading-tight">खरीदारी कार्ट (Editable Cart)</h2>
-            <p class="text-[11px] text-slate-400">▲ / ▼ बटन से तुरंत ऊपर-नीचे खिसकाएं</p>
+            <p class="text-[11px] text-slate-400">अनचेक करते ही आइटम तुरंत स्क्रीन से गायब होगा</p>
           </div>
         </div>
         <button onclick="closeCartModal()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-amber-300">
@@ -317,15 +317,6 @@
     let activeFilter = "ALL";
     let addMode = "non-packing";
     let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "https://script.google.com/macros/s/AKfycbz_4Lb4A1iYg8b0G4Qp1HtYNh_W6u6e9hShH9-BoOfMJZJSyArjyZsuFQMl3iK91NP07w/exec";
-
-    // Cart order array for custom card ordering
-    let cartOrderIds = [];
-    try {
-      const savedCartOrder = localStorage.getItem("bhog_cart_order");
-      if (savedCartOrder) {
-        cartOrderIds = JSON.parse(savedCartOrder).map(id => Number(id));
-      }
-    } catch(e) {}
 
     // Recent recipe order list storage
     let recentRecipes = [];
@@ -584,56 +575,6 @@
       document.getElementById("imageZoomModal").classList.add("hidden");
     }
 
-    function getOrderedCartItems() {
-      const checked = items.filter(i => isChecked(i));
-      const currentIds = checked.map(i => Number(i.id));
-      
-      cartOrderIds = cartOrderIds.map(id => Number(id)).filter(id => currentIds.includes(id));
-      currentIds.forEach(id => {
-        if (!cartOrderIds.includes(id)) {
-          cartOrderIds.push(id);
-        }
-      });
-      try {
-        localStorage.setItem("bhog_cart_order", JSON.stringify(cartOrderIds));
-      } catch(e) {}
-
-      return cartOrderIds.map(id => checked.find(i => Number(i.id) === Number(id))).filter(Boolean);
-    }
-
-    // --- INSTANT & CLEAN CART ITEM MOVE FUNCTION ---
-    function moveCartItem(id, direction) {
-      const numId = Number(id);
-      const checked = items.filter(i => isChecked(i));
-      const currentIds = checked.map(i => Number(i.id));
-      
-      cartOrderIds = cartOrderIds.map(x => Number(x)).filter(x => currentIds.includes(x));
-      currentIds.forEach(cid => {
-        if (!cartOrderIds.includes(cid)) {
-          cartOrderIds.push(cid);
-        }
-      });
-
-      const idx = cartOrderIds.indexOf(numId);
-      if (idx === -1) return;
-
-      if (direction === "up" && idx > 0) {
-        const temp = cartOrderIds[idx - 1];
-        cartOrderIds[idx - 1] = cartOrderIds[idx];
-        cartOrderIds[idx] = temp;
-      } else if (direction === "down" && idx < cartOrderIds.length - 1) {
-        const temp = cartOrderIds[idx + 1];
-        cartOrderIds[idx + 1] = cartOrderIds[idx];
-        cartOrderIds[idx] = temp;
-      }
-
-      try {
-        localStorage.setItem("bhog_cart_order", JSON.stringify(cartOrderIds));
-      } catch(e) {}
-
-      renderCartItems();
-    }
-
     function updateCartIndicator() {
       const checkedItems = items.filter(i => isChecked(i));
       const btn = document.getElementById("floatingCartBtn");
@@ -659,26 +600,35 @@
       renderList();
     }
 
-    // --- CLEAN & INSTANT UNCHECK FIX (NO STUCK/GHOST ELEMENTS) ---
     function uncheckFromCart(id) {
-      const item = items.find(x => x.id === Number(id));
+      const item = items.find(x => x.id === id);
       if (!item) return;
       item.checked = false;
       
       try {
         localStorage.setItem("bhog_local_backup", JSON.stringify(items));
       } catch (e) {}
-      
       setStatus("बदलाव लोकल सुरक्षित हैं (शीट में भेजने के लिए '☁️ सेव करें' दबाएं)", false);
 
-      // Instantly re-render cart and main list without animations to prevent any stuck items
-      renderCartItems();
+      const cardEl = document.getElementById("cart_card_" + id);
+      if (cardEl) {
+        cardEl.style.transition = "all 0.2s ease";
+        cardEl.style.opacity = "0";
+        cardEl.style.transform = "scale(0.95)";
+        setTimeout(() => {
+          cardEl.remove();
+          renderCartItems();
+        }, 200);
+      } else {
+        renderCartItems();
+      }
+
       updateCartSummaryOnly();
       renderList();
     }
 
     function updateCartField(id, field, val) {
-      const item = items.find(x => x.id === Number(id));
+      const item = items.find(x => x.id === id);
       if (!item) return;
       item[field] = val === "" ? 0 : parseFloat(val);
       
@@ -697,7 +647,7 @@
     }
 
     function updateCartPackingField(id, field, val) {
-      const item = items.find(x => x.id === Number(id));
+      const item = items.find(x => x.id === id);
       if (!item) return;
       item[field] = val === "" ? 0 : parseFloat(val);
       
@@ -716,7 +666,7 @@
     }
 
     function updateCartTotalRupees(id, totalRupeesVal) {
-      const item = items.find(x => x.id === Number(id));
+      const item = items.find(x => x.id === id);
       if (!item) return;
       const rupees = totalRupeesVal === "" ? 0 : parseFloat(totalRupeesVal);
       const gm = parseFloat(item.grams) || 0;
@@ -757,29 +707,19 @@
     }
 
     function renderCartItems() {
-      const orderedItems = getOrderedCartItems();
+      const checkedItems = items.filter(i => isChecked(i));
       const container = document.getElementById("cartItemsContainer");
       if (!container) return;
 
       updateCartSummaryOnly();
 
-      if (orderedItems.length === 0) {
+      if (checkedItems.length === 0) {
         container.innerHTML = `<div class="card-dark rounded-2xl p-6 text-center text-sm text-slate-400">कार्ट खाली है। मुख्य लिस्ट से खरीदने वाले आइटम टिक करें।</div>`;
         return;
       }
 
-      container.innerHTML = orderedItems.map((item, idx) => {
+      container.innerHTML = checkedItems.map(item => {
         const val = calcItemValue(item);
-        const isFirst = idx === 0;
-        const isLast = idx === orderedItems.length - 1;
-
-        const moveControls = `
-          <div class="inline-flex items-center gap-1 mr-1">
-            <button onclick="moveCartItem(${item.id}, 'up')" ${isFirst ? 'disabled' : ''} class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-[11px] font-bold ${isFirst ? 'opacity-30 cursor-not-allowed text-slate-500' : 'text-amber-300 hover:bg-slate-700'}" title="एक कदम ऊपर ले जाएं">▲</button>
-            <button onclick="moveCartItem(${item.id}, 'down')" ${isLast ? 'disabled' : ''} class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-[11px] font-bold ${isLast ? 'opacity-30 cursor-not-allowed text-slate-500' : 'text-amber-300 hover:bg-slate-700'}" title="एक कदम नीचे ले जाएं">▼</button>
-          </div>
-        `;
-
         if (item.category === "packing") {
           return `
             <div id="cart_card_${item.id}" class="card-dark card-checked rounded-2xl p-3.5 space-y-2">
@@ -787,10 +727,7 @@
                 <div class="flex items-start gap-2">
                   <input type="checkbox" checked onchange="uncheckFromCart(${item.id})" class="w-4 h-4 mt-1 accent-emerald-500 rounded cursor-pointer" title="अनचेक करके हटाएं" />
                   <div>
-                    <div class="flex flex-wrap items-center gap-1.5 mb-0.5">
-                      ${moveControls}
-                      <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold">${item.subRecipe} • काउंट</span>
-                    </div>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold mb-1 inline-block">${item.subRecipe} • काउंट</span>
                     <h3 class="text-sm font-bold text-slate-100">${item.name}</h3>
                   </div>
                 </div>
@@ -825,10 +762,7 @@
                 <div class="flex items-start gap-2">
                   <input type="checkbox" checked onchange="uncheckFromCart(${item.id})" class="w-4 h-4 mt-1 accent-emerald-500 rounded cursor-pointer" title="अनचेक करके हटाएं" />
                   <div>
-                    <div class="flex flex-wrap items-center gap-1.5 mb-0.5">
-                      ${moveControls}
-                      <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold">${item.subRecipe}</span>
-                    </div>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold mb-1 inline-block">${item.subRecipe}</span>
                     <h3 class="text-sm font-bold text-slate-100">${item.name}</h3>
                   </div>
                 </div>
@@ -1159,14 +1093,14 @@
     }
 
     function toggleCheck(id, status) {
-      const item = items.find(x => x.id === Number(id));
+      const item = items.find(x => x.id === id);
       if (!item) return;
       item.checked = status;
       saveLocallyOnly();
     }
 
     function updateStep(id, val) {
-      const item = items.find(x => x.id === Number(id));
+      const item = items.find(x => x.id === id);
       if (!item) return;
       item.step = String(val).trim() || "1";
       pushRecentRecipe(item.subRecipe);
@@ -1174,7 +1108,7 @@
     }
 
     function updateName(id, newNameVal) {
-      const item = items.find(x => x.id === Number(id));
+      const item = items.find(x => x.id === id);
       if (!item) return;
       const cleanName = newNameVal.trim();
       if (cleanName && cleanName !== item.name) {
@@ -1185,7 +1119,7 @@
     }
 
     function updateField(id, field, val) {
-      const item = items.find(x => x.id === Number(id));
+      const item = items.find(x => x.id === id);
       if (!item) return;
       item[field] = parseFloat(val) || 0;
       pushRecentRecipe(item.subRecipe);
@@ -1200,7 +1134,7 @@
     }
 
     function updateTotalRupees(id, totalRupeesVal) {
-      const item = items.find(x => x.id === Number(id));
+      const item = items.find(x => x.id === id);
       if (!item) return;
       const rupees = parseFloat(totalRupeesVal) || 0;
       const gm = parseFloat(item.grams) || 0;
@@ -1215,7 +1149,7 @@
     }
 
     function updatePackingField(id, field, val) {
-      const item = items.find(x => x.id === Number(id));
+      const item = items.find(x => x.id === id);
       if (!item) return;
       item[field] = parseFloat(val) || 0;
       pushRecentRecipe(item.subRecipe);
@@ -1304,11 +1238,11 @@
 
     function deleteItem(id) {
       if (!confirm("हटाना चाहते हैं?")) return;
-      const item = items.find(x => x.id === Number(id));
+      const item = items.find(x => x.id === id);
       if (item) {
         pushRecentRecipe(item.subRecipe);
       }
-      items = items.filter(x => x.id !== Number(id));
+      items = items.filter(x => x.id !== id);
       saveLocallyOnly();
     }
 
@@ -1446,7 +1380,7 @@
           } catch (e) {}
           renderList();
           await saveToGoogleSheet();
-          setStatus("✓ रिस्टोर सफल! बैकअप समय (" + (data.timestamp || "") + ") का डेटा वापस आ गया है.", true);
+          setStatus("✓ रिस्टोर सफल! बैकअप समय (" + (data.timestamp || "") + ") का डेटा वापस आ गया है।", true);
           alert("रिस्टोर पूरा हुआ! बैकअप दिनांक/समय: " + (data.timestamp || "") + " का डेटा मुख्य शीट और ऐप में वापस आ गया है।");
         } else {
           setStatus("कोई बैकअप डेटा नहीं मिला।", false);
