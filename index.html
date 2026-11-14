@@ -107,7 +107,7 @@
     <span id="floatingCartCount" class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded-full text-[11px]">0</span>
   </button>
 
-  <!-- Separate Cart View Page / Modal (Instant DOM Removal on Uncheck) -->
+  <!-- Separate Cart View Page / Modal (With Up/Down Move Buttons) -->
   <div id="cartModal" class="fixed inset-0 z-50 hidden bg-[#0f172a] overflow-y-auto pb-20">
     <div class="sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 px-4 py-3">
       <div class="max-w-3xl mx-auto flex items-center justify-between">
@@ -115,7 +115,7 @@
           <span class="text-lg">🛒</span>
           <div>
             <h2 class="text-base font-bold text-emerald-400 leading-tight">खरीदारी कार्ट (Editable Cart)</h2>
-            <p class="text-[11px] text-slate-400">अनचेक करते ही आइटम तुरंत स्क्रीन से गायब होगा</p>
+            <p class="text-[11px] text-slate-400">▲ / ▼ बटन से आइटम ऊपर-नीचे खिसकाएं</p>
           </div>
         </div>
         <button onclick="closeCartModal()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-amber-300">
@@ -317,6 +317,15 @@
     let activeFilter = "ALL";
     let addMode = "non-packing";
     let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "https://script.google.com/macros/s/AKfycbz_4Lb4A1iYg8b0G4Qp1HtYNh_W6u6e9hShH9-BoOfMJZJSyArjyZsuFQMl3iK91NP07w/exec";
+
+    // Separate custom order array for cart items only (doesn't touch main list steps)
+    let cartOrderIds = [];
+    try {
+      const savedCartOrder = localStorage.getItem("bhog_cart_order");
+      if (savedCartOrder) {
+        cartOrderIds = JSON.parse(savedCartOrder);
+      }
+    } catch(e) {}
 
     // Recent recipe order list storage
     let recentRecipes = [];
@@ -575,6 +584,44 @@
       document.getElementById("imageZoomModal").classList.add("hidden");
     }
 
+    function getOrderedCartItems() {
+      const checked = items.filter(i => isChecked(i));
+      // Sync cartOrderIds with currently checked items
+      const currentIds = checked.map(i => i.id);
+      cartOrderIds = cartOrderIds.filter(id => currentIds.includes(id));
+      currentIds.forEach(id => {
+        if (!cartOrderIds.includes(id)) {
+          cartOrderIds.push(id);
+        }
+      });
+      try {
+        localStorage.setItem("bhog_cart_order", JSON.stringify(cartOrderIds));
+      } catch(e) {}
+
+      return cartOrderIds.map(id => checked.find(i => i.id === id)).filter(Boolean);
+    }
+
+    function moveCartItem(id, direction) {
+      getOrderedCartItems(); // ensure order array is synced
+      const idx = cartOrderIds.indexOf(id);
+      if (idx === -1) return;
+
+      if (direction === "up" && idx > 0) {
+        const temp = cartOrderIds[idx - 1];
+        cartOrderIds[idx - 1] = cartOrderIds[idx];
+        cartOrderIds[idx] = temp;
+      } else if (direction === "down" && idx < cartOrderIds.length - 1) {
+        const temp = cartOrderIds[idx + 1];
+        cartOrderIds[idx + 1] = cartOrderIds[idx];
+        cartOrderIds[idx] = temp;
+      }
+
+      try {
+        localStorage.setItem("bhog_cart_order", JSON.stringify(cartOrderIds));
+      } catch(e) {}
+      renderCartItems();
+    }
+
     function updateCartIndicator() {
       const checkedItems = items.filter(i => isChecked(i));
       const btn = document.getElementById("floatingCartBtn");
@@ -600,7 +647,6 @@
       renderList();
     }
 
-    // --- INSTANT SMOOTH DOM CARD REMOVAL ON UNCHECK IN CART ---
     function uncheckFromCart(id) {
       const item = items.find(x => x.id === id);
       if (!item) return;
@@ -611,7 +657,6 @@
       } catch (e) {}
       setStatus("बदलाव लोकल सुरक्षित हैं (शीट में भेजने के लिए '☁️ सेव करें' दबाएं)", false);
 
-      // Directly remove the card element instantly from DOM with smooth animation
       const cardEl = document.getElementById("cart_card_" + id);
       if (cardEl) {
         cardEl.style.transition = "all 0.2s ease";
@@ -619,11 +664,7 @@
         cardEl.style.transform = "scale(0.95)";
         setTimeout(() => {
           cardEl.remove();
-          updateCartSummaryOnly();
-          const container = document.getElementById("cartItemsContainer");
-          if (container && container.querySelectorAll('[id^="cart_card_"]').length === 0) {
-            container.innerHTML = `<div class="card-dark rounded-2xl p-6 text-center text-sm text-slate-400">कार्ट खाली है। मुख्य लिस्ट से खरीदने वाले आइटम टिक करें।</div>`;
-          }
+          renderCartItems();
         }, 200);
       } else {
         renderCartItems();
@@ -713,27 +754,38 @@
     }
 
     function renderCartItems() {
-      const checkedItems = items.filter(i => isChecked(i));
+      const orderedItems = getOrderedCartItems();
       const container = document.getElementById("cartItemsContainer");
       if (!container) return;
 
       updateCartSummaryOnly();
 
-      if (checkedItems.length === 0) {
+      if (orderedItems.length === 0) {
         container.innerHTML = `<div class="card-dark rounded-2xl p-6 text-center text-sm text-slate-400">कार्ट खाली है। मुख्य लिस्ट से खरीदने वाले आइटम टिक करें।</div>`;
         return;
       }
 
-      container.innerHTML = checkedItems.map(item => {
+      container.innerHTML = orderedItems.map((item, idx) => {
         const val = calcItemValue(item);
+        const isFirst = idx === 0;
+        const isLast = idx === orderedItems.length - 1;
+
+        const moveControls = `
+          <div class="inline-flex items-center gap-1 mr-1">
+            <button onclick="moveCartItem(${item.id}, 'up')" ${isFirst ? 'disabled' : ''} class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-[11px] font-bold ${isFirst ? 'opacity-30 cursor-not-allowed text-slate-500' : 'text-amber-300 hover:bg-slate-700'}" title="एक कदम ऊपर ले जाएं">▲</button>
+            <button onclick="moveCartItem(${item.id}, 'down')" ${isLast ? 'disabled' : ''} class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-[11px] font-bold ${isLast ? 'opacity-30 cursor-not-allowed text-slate-500' : 'text-amber-300 hover:bg-slate-700'}" title="एक कदम नीचे ले जाएं">▼</button>
+          </div>
+        `;
+
         if (item.category === "packing") {
           return `
             <div id="cart_card_${item.id}" class="card-dark card-checked rounded-2xl p-3.5 space-y-2">
               <div class="flex items-start justify-between gap-2">
-                <div class="flex items-start gap-2.5">
+                <div class="flex items-start gap-2">
                   <input type="checkbox" checked onchange="uncheckFromCart(${item.id})" class="w-4 h-4 mt-1 accent-emerald-500 rounded cursor-pointer" title="अनचेक करके हटाएं" />
                   <div>
-                    <div class="flex items-center gap-1.5 mb-0.5">
+                    <div class="flex flex-wrap items-center gap-1.5 mb-0.5">
+                      ${moveControls}
                       <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold">${item.subRecipe} • काउंट</span>
                     </div>
                     <h3 class="text-sm font-bold text-slate-100">${item.name}</h3>
@@ -767,10 +819,11 @@
           return `
             <div id="cart_card_${item.id}" class="card-dark card-checked rounded-2xl p-3.5 space-y-2">
               <div class="flex items-start justify-between gap-2">
-                <div class="flex items-start gap-2.5">
+                <div class="flex items-start gap-2">
                   <input type="checkbox" checked onchange="uncheckFromCart(${item.id})" class="w-4 h-4 mt-1 accent-emerald-500 rounded cursor-pointer" title="अनचेक करके हटाएं" />
                   <div>
-                    <div class="flex items-center gap-1.5 mb-0.5">
+                    <div class="flex flex-wrap items-center gap-1.5 mb-0.5">
+                      ${moveControls}
                       <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold">${item.subRecipe}</span>
                     </div>
                     <h3 class="text-sm font-bold text-slate-100">${item.name}</h3>
