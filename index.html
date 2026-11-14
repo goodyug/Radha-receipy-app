@@ -141,17 +141,30 @@
         <button onclick="openSheetModal()" class="underline font-semibold text-amber-400 ml-2 shrink-0">लिंक सेटिंग्स</button>
       </div>
 
-      <!-- Direct File Import & Export Buttons -->
-      <div class="flex items-center justify-between gap-2 bg-slate-900/80 border border-slate-800 rounded-xl p-2">
-        <span class="text-[11px] text-slate-400 pl-1">फाइल बैकअप / लिस्टिंग:</span>
-        <div class="flex items-center gap-2">
-          <button onclick="exportDataCSV()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 transition">
-            <span>📤 एक्सपोर्ट (CSV)</span>
-          </button>
-          <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 flex items-center gap-1 transition">
-            <span>📥 इम्पोर्ट (CSV/JSON)</span>
-          </button>
-          <input type="file" id="importFileInput" accept=".csv,.json" class="hidden" onchange="handleFileImport(event)" />
+      <!-- Direct File Import & Export Buttons (Data + Code Backups) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-900/80 border border-slate-800 rounded-xl p-2.5">
+        <div class="flex items-center justify-between gap-1">
+          <span class="text-[11px] text-slate-400 pl-1">डेटा लिस्टिंग:</span>
+          <div class="flex items-center gap-1.5">
+            <button onclick="exportDataCSV()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 transition">
+              📤 एक्सपोर्ट (CSV)
+            </button>
+            <button onclick="document.getElementById('importFileInput').click()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 transition">
+              📥 इम्पोर्ट
+            </button>
+            <input type="file" id="importFileInput" accept=".csv,.json" class="hidden" onchange="handleFileImport(event)" />
+          </div>
+        </div>
+        <div class="flex items-center justify-between gap-1 border-t sm:border-t-0 sm:border-l border-slate-800 pt-2 sm:pt-0 sm:pl-2">
+          <span class="text-[11px] text-slate-400 pl-1">कोडिंग बैकअप:</span>
+          <div class="flex items-center gap-1.5">
+            <button onclick="downloadAppsScriptCode()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-500/30 transition" title="Apps Script कोड डाउनलोड करें">
+              📜 Apps Script.js
+            </button>
+            <button onclick="downloadHtmlCode()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/30 transition" title="HTML कोड डाउनलोड करें">
+              🌐 HTML.html
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -328,6 +341,168 @@
       }
     });
 
+    // --- DOWNLOAD APPS SCRIPT CODE FILE (.js) ---
+    function downloadAppsScriptCode() {
+      const appsScriptCode = `function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.tryLock(10000);
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var action = data.action || "save";
+    var items = data.items || [];
+    
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var headers = ["id", "step", "name", "subRecipe", "category", "itemType", "grams", "ratePerKg", "obtainedCount", "purchasePrice", "usedCount", "checked"];
+    
+    if (action === "backup") {
+      var backupSheet = ss.getSheetByName("Latest_Backup");
+      if (!backupSheet) {
+        backupSheet = ss.insertSheet("Latest_Backup");
+      }
+      backupSheet.clear();
+      
+      var timestamp = new Date().toLocaleString("hi-IN", { timeZone: "Asia/Kolkata" });
+      backupSheet.appendRow(["--- आख़िरी सुरक्षित बैकअप समय (Last Backup Timestamp): ---", timestamp]);
+      backupSheet.appendRow(headers);
+      
+      items.forEach(function(item) {
+        backupSheet.appendRow([
+          item.id || "",
+          item.step || "",
+          item.name || "",
+          item.subRecipe || "",
+          item.category || "",
+          item.itemType || "Grocery",
+          item.grams || 0,
+          item.ratePerKg || 0,
+          item.obtainedCount || 0,
+          item.purchasePrice || 0,
+          item.usedCount || 0,
+          item.checked ? "true" : "false"
+        ]);
+      });
+      
+      return ContentService.createTextOutput(JSON.stringify({status: "ok", timestamp: timestamp})).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    var sheet = ss.getSheetByName("Ingredients");
+    if (!sheet) {
+      sheet = ss.insertSheet("Ingredients");
+    }
+    
+    sheet.clear();
+    sheet.appendRow(headers);
+    
+    items.forEach(function(item) {
+      sheet.appendRow([
+        item.id || "",
+        item.step || "",
+        item.name || "",
+        item.subRecipe || "",
+        item.category || "",
+        item.itemType || "Grocery",
+        item.grams || 0,
+        item.ratePerKg || 0,
+        item.obtainedCount || 0,
+        item.purchasePrice || 0,
+        item.usedCount || 0,
+        item.checked ? "true" : "false"
+      ]);
+    });
+    
+    return ContentService.createTextOutput(JSON.stringify({status: "ok"})).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : "load";
+  
+  if (action === "restore") {
+    var backupSheet = ss.getSheetByName("Latest_Backup");
+    if (!backupSheet) {
+      return ContentService.createTextOutput(JSON.stringify({status: "empty", message: "कोई बैकअप शीट नहीं मिली।"})).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    var bRows = backupSheet.getDataRange().getValues();
+    if (bRows.length <= 2) {
+      return ContentService.createTextOutput(JSON.stringify({status: "empty", message: "बैकअप शीट खाली है।"})).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    var backupTime = bRows[0][1] || "अज्ञात समय";
+    var bHeaders = bRows[1];
+    var bItems = [];
+    
+    for (var i = 2; i < bRows.length; i++) {
+      var row = bRows[i];
+      var obj = {};
+      for (var j = 0; j < bHeaders.length; j++) {
+        obj[bHeaders[j]] = row[j];
+      }
+      bItems.push(obj);
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({status: "ok", items: bItems, timestamp: backupTime})).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  var sheet = ss.getSheetByName("Ingredients");
+  if (!sheet) {
+    return ContentService.createTextOutput(JSON.stringify({status: "empty"})).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  var rows = sheet.getDataRange().getValues();
+  if (rows.length <= 1) {
+    return ContentService.createTextOutput(JSON.stringify({status: "empty"})).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  var headers = rows[0];
+  var items = [];
+  
+  for (var i = 1; i < rows.length; i++) {
+    var row = rows[i];
+    var obj = {};
+    for (var j = 0; j < headers.length; j++) {
+      obj[headers[j]] = row[j];
+    }
+    items.push(obj);
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({status: "ok", items: items})).setMimeType(ContentService.MimeType.JSON);
+}`;
+
+      const blob = new Blob([appsScriptCode], { type: "text/javascript;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const dateStr = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `Bhog_AppsScript_Backup_${dateStr}.js`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setStatus("✓ Apps Script कोड फाइल डाउनलोड हो गई है!", true);
+    }
+
+    // --- DOWNLOAD HTML / GITHUB CODE FILE (.html) ---
+    function downloadHtmlCode() {
+      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const dateStr = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `Bhog_Prasadi_HTML_Backup_${dateStr}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setStatus("✓ HTML (GitHub) कोड फाइल डाउनलोड हो गई है!", true);
+    }
+
     // --- CSV EXPORT FUNCTION ---
     function exportDataCSV() {
       if (items.length === 0) {
@@ -369,7 +544,7 @@
       setStatus("✓ CSV फाइल डाउनलोड हो गई है!", true);
     }
 
-    // --- FIXED CSV / JSON IMPORT FUNCTION (Ignores blank/trailing empty rows) ---
+    // --- FIXED CSV / JSON IMPORT FUNCTION ---
     function handleFileImport(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -422,7 +597,6 @@
                 obj[h] = vals[idx] !== undefined ? vals[idx] : "";
               });
 
-              // FIX: Ignore blank rows or rows without a name!
               const itemName = String(obj.name || "").replace(/^"+|"+$/g, '').trim();
               if (!itemName || itemName === "" || itemName === "undefined") {
                 continue;
@@ -1085,7 +1259,7 @@
           body: JSON.stringify({ action: "save", items })
         });
         setStatus("✓ मुख्य Google Sheet में डेटा सुरक्षित सेव हो गया!", true);
-        alert("सफल! वर्तमान 209 आइटम्स मुख्य Google Sheet में हमेशा के लिए सेव हो गए हैं।");
+        alert("सफल! वर्तमान आइटम्स मुख्य Google Sheet में हमेशा के लिए सेव हो गए हैं।");
       } catch (e) {
         setStatus("सेव करने में समस्या आई।", false);
       }
