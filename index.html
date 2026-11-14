@@ -502,7 +502,6 @@
 
     function duplicateRecipe(recipeName) {
       const subs = getSubRecipes();
-      // Generate unique name like 'आलू बड़ा (1)'
       let copyNum = 1;
       let newRecipeName = `${recipeName} (${copyNum})`;
       while (subs.includes(newRecipeName)) {
@@ -510,7 +509,6 @@
         newRecipeName = `${recipeName} (${copyNum})`;
       }
 
-      // Copy all items belonging to this recipe
       const recipeItems = items.filter(i => i.subRecipe === recipeName);
       let maxId = items.length > 0 ? Math.max(...items.map(i => i.id)) : 0;
 
@@ -683,8 +681,9 @@
                   <h3 contenteditable="true" onblur="updateName(${item.id}, this.textContent)" class="text-sm font-bold text-slate-100 outline-none focus:ring-1 focus:ring-amber-400 rounded px-1" title="क्लिक करके नाम बदलें">${item.name}</h3>
                 </div>
                 <div class="flex items-center gap-2">
-                  <div class="text-right">
-                    <div id="val_${item.id}" class="text-base font-bold text-emerald-400">₹${val.toFixed(2)}</div>
+                  <div class="flex items-center bg-slate-900/90 border border-emerald-500/40 rounded-lg px-2 py-1" title="सीधे कुल रुपए लिखकर रेट निकालें">
+                    <span class="text-sm font-bold text-emerald-400 mr-0.5">₹</span>
+                    <input id="val_${item.id}" type="number" step="any" value="${val.toFixed(2)}" oninput="updateTotalRupees(${item.id}, this.value)" class="w-16 bg-transparent text-right text-sm font-bold text-emerald-400 focus:outline-none" />
                   </div>
                   <button onclick="deleteItem(${item.id})" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 text-xs">🗑️</button>
                 </div>
@@ -692,11 +691,11 @@
               <div class="grid grid-cols-2 gap-2.5">
                 <div>
                   <label class="text-[10px] text-slate-400 block">मात्रा (ग्राम / gm)</label>
-                  <input type="number" step="any" value="${item.grams}" oninput="updateField(${item.id}, 'grams', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-300" />
+                  <input id="grams_${item.id}" type="number" step="any" value="${item.grams}" oninput="updateField(${item.id}, 'grams', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-300" />
                 </div>
                 <div>
                   <label class="text-[10px] text-slate-400 block">रेट (₹ / kg)</label>
-                  <input type="number" step="any" value="${item.ratePerKg}" oninput="updateField(${item.id}, 'ratePerKg', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300" />
+                  <input id="rate_${item.id}" type="number" step="any" value="${item.ratePerKg}" oninput="updateField(${item.id}, 'ratePerKg', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300" />
                 </div>
               </div>
             </div>
@@ -738,7 +737,28 @@
       if (!item) return;
       item[field] = parseFloat(val) || 0;
       const el = document.getElementById("val_" + id);
-      if (el) el.textContent = "₹" + calcItemValue(item).toFixed(2);
+      if (el) {
+        if (el.tagName === "INPUT") {
+          el.value = calcItemValue(item).toFixed(2);
+        } else {
+          el.textContent = "₹" + calcItemValue(item).toFixed(2);
+        }
+      }
+      updateSummary();
+      if (sheetWebAppUrl) saveToGoogleSheet();
+    }
+
+    function updateTotalRupees(id, totalRupeesVal) {
+      const item = items.find(x => x.id === id);
+      if (!item) return;
+      const rupees = parseFloat(totalRupeesVal) || 0;
+      const gm = parseFloat(item.grams) || 0;
+      if (gm > 0) {
+        const calculatedRate = (rupees / gm) * 1000;
+        item.ratePerKg = parseFloat(calculatedRate.toFixed(2));
+        const rateInput = document.getElementById("rate_" + id);
+        if (rateInput) rateInput.value = item.ratePerKg;
+      }
       updateSummary();
       if (sheetWebAppUrl) saveToGoogleSheet();
     }
@@ -893,7 +913,7 @@
       if (!sheetWebAppUrl) { openSheetModal(); return; }
       try {
         await fetch(sheetWebAppUrl, {
-          method: "mode-no-cors" ? "POST" : "POST",
+          method: "POST",
           mode: "no-cors",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ items })
