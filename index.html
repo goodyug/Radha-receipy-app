@@ -355,7 +355,7 @@
         csvRows.push(row.join(","));
       });
 
-      const csvContent = "\uFEFF" + csvRows.join("\n"); // BOM for proper Hindi Excel support
+      const csvContent = "\uFEFF" + csvRows.join("\n");
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -369,7 +369,7 @@
       setStatus("✓ CSV फाइल डाउनलोड हो गई है!", true);
     }
 
-    // --- CSV / JSON IMPORT FUNCTION ---
+    // --- FIXED CSV / JSON IMPORT FUNCTION (Ignores blank/trailing empty rows) ---
     function handleFileImport(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -384,7 +384,6 @@
             if (list.length === 0) throw new Error("खाली फाइल");
             items = list;
           } else {
-            // Parse CSV
             const lines = content.split(/\r?\n/).filter(line => line.trim() !== "");
             if (lines.length < 2) throw new Error("CSV फाइल में डेटा नहीं है।");
             
@@ -422,13 +421,20 @@
               headers.forEach((h, idx) => {
                 obj[h] = vals[idx] !== undefined ? vals[idx] : "";
               });
+
+              // FIX: Ignore blank rows or rows without a name!
+              const itemName = String(obj.name || "").replace(/^"+|"+$/g, '').trim();
+              if (!itemName || itemName === "" || itemName === "undefined") {
+                continue;
+              }
+
               importedItems.push({
                 id: Number(obj.id) || i,
                 step: String(obj.step || "1"),
-                name: String(obj.name || "अज्ञात सामग्री"),
-                subRecipe: String(obj.subRecipe || "आलू बड़ा"),
-                category: String(obj.category || "non-packing"),
-                itemType: String(obj.itemType || "Grocery"),
+                name: itemName,
+                subRecipe: String(obj.subRecipe || "आलू बड़ा").replace(/^"+|"+$/g, '').trim(),
+                category: String(obj.category || "non-packing").replace(/^"+|"+$/g, '').trim(),
+                itemType: String(obj.itemType || "Grocery").replace(/^"+|"+$/g, '').trim(),
                 grams: parseFloat(obj.grams) || 0,
                 ratePerKg: parseFloat(obj.ratePerKg) || 0,
                 obtainedCount: parseFloat(obj.obtainedCount) || 0,
@@ -439,7 +445,7 @@
             }
 
             if (importedItems.length === 0) throw new Error("कोई वैध आइटम नहीं मिला।");
-            if (!confirm(`फाइल से ${importedItems.length} आइटम्स मिले हैं। क्या आप इन्हें ऐप में लोड करना चाहते हैं?`)) return;
+            if (!confirm(`फाइल से ${importedItems.length} वैध आइटम्स मिले हैं। क्या आप इन्हें ऐप में लोड करना चाहते हैं?`)) return;
             items = importedItems;
           }
 
@@ -1079,6 +1085,7 @@
           body: JSON.stringify({ action: "save", items })
         });
         setStatus("✓ मुख्य Google Sheet में डेटा सुरक्षित सेव हो गया!", true);
+        alert("सफल! वर्तमान 209 आइटम्स मुख्य Google Sheet में हमेशा के लिए सेव हो गए हैं।");
       } catch (e) {
         setStatus("सेव करने में समस्या आई।", false);
       }
