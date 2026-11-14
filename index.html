@@ -38,7 +38,7 @@
 </head>
 <body class="min-h-screen pb-24">
 
-  <!-- Top Header with ALL restored features -->
+  <!-- Top Header -->
   <header class="sticky top-0 z-30 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 px-3 py-2.5">
     <div class="max-w-3xl mx-auto flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2.5">
@@ -56,29 +56,12 @@
         </div>
       </div>
 
-      <!-- Action Buttons Toolbar (All restored: Settings, Save, Backup, Restore, Load, CSV Export/Import) -->
+      <!-- Action Buttons Toolbar -->
       <div class="flex flex-wrap items-center gap-1.5">
-        <button onclick="openSheetModal()" id="syncBtn" class="px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 transition" title="Google Sheet सेटिंग्स">
-          ⚙️
-        </button>
-        <button onclick="saveToGoogleSheet()" id="saveSheetBtn" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition" title="शीट में सेव करें">
-          ☁️ सेव करें
-        </button>
-        <button onclick="triggerBackup()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white shadow transition" title="अलग शीट में बैकअप लें">
-          🛡️ बैकअप
-        </button>
-        <button onclick="triggerRestore()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white shadow transition" title="बैकअप से डेटा वापस लाएं">
-          🔄 रिस्टोर
-        </button>
-        <button onclick="loadFromGoogleSheet()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow transition" title="Google Sheet से ताज़ा डेटा लोड करें">
-          📥 शीट से लोड
-        </button>
-        <button onclick="exportDataCSV()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="CSV एक्सपोर्ट">
-          📤 CSV
-        </button>
-        <button onclick="document.getElementById('importFileInput').click()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="CSV इम्पोर्ट">
-          📥 इम्पोर्ट
-        </button>
+        <button onclick="openSheetModal()" class="px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 transition" title="शीट सेटिंग्स">⚙️</button>
+        <button onclick="exportDataCSV()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="मुख्य CSV एक्सपोर्ट">📤 CSV</button>
+        <button onclick="exportSubmittedCSV()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-600 text-white shadow transition" title="सबमिट किया हुआ इतिहास CSV डाउनलोड">📥 सबमिटेड इतिहास</button>
+        <button onclick="document.getElementById('importFileInput').click()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="CSV इम्पोर्ट">📥 इम्पोर्ट</button>
         <input type="file" id="importFileInput" accept=".csv,.json" class="hidden" onchange="handleFileImport(event)" />
       </div>
     </div>
@@ -89,12 +72,8 @@
     <div class="relative max-w-2xl w-full flex flex-col items-center" onclick="event.stopPropagation()">
       <img id="zoomedImg" src="" alt="Closeup" onclick="closeImageZoom()" class="max-h-[78vh] w-auto rounded-2xl shadow-2xl border-2 border-amber-400 object-contain cursor-pointer" />
       <div class="flex items-center gap-3 mt-4">
-        <button onclick="document.getElementById('imageUploadInput').click()" class="text-xs font-semibold text-amber-300 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-full border border-amber-500/40">
-          फोटो बदलें
-        </button>
-        <button onclick="closeImageZoom()" class="text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-full border border-slate-600">
-          बंद करें ✕
-        </button>
+        <button onclick="document.getElementById('imageUploadInput').click()" class="text-xs font-semibold text-amber-300 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-full border border-amber-500/40">फोटो बदलें</button>
+        <button onclick="closeImageZoom()" class="text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-full border border-slate-600">बंद करें ✕</button>
       </div>
     </div>
   </div>
@@ -150,11 +129,10 @@
 
   <main class="max-w-3xl mx-auto px-4 pt-4 space-y-4">
 
-    <!-- Status Bar & Import/Export Toolbar -->
+    <!-- Status Bar -->
     <div class="space-y-2">
       <div id="statusBanner" class="rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 text-emerald-200">
-        <span id="statusText">डेटा लोकल सुरक्षित है। शीट सिंक या CSV का उपयोग करें।</span>
-        <button onclick="openSheetModal()" class="underline font-semibold text-amber-400 ml-2 shrink-0">लिंक सेटिंग्स</button>
+        <span id="statusText">डेटा लोकल सुरक्षित है। सबमिट करने पर आइटम इतिहास में सेव होकर लिस्ट से हट जाएगा।</span>
       </div>
     </div>
 
@@ -263,28 +241,19 @@
 
   </main>
 
-  <!-- Google Sheet Modal -->
+  <!-- Sheet Modal -->
   <div id="sheetModal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="card-dark rounded-2xl max-w-md w-full p-5 space-y-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-base font-bold text-amber-400">Google Sheet कनेक्शन सेटअप</h3>
+        <h3 class="text-base font-bold text-amber-400">सेटिंग्स और जानकारी</h3>
         <button onclick="closeSheetModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
       </div>
       <p class="text-xs text-slate-300 leading-relaxed">
-        अपना Google Apps Script <b>Web App URL</b> यहाँ दर्ज करें।
+        यह ऐप पूरी तरह लोकल स्टोरेज और CSV पर आधारित है। आप जब चाहें मुख्य CSV या सबमिटेड इतिहास CSV डाउनलोड कर सकते हैं।
       </p>
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">Web App URL</label>
-        <input id="sheetUrlInput" type="url" value="https://script.google.com/macros/s/AKfycbxfUJpLHQ8nhX5x4R2rt627pDpFSsNBosElNiwuFhjU6ffSAwMJxkczCmgK9wFZIp2jFA/exec" class="input-dark w-full rounded-xl px-3 py-2 text-xs" />
-      </div>
-      <div class="flex gap-2">
-        <button onclick="connectAndLoadSheet()" class="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
-          कनेक्ट करें और लोड करें
-        </button>
-        <button onclick="loadDefaultData()" class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs">
-          लोकल रीसेट
-        </button>
-      </div>
+      <button onclick="closeSheetModal()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
+        ठीक है बंद करें
+      </button>
     </div>
   </div>
 
@@ -294,25 +263,29 @@
       const savedLocalData = localStorage.getItem("bhog_local_backup");
       if (savedLocalData) {
         const parsed = JSON.parse(savedLocalData);
-        if (Array.isArray(parsed)) {
-          items = parsed;
-        }
+        if (Array.isArray(parsed)) items = parsed;
       }
     } catch (err) {
-      localStorage.removeItem("bhog_local_backup");
       items = [];
+    }
+
+    let submittedHistory = [];
+    try {
+      const savedHist = localStorage.getItem("bhog_submitted_history");
+      if (savedHist) {
+        const parsedHist = JSON.parse(savedHist);
+        if (Array.isArray(parsedHist)) submittedHistory = parsedHist;
+      }
+    } catch (err) {
+      submittedHistory = [];
     }
     
     let activeFilter = "ALL";
     let addMode = "non-packing";
-    let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "https://script.google.com/macros/s/AKfycbxfUJpLHQ8nhX5x4R2rt627pDpFSsNBosElNiwuFhjU6ffSAwMJxkczCmgK9wFZIp2jFA/exec";
-
     let recentRecipes = [];
     try {
       const savedRecents = localStorage.getItem("bhog_recent_recipes");
-      if (savedRecents) {
-        recentRecipes = JSON.parse(savedRecents);
-      }
+      if (savedRecents) recentRecipes = JSON.parse(savedRecents);
     } catch(e) {}
 
     window.addEventListener("DOMContentLoaded", () => {
@@ -328,7 +301,6 @@
         img.classList.remove("hidden");
         document.getElementById("logoDefaultIcon").classList.add("hidden");
       }
-
       renderList();
     });
 
@@ -336,13 +308,13 @@
       return item.checked === true || item.checked === "true" || item.checked === 1;
     }
 
-    // --- CSV EXPORT FUNCTION ---
+    // --- CSV EXPORT (MAIN DATA) ---
     function exportDataCSV() {
       if (items.length === 0) {
         alert("एक्सपोर्ट करने के लिए कोई डेटा नहीं है।");
         return;
       }
-      const headers = ["id", "step", "name", "subRecipe", "category", "itemType", "grams", "ratePerKg", "obtainedCount", "purchasePrice", "usedCount", "checked"];
+      const headers = ["id", "step", "name", "subRecipe", "category", "grams", "ratePerKg", "obtainedCount", "purchasePrice", "usedCount", "checked"];
       const csvRows = [headers.join(",")];
 
       items.forEach(item => {
@@ -352,7 +324,6 @@
           `"${String(item.name || "").replace(/"/g, '""')}"`,
           `"${String(item.subRecipe || "").replace(/"/g, '""')}"`,
           item.category || "non-packing",
-          item.itemType || "Grocery",
           item.grams || 0,
           item.ratePerKg || 0,
           item.obtainedCount || 0,
@@ -363,13 +334,45 @@
         csvRows.push(row.join(","));
       });
 
-      const csvContent = "\uFEFF" + csvRows.join("\n");
+      downloadCSVFile(csvRows.join("\n"), `Bhog_Active_Items_${new Date().toISOString().slice(0, 10)}.csv`);
+    }
+
+    // --- CSV EXPORT (SUBMITTED HISTORY WITH TIMESTAMP) ---
+    function exportSubmittedCSV() {
+      if (submittedHistory.length === 0) {
+        alert("कोई सबमिट किया हुआ इतिहास उपलब्ध नहीं है।");
+        return;
+      }
+      const headers = ["timestamp", "name", "subRecipe", "category", "quantityOrCount", "totalCost", "paymentMode", "refNum", "otherNotes"];
+      const csvRows = [headers.join(",")];
+
+      submittedHistory.forEach(item => {
+        const val = calcItemValue(item).toFixed(2);
+        const qtyStr = item.category === "packing" ? `${item.usedCount} pieces (out of ${item.obtainedCount})` : `${item.grams} grams @ ₹${item.ratePerKg}/kg`;
+        const row = [
+          `"${String(item.submittedAt || "").replace(/"/g, '""')}"`,
+          `"${String(item.name || "").replace(/"/g, '""')}"`,
+          `"${String(item.subRecipe || "").replace(/"/g, '""')}"`,
+          item.category || "non-packing",
+          `"${qtyStr}"`,
+          val,
+          `"${String(item.paymentMode || "").replace(/"/g, '""')}"`,
+          `"${String(item.refNum || "").replace(/"/g, '""')}"`,
+          `"${String(item.otherNotes || "").replace(/"/g, '""')}"`
+        ];
+        csvRows.push(row.join(","));
+      });
+
+      downloadCSVFile(csvRows.join("\n"), `Bhog_Submitted_History_${new Date().toISOString().slice(0, 10)}.csv`);
+    }
+
+    function downloadCSVFile(csvText, filename) {
+      const csvContent = "\uFEFF" + csvText;
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      const dateStr = new Date().toISOString().slice(0, 10);
       a.href = url;
-      a.download = `Bhog_Prasadi_Backup_${dateStr}.csv`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -377,7 +380,7 @@
       setStatus("✓ CSV फाइल सफलतापूर्वक डाउनलोड हो गई है!", true);
     }
 
-    // --- CSV IMPORT FUNCTION ---
+    // --- CSV IMPORT ---
     function handleFileImport(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -386,77 +389,59 @@
       reader.onload = function(e) {
         const content = e.target.result;
         try {
-          if (file.name.endsWith(".json")) {
-            const parsed = JSON.parse(content);
-            const list = Array.isArray(parsed) ? parsed : (parsed.items || []);
-            if (list.length === 0) throw new Error("खाली फाइल");
-            items = list;
-          } else {
-            const lines = content.split(/\r?\n/).filter(line => line.trim() !== "");
-            if (lines.length < 2) throw new Error("CSV फाइल में डेटा नहीं है।");
-            
-            const parseCSVLine = (text) => {
-              const result = [];
-              let cell = "";
-              let inQuotes = false;
-              for (let i = 0; i < text.length; i++) {
-                const char = text[i];
-                if (char === '"') {
-                  if (inQuotes && text[i+1] === '"') {
-                    cell += '"';
-                    i++;
-                  } else {
-                    inQuotes = !inQuotes;
-                  }
-                } else if (char === ',' && !inQuotes) {
-                  result.push(cell.trim());
-                  cell = "";
-                } else {
-                  cell += char;
-                }
-              }
-              result.push(cell.trim());
-              return result;
-            };
-
-            const headers = parseCSVLine(lines[0]).map(h => h.replace(/^\uFEFF/, '').trim());
-            const importedItems = [];
-
-            for (let i = 1; i < lines.length; i++) {
-              const vals = parseCSVLine(lines[i]);
-              if (vals.length < 3) continue;
-              const obj = {};
-              headers.forEach((h, idx) => {
-                obj[h] = vals[idx] !== undefined ? vals[idx] : "";
-              });
-
-              const itemName = String(obj.name || "").replace(/^"+|"+$/g, '').trim();
-              if (!itemName || itemName === "" || itemName === "undefined") continue;
-
-              importedItems.push({
-                id: Number(obj.id) || i,
-                step: String(obj.step || "1"),
-                name: itemName,
-                subRecipe: String(obj.subRecipe || "आलू बड़ा").replace(/^"+|"+$/g, '').trim(),
-                category: String(obj.category || "non-packing").replace(/^"+|"+$/g, '').trim(),
-                itemType: String(obj.itemType || "Grocery").replace(/^"+|"+$/g, '').trim(),
-                grams: parseFloat(obj.grams) || 0,
-                ratePerKg: parseFloat(obj.ratePerKg) || 0,
-                obtainedCount: parseFloat(obj.obtainedCount) || 0,
-                purchasePrice: parseFloat(obj.purchasePrice) || 0,
-                usedCount: parseFloat(obj.usedCount) || 0,
-                checked: String(obj.checked).toLowerCase() === "true"
-              });
+          const lines = content.split(/\r?\n/).filter(line => line.trim() !== "");
+          if (lines.length < 2) throw new Error("CSV फाइल खाली है।");
+          
+          const parseCSVLine = (text) => {
+            const result = [];
+            let cell = "";
+            let inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+              const char = text[i];
+              if (char === '"') {
+                if (inQuotes && text[i+1] === '"') { cell += '"'; i++; }
+                else { inQuotes = !inQuotes; }
+              } else if (char === ',' && !inQuotes) {
+                result.push(cell.trim());
+                cell = "";
+              } else { cell += char; }
             }
+            result.push(cell.trim());
+            return result;
+          };
 
-            if (importedItems.length === 0) throw new Error("कोई वैध आइटम नहीं मिला।");
-            if (!confirm(`फाइल से ${importedItems.length} वैध आइटम्स मिले हैं। क्या आप इन्हें ऐप में लोड करना चाहते हैं?`)) return;
-            items = importedItems;
+          const headers = parseCSVLine(lines[0]).map(h => h.replace(/^\uFEFF/, '').trim());
+          const importedItems = [];
+
+          for (let i = 1; i < lines.length; i++) {
+            const vals = parseCSVLine(lines[i]);
+            if (vals.length < 3) continue;
+            const obj = {};
+            headers.forEach((h, idx) => { obj[h] = vals[idx] !== undefined ? vals[idx] : ""; });
+
+            const itemName = String(obj.name || "").replace(/^"+|"+$/g, '').trim();
+            if (!itemName || itemName === "" || itemName === "undefined") continue;
+
+            importedItems.push({
+              id: Number(obj.id) || (i + Date.now()),
+              step: String(obj.step || "1"),
+              name: itemName,
+              subRecipe: String(obj.subRecipe || "आलू बड़ा").replace(/^"+|"+$/g, '').trim(),
+              category: String(obj.category || "non-packing").replace(/^"+|"+$/g, '').trim(),
+              grams: parseFloat(obj.grams) || 0,
+              ratePerKg: parseFloat(obj.ratePerKg) || 0,
+              obtainedCount: parseFloat(obj.obtainedCount) || 0,
+              purchasePrice: parseFloat(obj.purchasePrice) || 0,
+              usedCount: parseFloat(obj.usedCount) || 0,
+              checked: false
+            });
           }
 
+          if (importedItems.length === 0) throw new Error("कोई वैध आइटम नहीं मिला।");
+          if (!confirm(`फाइल से ${importedItems.length} वैध आइटम्स मिले हैं। क्या आप इन्हें लोड करना चाहते हैं?`)) return;
+          items = importedItems;
           saveLocallyOnly();
-          setStatus(`✓ ${items.length} आइटम्स सफलतापूर्वक इम्पोर्ट हो गए!`, true);
-          alert(`सफल! ${items.length} आइटम्स ऐप में लोड हो गए हैं।`);
+          alert(`सफल! ${importedItems.length} आइटम्स लोड हो गए।`);
         } catch (err) {
           alert("फाइल पढ़ने में त्रुटि: " + err.message);
         }
@@ -466,15 +451,14 @@
     }
 
     function saveCustomHeader() {
-      const title = document.getElementById("editableTitle").textContent.trim();
-      const sub = document.getElementById("editableSubtitle").textContent.trim();
-      localStorage.setItem("bhog_custom_title", title);
-      localStorage.setItem("bhog_custom_sub", sub);
+      localStorage.setItem("bhog_custom_title", document.getElementById("editableTitle").textContent.trim());
+      localStorage.setItem("bhog_custom_sub", document.getElementById("editableSubtitle").textContent.trim());
     }
 
     function saveLocallyOnly() {
       try {
         localStorage.setItem("bhog_local_backup", JSON.stringify(items));
+        localStorage.setItem("bhog_submitted_history", JSON.stringify(submittedHistory));
       } catch (e) {}
       renderList();
       setStatus("डेटा लोकल सुरक्षित है।", true);
@@ -495,10 +479,9 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(e) {
-        const base64Str = e.target.result;
-        localStorage.setItem("bhog_custom_logo", base64Str);
+        localStorage.setItem("bhog_custom_logo", e.target.result);
         const img = document.getElementById("logoImg");
-        img.src = base64Str;
+        img.src = e.target.result;
         img.classList.remove("hidden");
         document.getElementById("logoDefaultIcon").classList.add("hidden");
         closeImageZoom();
@@ -506,9 +489,7 @@
       reader.readAsDataURL(file);
     }
 
-    function closeImageZoom() {
-      document.getElementById("imageZoomModal").classList.add("hidden");
-    }
+    function closeImageZoom() { document.getElementById("imageZoomModal").classList.add("hidden"); }
 
     function updateCartIndicator() {
       const checkedItems = items.filter(i => isChecked(i));
@@ -540,21 +521,7 @@
       if (!item) return;
       item.checked = false;
       saveLocallyOnly();
-
-      const cardEl = document.getElementById("cart_card_" + id);
-      if (cardEl) {
-        cardEl.style.transition = "all 0.2s ease";
-        cardEl.style.opacity = "0";
-        cardEl.style.transform = "scale(0.95)";
-        setTimeout(() => {
-          cardEl.remove();
-          renderCartItems();
-        }, 200);
-      } else {
-        renderCartItems();
-      }
-
-      updateCartSummaryOnly();
+      renderCartItems();
       renderList();
     }
 
@@ -562,10 +529,7 @@
       const item = items.find(x => x.id === id);
       if (!item) return;
       const cleanName = newNameVal.trim();
-      if (cleanName && cleanName !== item.name) {
-        item.name = cleanName;
-        saveLocallyOnly();
-      }
+      if (cleanName) { item.name = cleanName; saveLocallyOnly(); }
     }
 
     function updateCartMeta(id, field, val) {
@@ -579,44 +543,43 @@
       const item = items.find(x => x.id === id);
       if (!item) return;
       const val = calcItemValue(item).toFixed(2);
-      const pMode = item.paymentMode || '-';
-      const rNum = item.refNum || '-';
-      const oNotes = item.otherNotes || '-';
-      const qtyInfo = item.category === "packing"
-        ? `${item.usedCount} पीस (कुल ${item.obtainedCount} पीस / ₹${item.purchasePrice})`
-        : `${item.grams} ग्राम @ ₹${item.ratePerKg}/kg`;
-
+      const qtyInfo = item.category === "packing" ? `${item.usedCount} पीस (कुल ${item.obtainedCount})` : `${item.grams} ग्राम @ ₹${item.ratePerKg}/kg`;
       const text = `*खरीद विवरण (Radha Bhog)*\n` +
                    `📦 सामग्री: ${item.name} (${item.subRecipe})\n` +
                    `⚖️ मात्रा: ${qtyInfo}\n` +
                    `💰 कुल खर्च: ₹${val}\n` +
-                   `💳 पेमेंट मोड: ${pMode}\n` +
-                   `📑 रिफरेंस नंबर: ${rNum}\n` +
-                   `📝 अन्य नोट्स: ${oNotes}`;
+                   `💳 पेमेंट: ${item.paymentMode || '-'}\n` +
+                   `📑 रिफरेन्स: ${item.refNum || '-'}\n` +
+                   `📝 नोट्स: ${item.otherNotes || '-'}`;
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
+    // --- SUBMIT SINGLE ITEM FROM CART (THE CORE REQUIREMENT) ---
     function submitSingleCartItem(id) {
-      const item = items.find(x => x.id === id);
-      if (!item) return;
+      const itemIndex = items.findIndex(x => x.id === id);
+      if (itemIndex === -1) return;
 
-      const totalVal = calcItemValue(item).toFixed(2);
-      const submitBtn = document.getElementById("cart_submit_btn_" + id);
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = "सफलतापूर्वक सबमिट हुआ ✓";
-      }
+      const item = items[itemIndex];
+      // 1. Set timestamp & store in submitted history
+      item.submittedAt = new Date().toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'medium' });
+      submittedHistory.unshift(item);
 
+      // 2. Remove item from active list so it disappears from the active view permanently
+      items.splice(itemIndex, 1);
+
+      // 3. Save state locally
+      saveLocallyOnly();
+
+      // 4. Show success toast and refresh cart/list
       const toast = document.getElementById("cartToastBanner");
       const toastText = document.getElementById("cartToastText");
       if (toast && toastText) {
-        toastText.textContent = `✓ '${item.name}' (₹${totalVal}) की खरीद दर्ज हो गई!`;
+        toastText.textContent = `✓ '${item.name}' सफलतापूर्वक सबमिट हो गया और इतिहास में दर्ज हो गया!`;
         toast.classList.remove("hidden");
       }
 
-      setTimeout(() => {
-        uncheckFromCart(id);
-      }, 800);
+      renderCartItems();
+      renderList();
     }
 
     function updateCartField(id, field, val) {
@@ -624,12 +587,6 @@
       if (!item) return;
       item[field] = val === "" ? 0 : parseFloat(val);
       saveLocallyOnly();
-
-      const itemVal = calcItemValue(item);
-      const priceInputEl = document.getElementById("cart_item_price_input_" + id);
-      if (priceInputEl && document.activeElement !== priceInputEl) {
-        priceInputEl.value = itemVal.toFixed(2);
-      }
       updateCartSummaryOnly();
     }
 
@@ -638,12 +595,6 @@
       if (!item) return;
       item[field] = val === "" ? 0 : parseFloat(val);
       saveLocallyOnly();
-
-      const itemVal = calcItemValue(item);
-      const priceInputEl = document.getElementById("cart_item_price_input_" + id);
-      if (priceInputEl && document.activeElement !== priceInputEl) {
-        priceInputEl.value = itemVal.toFixed(2);
-      }
       updateCartSummaryOnly();
     }
 
@@ -653,8 +604,7 @@
       const rupees = totalRupeesVal === "" ? 0 : parseFloat(totalRupeesVal);
       const gm = parseFloat(item.grams) || 0;
       if (gm > 0) {
-        const calculatedRate = (rupees / gm) * 1000;
-        item.ratePerKg = parseFloat(calculatedRate.toFixed(2));
+        item.ratePerKg = parseFloat(((rupees / gm) * 1000).toFixed(2));
       }
       saveLocallyOnly();
       updateCartSummaryOnly();
@@ -662,26 +612,17 @@
 
     function updateCartSummaryOnly() {
       const checkedItems = items.filter(i => isChecked(i));
-      let totalCost = 0;
-      let totalGrams = 0;
+      let totalCost = 0, totalGrams = 0;
 
       checkedItems.forEach(item => {
         totalCost += calcItemValue(item);
-        if (item.category !== "packing") {
-          totalGrams += (parseFloat(item.grams) || 0);
-        }
+        if (item.category !== "packing") totalGrams += (parseFloat(item.grams) || 0);
       });
 
-      const costEl = document.getElementById("cartTotalCost");
-      const wtEl = document.getElementById("cartTotalWeight");
-      const wtKgEl = document.getElementById("cartTotalWeightKg");
-      const cntEl = document.getElementById("cartTotalCount");
-
-      if (costEl) costEl.textContent = "₹" + totalCost.toFixed(2);
-      if (wtEl) wtEl.textContent = Math.round(totalGrams) + " ग्राम";
-      if (wtKgEl) wtKgEl.textContent = (totalGrams / 1000).toFixed(3) + " kg";
-      if (cntEl) cntEl.textContent = checkedItems.length;
-
+      document.getElementById("cartTotalCost").textContent = "₹" + totalCost.toFixed(2);
+      document.getElementById("cartTotalWeight").textContent = Math.round(totalGrams) + " ग्राम";
+      document.getElementById("cartTotalWeightKg").textContent = (totalGrams / 1000).toFixed(3) + " kg";
+      document.getElementById("cartTotalCount").textContent = checkedItems.length;
       updateSummary();
     }
 
@@ -708,7 +649,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
                 <label class="text-[10px] text-slate-400 block mb-0.5">पेमेंट मोड</label>
-                <input type="text" value="${pModeVal}" oninput="updateCartMeta(${item.id}, 'paymentMode', this.value)" placeholder="जैसे: Online / Cash" class="input-dark w-full rounded-lg px-2 py-1 text-xs" />
+                <input type="text" value="${pModeVal}" oninput="updateCartMeta(${item.id}, 'paymentMode', this.value)" placeholder="Online / Cash" class="input-dark w-full rounded-lg px-2 py-1 text-xs" />
               </div>
               <div>
                 <label class="text-[10px] text-slate-400 block mb-0.5">रिफरेंस नंबर</label>
@@ -720,12 +661,8 @@
               </div>
             </div>
             <div class="flex items-center justify-end gap-2 pt-1">
-              <button onclick="shareItemWhatsApp(${item.id})" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold shadow transition flex items-center gap-1" title="WhatsApp पर शेयर करें">
-                <span>📤 WhatsApp</span>
-              </button>
-              <button id="cart_submit_btn_${item.id}" onclick="submitSingleCartItem(${item.id})" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow transition" title="सबमिट करें">
-                ✓ सबमिट
-              </button>
+              <button onclick="shareItemWhatsApp(${item.id})" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold shadow transition">📤 WhatsApp</button>
+              <button onclick="submitSingleCartItem(${item.id})" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow transition">✓ सबमिट करें</button>
             </div>
           </div>
         `;
@@ -735,16 +672,16 @@
             <div id="cart_card_${item.id}" class="card-dark card-checked rounded-2xl p-3.5 space-y-2">
               <div class="flex items-start justify-between gap-2">
                 <div class="flex items-start gap-2">
-                  <input type="checkbox" checked onchange="uncheckFromCart(${item.id})" class="w-4 h-4 mt-1 accent-emerald-500 rounded cursor-pointer" title="अनचेक करके हटाएं" />
+                  <input type="checkbox" checked onchange="uncheckFromCart(${item.id})" class="w-4 h-4 mt-1 accent-emerald-500 rounded cursor-pointer" />
                   <div>
                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold mb-1 inline-block">${item.subRecipe} • काउंट</span>
-                    <h3 contenteditable="true" onblur="updateCartName(${item.id}, this.textContent)" class="text-sm font-bold text-slate-100 outline-none focus:ring-1 focus:ring-amber-400 rounded px-1" title="क्लिक करके नाम बदलें">${item.name}</h3>
+                    <h3 contenteditable="true" onblur="updateCartName(${item.id}, this.textContent)" class="text-sm font-bold text-slate-100 outline-none focus:ring-1 focus:ring-amber-400 rounded px-1">${item.name}</h3>
                   </div>
                 </div>
                 <div class="text-right shrink-0">
-                  <div class="flex items-center bg-slate-900/90 border border-sky-500/40 rounded-lg px-2 py-1" title="सीधे कुल मूल्य एडिट करें">
+                  <div class="flex items-center bg-slate-900/90 border border-sky-500/40 rounded-lg px-2 py-1">
                     <span class="text-xs font-bold text-sky-400 mr-0.5">₹</span>
-                    <input id="cart_item_price_input_${item.id}" type="number" step="any" value="${val.toFixed(2)}" oninput="updateCartTotalRupees(${item.id}, this.value)" class="w-16 bg-transparent text-right text-xs font-bold text-sky-400 focus:outline-none" />
+                    <input type="number" step="any" value="${val.toFixed(2)}" oninput="updateCartTotalRupees(${item.id}, this.value)" class="w-16 bg-transparent text-right text-xs font-bold text-sky-400 focus:outline-none" />
                   </div>
                   <button onclick="uncheckFromCart(${item.id})" class="text-[10px] text-rose-300 underline mt-1">हटाएं</button>
                 </div>
@@ -771,16 +708,16 @@
             <div id="cart_card_${item.id}" class="card-dark card-checked rounded-2xl p-3.5 space-y-2">
               <div class="flex items-start justify-between gap-2">
                 <div class="flex items-start gap-2">
-                  <input type="checkbox" checked onchange="uncheckFromCart(${item.id})" class="w-4 h-4 mt-1 accent-emerald-500 rounded cursor-pointer" title="अनचेक करके हटाएं" />
+                  <input type="checkbox" checked onchange="uncheckFromCart(${item.id})" class="w-4 h-4 mt-1 accent-emerald-500 rounded cursor-pointer" />
                   <div>
                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold mb-1 inline-block">${item.subRecipe}</span>
-                    <h3 contenteditable="true" onblur="updateCartName(${item.id}, this.textContent)" class="text-sm font-bold text-slate-100 outline-none focus:ring-1 focus:ring-amber-400 rounded px-1" title="क्लिक करके नाम बदलें">${item.name}</h3>
+                    <h3 contenteditable="true" onblur="updateCartName(${item.id}, this.textContent)" class="text-sm font-bold text-slate-100 outline-none focus:ring-1 focus:ring-amber-400 rounded px-1">${item.name}</h3>
                   </div>
                 </div>
                 <div class="text-right shrink-0">
-                  <div class="flex items-center bg-slate-900/90 border border-amber-500/40 rounded-lg px-2 py-1" title="सीधे कुल मूल्य एडिट करें">
+                  <div class="flex items-center bg-slate-900/90 border border-amber-500/40 rounded-lg px-2 py-1">
                     <span class="text-xs font-bold text-amber-400 mr-0.5">₹</span>
-                    <input id="cart_item_price_input_${item.id}" type="number" step="any" value="${val.toFixed(2)}" oninput="updateCartTotalRupees(${item.id}, this.value)" class="w-20 bg-transparent text-right text-xs font-bold text-amber-400 focus:outline-none" />
+                    <input type="number" step="any" value="${val.toFixed(2)}" oninput="updateCartTotalRupees(${item.id}, this.value)" class="w-20 bg-transparent text-right text-xs font-bold text-amber-400 focus:outline-none" />
                   </div>
                   <button onclick="uncheckFromCart(${item.id})" class="text-[10px] text-rose-300 underline mt-1">हटाएं</button>
                 </div>
@@ -792,7 +729,7 @@
                 </div>
                 <div>
                   <label class="text-[10px] text-slate-400 block">रेट (₹ / kg)</label>
-                  <input id="cart_rate_input_${item.id}" type="number" step="any" value="${item.ratePerKg}" oninput="updateCartField(${item.id}, 'ratePerKg', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-amber-300" />
+                  <input type="number" step="any" value="${item.ratePerKg}" oninput="updateCartField(${item.id}, 'ratePerKg', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-amber-300" />
                 </div>
               </div>
               ${metaFieldsBar}
@@ -806,39 +743,32 @@
       const set = new Set(["आलू बड़ा", "इमली चटनी", "हरी मिर्च चटनी", "पैकिंग सामग्री"]);
       items.forEach(i => { if (i.subRecipe) set.add(i.subRecipe); });
       let allSubs = Array.from(set);
-
       allSubs.sort((a, b) => {
-        let indexA = recentRecipes.indexOf(a);
-        let indexB = recentRecipes.indexOf(b);
-        if (indexA === -1) indexA = 999;
-        if (indexB === -1) indexB = 999;
-        return indexA - indexB;
+        let idxA = recentRecipes.indexOf(a), idxB = recentRecipes.indexOf(b);
+        return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
       });
-
       return allSubs;
     }
 
     function pushRecentRecipe(recipeName) {
       recentRecipes = recentRecipes.filter(r => r !== recipeName);
       recentRecipes.unshift(recipeName);
-      try {
-        localStorage.setItem("bhog_recent_recipes", JSON.stringify(recentRecipes));
-      } catch(e) {}
+      try { localStorage.setItem("bhog_recent_recipes", JSON.stringify(recentRecipes)); } catch(e){}
     }
 
     function renderFilterTabs() {
       const container = document.getElementById("filterTabs");
       const subs = getSubRecipes();
       
-      let html = `<button onclick="setFilter('ALL')" data-filter="ALL" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold ${activeFilter === 'ALL' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300 border border-slate-700'} shrink-0">सभी</button>`;
+      let html = `<button onclick="setFilter('ALL')" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold ${activeFilter === 'ALL' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300 border border-slate-700'} shrink-0">सभी</button>`;
       
       subs.forEach(sub => {
         const isActive = activeFilter === sub;
         html += `<div class="inline-flex items-center gap-1 shrink-0 bg-slate-800 border border-slate-700 rounded-full px-2.5 py-1">
-          <button onclick="setFilter('${sub}')" data-filter="${sub}" class="filter-btn text-xs font-semibold ${isActive ? 'text-amber-400 font-bold' : 'text-slate-300'}">${sub}</button>
+          <button onclick="setFilter('${sub}')" class="filter-btn text-xs font-semibold ${isActive ? 'text-amber-400 font-bold' : 'text-slate-300'}">${sub}</button>
           <button onclick="promptRenameRecipe('${sub}')" class="text-[10px] text-slate-400 hover:text-amber-400 px-0.5" title="नाम बदलें">✏️</button>
-          <button onclick="duplicateRecipe('${sub}')" class="text-[10px] text-sky-400 hover:text-sky-300 px-0.5" title="रेसिपी डुप्लीकेट (कॉपी) करें">📋</button>
-          <button onclick="handleDeleteRecipe('${sub}')" class="text-[10px] text-rose-400 hover:text-rose-300 px-0.5" title="रेसिपी डिलीट करें">🗑️</button>
+          <button onclick="duplicateRecipe('${sub}')" class="text-[10px] text-sky-400 hover:text-sky-300 px-0.5" title="डुप्लीकेट करें">📋</button>
+          <button onclick="handleDeleteRecipe('${sub}')" class="text-[10px] text-rose-400 hover:text-rose-300 px-0.5" title="डिलीट करें">🗑️</button>
         </div>`;
       });
 
@@ -848,32 +778,18 @@
       const select = document.getElementById("newSubRecipe");
       if (select) {
         select.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join("");
-        if (subs.includes(activeFilter)) {
-          select.value = activeFilter;
-        } else {
-          select.value = subs[0];
-        }
+        if (subs.includes(activeFilter)) select.value = activeFilter;
       }
     }
 
     function promptAddNewRecipe() {
-      const name = prompt("नई रेसिपी या सब-रेसिपी का नाम लिखें (जैसे: रायता, सलाद):");
+      const name = prompt("नई रेसिपी या सब-रेसिपी का नाम लिखें:");
       if (!name || !name.trim()) return;
       const cleanName = name.trim();
-      
       const subs = getSubRecipes();
       if (!subs.includes(cleanName)) {
         const newId = items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1;
-        items.unshift({
-          id: newId,
-          step: "1",
-          name: "नया आइटम जोड़ें",
-          subRecipe: cleanName,
-          category: "non-packing",
-          grams: 100,
-          ratePerKg: 50,
-          checked: false
-        });
+        items.unshift({ id: newId, step: "1", name: "नया आइटम जोड़ें", subRecipe: cleanName, category: "non-packing", grams: 100, ratePerKg: 50, checked: false });
       }
       pushRecentRecipe(cleanName);
       setFilter(cleanName);
@@ -884,54 +800,30 @@
       const newName = prompt(`'${oldName}' का नया नाम लिखें:`, oldName);
       if (!newName || !newName.trim() || newName.trim() === oldName) return;
       const cleanName = newName.trim();
-      
-      items.forEach(i => {
-        if (i.subRecipe === oldName) i.subRecipe = cleanName;
-      });
+      items.forEach(i => { if (i.subRecipe === oldName) i.subRecipe = cleanName; });
       recentRecipes = recentRecipes.map(r => r === oldName ? cleanName : r);
-      try { localStorage.setItem("bhog_recent_recipes", JSON.stringify(recentRecipes)); } catch(e){}
-
       if (activeFilter === oldName) activeFilter = cleanName;
       saveLocallyOnly();
     }
 
     function duplicateRecipe(recipeName) {
       const subs = getSubRecipes();
-      let copyNum = 1;
-      let newRecipeName = `${recipeName} (${copyNum})`;
-      while (subs.includes(newRecipeName)) {
-        copyNum++;
-        newRecipeName = `${recipeName} (${copyNum})`;
-      }
-
-      const recipeItems = items.filter(i => i.subRecipe === recipeName);
+      let copyNum = 1, newName = `${recipeName} (${copyNum})`;
+      while (subs.includes(newName)) { copyNum++; newName = `${recipeName} (${copyNum})`; }
       let maxId = items.length > 0 ? Math.max(...items.map(i => i.id)) : 0;
-
-      recipeItems.forEach(orig => {
-        maxId++;
-        const duplicatedItem = {
-          ...orig,
-          id: maxId,
-          subRecipe: newRecipeName,
-          checked: false
-        };
-        items.push(duplicatedItem);
+      items.filter(i => i.subRecipe === recipeName).forEach(orig => {
+        items.push({ ...orig, id: ++maxId, subRecipe: newName, checked: false });
       });
-
-      pushRecentRecipe(newRecipeName);
-      setFilter(newRecipeName);
+      pushRecentRecipe(newName);
+      setFilter(newName);
       saveLocallyOnly();
     }
 
     function handleDeleteRecipe(recipeName) {
-      if (!confirm(`क्या आप वाकई '${recipeName}' रेसिपी और इसके सभी आइटम्स को हटाना चाहते हैं?`)) return;
+      if (!confirm(`क्या आप वाकई '${recipeName}' हटाना चाहते हैं?`)) return;
       items = items.filter(i => i.subRecipe !== recipeName);
       recentRecipes = recentRecipes.filter(r => r !== recipeName);
-      try { localStorage.setItem("bhog_recent_recipes", JSON.stringify(recentRecipes)); } catch(e){}
-
-      if (activeFilter === recipeName) {
-        activeFilter = "ALL";
-      }
+      if (activeFilter === recipeName) activeFilter = "ALL";
       saveLocallyOnly();
     }
 
@@ -942,9 +834,7 @@
         const used = parseFloat(item.usedCount) || 0;
         return obtained > 0 ? (purchase / obtained) * used : 0;
       } else {
-        const gm = parseFloat(item.grams) || 0;
-        const rate = parseFloat(item.ratePerKg) || 0;
-        return (gm / 1000) * rate;
+        return ((parseFloat(item.grams) || 0) / 1000) * (parseFloat(item.ratePerKg) || 0);
       }
     }
 
@@ -954,14 +844,8 @@
 
       items.forEach(item => {
         const val = calcItemValue(item);
-        if (item.category === "packing") {
-          packCost += val;
-          packCnt++;
-        } else {
-          nonPackCost += val;
-          nonPackWt += (parseFloat(item.grams) || 0);
-          nonPackCnt++;
-        }
+        if (item.category === "packing") { packCost += val; packCnt++; }
+        else { nonPackCost += val; nonPackWt += (parseFloat(item.grams) || 0); nonPackCnt++; }
       });
 
       const grandTotal = nonPackCost + packCost;
@@ -985,39 +869,28 @@
         let subCost = 0, subWt = 0, subCount = 0;
         items.filter(i => i.subRecipe === activeFilter).forEach(i => {
           subCost += calcItemValue(i);
-          if (i.category !== "packing") {
-            subWt += (parseFloat(i.grams) || 0);
-          }
+          if (i.category !== "packing") subWt += (parseFloat(i.grams) || 0);
           subCount++;
         });
         document.getElementById("subTotalTitle").textContent = `${activeFilter} — सब टोटल`;
         document.getElementById("subTotalDesc").textContent = `सामग्री: ${subCount} | वजन: ${subWt} ग्राम (${(subWt/1000).toFixed(3)} kg)`;
         document.getElementById("subTotalCost").textContent = "₹" + subCost.toFixed(2);
       }
-
       updateCartIndicator();
     }
 
     function renderList() {
       renderFilterTabs();
       const container = document.getElementById("itemsContainer");
-      const searchInputEl = document.getElementById("searchInput");
-      const query = searchInputEl ? searchInputEl.value.trim().toLowerCase() : "";
+      const query = document.getElementById("searchInput") ? document.getElementById("searchInput").value.trim().toLowerCase() : "";
 
-      let sortedItems = [...items].sort((a, b) => {
-        let sA = parseFloat(a.step) || 999;
-        let sB = parseFloat(b.step) || 999;
-        return sA - sB;
-      });
-
-      const filtered = sortedItems.filter(item => {
-        const matchTab = activeFilter === "ALL" || item.subRecipe === activeFilter;
-        const matchSearch = !query || (item.name && item.name.toLowerCase().includes(query));
-        return matchTab && matchSearch;
+      let sorted = [...items].sort((a, b) => (parseFloat(a.step) || 999) - (parseFloat(b.step) || 999));
+      const filtered = sorted.filter(item => {
+        return (activeFilter === "ALL" || item.subRecipe === activeFilter) && (!query || item.name.toLowerCase().includes(query));
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="card-dark rounded-2xl p-6 text-center text-sm text-slate-400">कोई सामग्री नहीं मिली।</div>`;
+        container.innerHTML = `<div class="card-dark rounded-2xl p-6 text-center text-sm text-slate-400">कोई सामग्री नहीं मिली। (या सबमिट होकर हट चुकी है)</div>`;
         updateSummary();
         return;
       }
@@ -1026,7 +899,7 @@
         const val = calcItemValue(item);
         const checkedStatus = isChecked(item);
         const cardClass = checkedStatus ? "card-dark card-checked rounded-2xl p-3.5" : "card-dark rounded-2xl p-3.5";
-        const stepInput = `<label class="inline-flex items-center gap-1 text-[10px] text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded font-bold">क्रम: <input type="number" step="any" value="${item.step || ''}" onchange="updateStep(${item.id}, this.value)" class="w-10 bg-slate-900/90 border border-amber-500/40 rounded px-1 text-center text-amber-300 font-bold focus:outline-none focus:border-amber-400" /></label>`;
+        const stepInput = `<label class="inline-flex items-center gap-1 text-[10px] text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded font-bold">क्रम: <input type="number" step="any" value="${item.step || ''}" onchange="updateStep(${item.id}, this.value)" class="w-10 bg-slate-900/90 border border-amber-500/40 rounded px-1 text-center text-amber-300 font-bold focus:outline-none" /></label>`;
         const checkboxEl = `<label class="inline-flex items-center gap-1 text-xs text-slate-300 cursor-pointer"><input type="checkbox" ${checkedStatus ? 'checked' : ''} onchange="toggleCheck(${item.id}, this.checked)" class="w-3.5 h-3.5 accent-emerald-500 rounded cursor-pointer" /> टिक</label>`;
 
         if (item.category === "packing") {
@@ -1036,33 +909,21 @@
               <div class="flex items-start justify-between gap-2 mb-2.5">
                 <div>
                   <div class="flex items-center gap-2 mb-1">
-                    ${stepInput}
-                    ${checkboxEl}
+                    ${stepInput} ${checkboxEl}
                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold">${item.subRecipe} • काउंट</span>
                   </div>
-                  <h3 contenteditable="true" onblur="updateName(${item.id}, this.textContent)" class="text-sm font-bold text-slate-100 outline-none focus:ring-1 focus:ring-amber-400 rounded px-1" title="क्लिक करके नाम बदलें">${item.name}</h3>
+                  <h3 contenteditable="true" onblur="updateName(${item.id}, this.textContent)" class="text-sm font-bold text-slate-100 outline-none focus:ring-1 focus:ring-amber-400 rounded px-1">${item.name}</h3>
                   <div class="text-[11px] text-slate-400">1 पीस रेट: ₹${unitRate.toFixed(3)}</div>
                 </div>
                 <div class="flex items-center gap-2">
-                  <div class="text-right">
-                    <div id="val_${item.id}" class="text-base font-bold text-sky-400">₹${val.toFixed(2)}</div>
-                  </div>
+                  <div class="text-right"><div class="text-base font-bold text-sky-400">₹${val.toFixed(2)}</div></div>
                   <button onclick="deleteItem(${item.id})" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 text-xs">🗑️</button>
                 </div>
               </div>
               <div class="grid grid-cols-3 gap-2">
-                <div>
-                  <label class="text-[10px] text-slate-400 block">खरीद मूल्य (₹)</label>
-                  <input type="number" step="any" value="${item.purchasePrice}" oninput="updatePackingField(${item.id}, 'purchasePrice', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300" />
-                </div>
-                <div>
-                  <label class="text-[10px] text-slate-400 block">कुल पीस मिले</label>
-                  <input type="number" step="any" value="${item.obtainedCount}" oninput="updatePackingField(${item.id}, 'obtainedCount', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold" />
-                </div>
-                <div>
-                  <label class="text-[10px] text-slate-400 block">आज लगे पीस</label>
-                  <input type="number" step="any" value="${item.usedCount}" oninput="updatePackingField(${item.id}, 'usedCount', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-300" />
-                </div>
+                <div><label class="text-[10px] text-slate-400 block">खरीद मूल्य (₹)</label><input type="number" step="any" value="${item.purchasePrice}" oninput="updatePackingField(${item.id}, 'purchasePrice', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-amber-300" /></div>
+                <div><label class="text-[10px] text-slate-400 block">कुल पीस मिले</label><input type="number" step="any" value="${item.obtainedCount}" oninput="updatePackingField(${item.id}, 'obtainedCount', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold" /></div>
+                <div><label class="text-[10px] text-slate-400 block">आज लगे पीस</label><input type="number" step="any" value="${item.usedCount}" oninput="updatePackingField(${item.id}, 'usedCount', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-emerald-300" /></div>
               </div>
             </div>
           `;
@@ -1072,29 +933,22 @@
               <div class="flex items-start justify-between gap-2 mb-2.5">
                 <div>
                   <div class="flex items-center gap-2 mb-1">
-                    ${stepInput}
-                    ${checkboxEl}
+                    ${stepInput} ${checkboxEl}
                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 font-semibold">${item.subRecipe}</span>
                   </div>
-                  <h3 contenteditable="true" onblur="updateName(${item.id}, this.textContent)" class="text-sm font-bold text-slate-100 outline-none focus:ring-1 focus:ring-amber-400 rounded px-1" title="क्लिक करके नाम बदलें">${item.name}</h3>
+                  <h3 contenteditable="true" onblur="updateName(${item.id}, this.textContent)" class="text-sm font-bold text-slate-100 outline-none focus:ring-1 focus:ring-amber-400 rounded px-1">${item.name}</h3>
                 </div>
                 <div class="flex items-center gap-2">
-                  <div class="flex items-center bg-slate-900/90 border border-emerald-500/40 rounded-lg px-2 py-1" title="सीधे कुल रुपए लिखकर रेट निकालें">
+                  <div class="flex items-center bg-slate-900/90 border border-emerald-500/40 rounded-lg px-2 py-1">
                     <span class="text-sm font-bold text-emerald-400 mr-0.5">₹</span>
-                    <input id="val_${item.id}" type="number" step="any" value="${val.toFixed(2)}" onchange="updateTotalRupees(${item.id}, this.value)" class="w-16 bg-transparent text-right text-sm font-bold text-emerald-400 focus:outline-none" />
+                    <input type="number" step="any" value="${val.toFixed(2)}" onchange="updateTotalRupees(${item.id}, this.value)" class="w-16 bg-transparent text-right text-sm font-bold text-emerald-400 focus:outline-none" />
                   </div>
                   <button onclick="deleteItem(${item.id})" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 text-xs">🗑️</button>
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label class="text-[10px] text-slate-400 block">मात्रा (ग्राम / gm)</label>
-                  <input id="grams_${item.id}" type="number" step="any" value="${item.grams}" oninput="updateField(${item.id}, 'grams', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-300" />
-                </div>
-                <div>
-                  <label class="text-[10px] text-slate-400 block">रेट (₹ / kg)</label>
-                  <input id="rate_${item.id}" type="number" step="any" value="${item.ratePerKg}" oninput="updateField(${item.id}, 'ratePerKg', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300" />
-                </div>
+                <div><label class="text-[10px] text-slate-400 block">मात्रा (ग्राम)</label><input type="number" step="any" value="${item.grams}" oninput="updateField(${item.id}, 'grams', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-300" /></div>
+                <div><label class="text-[10px] text-slate-400 block">रेट (₹ / kg)</label><input id="rate_${item.id}" type="number" step="any" value="${item.ratePerKg}" oninput="updateField(${item.id}, 'ratePerKg', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300" /></div>
               </div>
             </div>
           `;
@@ -1106,171 +960,95 @@
 
     function toggleCheck(id, status) {
       const item = items.find(x => x.id === id);
-      if (!item) return;
-      item.checked = status;
-      saveLocallyOnly();
+      if (item) { item.checked = status; saveLocallyOnly(); }
     }
 
     function updateStep(id, val) {
       const item = items.find(x => x.id === id);
-      if (!item) return;
-      item.step = String(val).trim() || "1";
-      pushRecentRecipe(item.subRecipe);
-      saveLocallyOnly();
+      if (item) { item.step = String(val).trim() || "1"; saveLocallyOnly(); }
     }
 
-    function updateName(id, newNameVal) {
+    function updateName(id, val) {
       const item = items.find(x => x.id === id);
-      if (!item) return;
-      const cleanName = newNameVal.trim();
-      if (cleanName && cleanName !== item.name) {
-        item.name = cleanName;
-        pushRecentRecipe(item.subRecipe);
-        saveLocallyOnly();
-      }
+      if (item && val.trim()) { item.name = val.trim(); saveLocallyOnly(); }
     }
 
     function updateField(id, field, val) {
       const item = items.find(x => x.id === id);
-      if (!item) return;
-      item[field] = parseFloat(val) || 0;
-      pushRecentRecipe(item.subRecipe);
-      const el = document.getElementById("val_" + id);
-      if (el) {
-        el.value = calcItemValue(item).toFixed(2);
-      }
-      updateSummary();
-      saveLocallyOnly();
+      if (item) { item[field] = parseFloat(val) || 0; saveLocallyOnly(); }
     }
 
-    function updateTotalRupees(id, totalRupeesVal) {
+    function updateTotalRupees(id, val) {
       const item = items.find(x => x.id === id);
-      if (!item) return;
-      const rupees = parseFloat(totalRupeesVal) || 0;
-      const gm = parseFloat(item.grams) || 0;
-      if (gm > 0) {
-        const calculatedRate = (rupees / gm) * 1000;
-        item.ratePerKg = parseFloat(calculatedRate.toFixed(2));
-        const rateInput = document.getElementById("rate_" + id);
-        if (rateInput) rateInput.value = item.ratePerKg;
+      if (item && (parseFloat(item.grams) || 0) > 0) {
+        item.ratePerKg = parseFloat((((parseFloat(val) || 0) / item.grams) * 1000).toFixed(2));
+        saveLocallyOnly();
       }
-      pushRecentRecipe(item.subRecipe);
-      saveLocallyOnly();
     }
 
     function updatePackingField(id, field, val) {
       const item = items.find(x => x.id === id);
-      if (!item) return;
-      item[field] = parseFloat(val) || 0;
-      pushRecentRecipe(item.subRecipe);
-      const el = document.getElementById("val_" + id);
-      if (el) el.textContent = "₹" + calcItemValue(item).toFixed(2);
-      updateSummary();
-      saveLocallyOnly();
+      if (item) { item[field] = parseFloat(val) || 0; saveLocallyOnly(); }
     }
 
-    function setFilter(name) {
-      activeFilter = name;
-      renderList();
-    }
+    function setFilter(name) { activeFilter = name; renderList(); }
 
     function switchAddMode(mode) {
       addMode = mode;
       const nonPack = document.getElementById("nonPackingFields");
       const pack = document.getElementById("packingFields");
       if (mode === "packing") {
-        nonPack.classList.add("hidden");
-        pack.classList.remove("hidden");
-        pack.classList.add("grid");
+        nonPack.classList.add("hidden"); pack.classList.remove("hidden"); pack.classList.add("grid");
         document.getElementById("modePackingBtn").className = "px-2.5 py-1 rounded-md bg-sky-500 text-slate-950 font-semibold";
         document.getElementById("modeNonPackingBtn").className = "px-2.5 py-1 rounded-md text-slate-300";
         document.getElementById("newSubRecipe").value = "पैकिंग सामग्री";
       } else {
-        pack.classList.add("hidden");
-        pack.classList.remove("grid");
-        nonPack.classList.remove("hidden");
+        pack.classList.add("hidden"); pack.classList.remove("grid"); nonPack.classList.remove("hidden");
         document.getElementById("modeNonPackingBtn").className = "px-2.5 py-1 rounded-md bg-amber-500 text-slate-950 font-semibold";
         document.getElementById("modePackingBtn").className = "px-2.5 py-1 rounded-md text-slate-300";
       }
     }
 
-    function getNextStep(subRecipe) {
-      const groupItems = items.filter(i => i.subRecipe === subRecipe);
-      if (groupItems.length === 0) return "1";
-      const maxStep = Math.max(...groupItems.map(i => parseFloat(i.step) || 0));
-      return String(maxStep + 1);
-    }
-
     function addNewItem() {
-      const nameEl = document.getElementById("newName");
-      const name = nameEl ? nameEl.value.trim() : "";
-      const subRecipeSel = document.getElementById("newSubRecipe");
-      const subRecipe = addMode === "packing" ? "पैकिंग सामग्री" : (subRecipeSel ? subRecipeSel.value : "आलू बड़ा");
-      const rawStepEl = document.getElementById("newStep");
-      const rawStep = rawStepEl ? rawStepEl.value.trim() : "";
+      const name = document.getElementById("newName").value.trim();
       if (!name) { alert("कृपया नाम लिखें"); return; }
-
+      const subRecipe = addMode === "packing" ? "पैकिंग सामग्री" : document.getElementById("newSubRecipe").value;
+      const step = document.getElementById("newStep").value.trim() || "1";
       const newId = items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1;
-      const finalStep = rawStep || getNextStep(subRecipe);
 
       if (addMode === "packing") {
         items.unshift({
-          id: newId,
-          step: finalStep,
-          name,
-          subRecipe: "पैकिंग सामग्री",
-          category: "packing",
+          id: newId, step, name, subRecipe: "पैकिंग सामग्री", category: "packing",
           purchasePrice: parseFloat(document.getElementById("newPurchasePrice").value) || 0,
           obtainedCount: parseFloat(document.getElementById("newObtainedCount").value) || 1,
-          usedCount: parseFloat(document.getElementById("newUsedCount").value) || 0,
-          checked: false
+          usedCount: parseFloat(document.getElementById("newUsedCount").value) || 0, checked: false
         });
       } else {
         items.unshift({
-          id: newId,
-          step: finalStep,
-          name,
-          subRecipe,
-          category: "non-packing",
+          id: newId, step, name, subRecipe, category: "non-packing",
           grams: parseFloat(document.getElementById("newGrams").value) || 0,
-          ratePerKg: parseFloat(document.getElementById("newRate").value) || 0,
-          checked: false
+          ratePerKg: parseFloat(document.getElementById("newRate").value) || 0, checked: false
         });
       }
-
       pushRecentRecipe(subRecipe);
-      if (rawStepEl) rawStepEl.value = "";
-      if (nameEl) nameEl.value = "";
+      document.getElementById("newName").value = "";
+      document.getElementById("newStep").value = "";
       saveLocallyOnly();
     }
 
     function deleteItem(id) {
       if (!confirm("हटाना चाहते हैं?")) return;
-      const item = items.find(x => x.id === id);
-      if (item) {
-        pushRecentRecipe(item.subRecipe);
-      }
       items = items.filter(x => x.id !== id);
       saveLocallyOnly();
     }
 
     function setStatus(msg, ok) {
-      const banner = document.getElementById("statusBanner");
-      if (!banner) return;
-      banner.className = ok ? "rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 text-emerald-200" : "rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-amber-500/10 border border-amber-500/30 text-amber-200";
       const textEl = document.getElementById("statusText");
       if (textEl) textEl.textContent = msg;
     }
 
-    // Google Sheet & CSV Backup/Restore functions restored for safety
     function openSheetModal() { document.getElementById("sheetModal").classList.remove("hidden"); }
     function closeSheetModal() { document.getElementById("sheetModal").classList.add("hidden"); }
-    async function loadFromGoogleSheet() { alert("लोकल और CSV मोड सक्रिय है। शीट लोड की आवश्यकता नहीं।"); }
-    async function saveToGoogleSheet() { alert("लोकल और CSV मोड सक्रिय है।"); }
-    async function triggerBackup() { alert("बैकअप सुरक्षित है।"); }
-    async function triggerRestore() { alert("रिस्टोर सुरक्षित है।"); }
-    function loadDefaultData() { localStorage.clear(); location.reload(); }
-    function connectAndLoadSheet() { closeSheetModal(); }
   </script>
 </body>
 </html>
