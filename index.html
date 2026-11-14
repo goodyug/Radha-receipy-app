@@ -76,10 +76,10 @@
         <button onclick="downloadAppsScriptCodeFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="Apps Script कोड डाउनलोड करें">
           📜 AS कोड
         </button>
-        <button onclick="downloadHtmlCodeFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML कोड डाउनलोड करें">
+        <button onclick="downloadHtmlCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML कोड डाउनलोड करें">
           🌐 HTML कोड
         </button>
-        <button onclick="downloadWebUrlFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-500 text-white shadow transition" title="वेब यूआरएल डाउनलोड करें">
+        <button onclick="downloadWebUrlFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-500 text-white shadow transition" title="वेब यूआरएल डाउनलोड करें">
           🔗 यूआरएल
         </button>
       </div>
@@ -318,6 +318,15 @@
     let addMode = "non-packing";
     let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "https://script.google.com/macros/s/AKfycbz_4Lb4A1iYg8b0G4Qp1HtYNh_W6u6e9hShH9-BoOfMJZJSyArjyZsuFQMl3iK91NP07w/exec";
 
+    // Recent recipe order list storage
+    let recentRecipes = [];
+    try {
+      const savedRecents = localStorage.getItem("bhog_recent_recipes");
+      if (savedRecents) {
+        recentRecipes = JSON.parse(savedRecents);
+      }
+    } catch(e) {}
+
     window.addEventListener("DOMContentLoaded", () => {
       const savedTitle = localStorage.getItem("bhog_custom_title");
       const savedSub = localStorage.getItem("bhog_custom_sub");
@@ -356,7 +365,7 @@
 
     // --- DOWNLOAD APPS SCRIPT CODE AS .TXT FILE ---
     function downloadAppsScriptCodeFile() {
-      const appsScriptCode = `function doGet(e) { ... }`; // Full script
+      const appsScriptCode = `// Apps Script Code already configured`;
       const blob = new Blob([appsScriptCode], { type: "text/plain;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -649,7 +658,26 @@
     function getSubRecipes() {
       const set = new Set(["आलू बड़ा", "इमली चटनी", "हरी मिर्च चटनी", "पैकिंग सामग्री"]);
       items.forEach(i => { if (i.subRecipe) set.add(i.subRecipe); });
-      return Array.from(set);
+      let allSubs = Array.from(set);
+
+      // Sort recent recipes to the front based on recentRecipes array
+      allSubs.sort((a, b) => {
+        let indexA = recentRecipes.indexOf(a);
+        let indexB = recentRecipes.indexOf(b);
+        if (indexA === -1) indexA = 999;
+        if (indexB === -1) indexB = 999;
+        return indexA - indexB;
+      });
+
+      return allSubs;
+    }
+
+    function pushRecentRecipe(recipeName) {
+      recentRecipes = recentRecipes.filter(r => r !== recipeName);
+      recentRecipes.unshift(recipeName);
+      try {
+        localStorage.setItem("bhog_recent_recipes", JSON.stringify(recentRecipes));
+      } catch(e) {}
     }
 
     function renderFilterTabs() {
@@ -701,6 +729,7 @@
           checked: false
         });
       }
+      pushRecentRecipe(cleanName);
       setFilter(cleanName);
       saveLocallyOnly();
     }
@@ -713,6 +742,9 @@
       items.forEach(i => {
         if (i.subRecipe === oldName) i.subRecipe = cleanName;
       });
+      recentRecipes = recentRecipes.map(r => r === oldName ? cleanName : r);
+      try { localStorage.setItem("bhog_recent_recipes", JSON.stringify(recentRecipes)); } catch(e){}
+
       if (activeFilter === oldName) activeFilter = cleanName;
       saveLocallyOnly();
     }
@@ -740,6 +772,7 @@
         items.push(duplicatedItem);
       });
 
+      pushRecentRecipe(newRecipeName);
       setFilter(newRecipeName);
       saveLocallyOnly();
     }
@@ -747,6 +780,9 @@
     function handleDeleteRecipe(recipeName) {
       if (!confirm(`क्या आप वाकई '${recipeName}' रेसिपी और इसके सभी आइटम्स को हटाना चाहते हैं?`)) return;
       items = items.filter(i => i.subRecipe !== recipeName);
+      recentRecipes = recentRecipes.filter(r => r !== recipeName);
+      try { localStorage.setItem("bhog_recent_recipes", JSON.stringify(recentRecipes)); } catch(e){}
+
       if (activeFilter === recipeName) {
         activeFilter = "ALL";
       }
@@ -926,6 +962,7 @@
       const item = items.find(x => x.id === id);
       if (!item) return;
       item.checked = status;
+      pushRecentRecipe(item.subRecipe);
       saveLocallyOnly();
     }
 
@@ -933,6 +970,7 @@
       const item = items.find(x => x.id === id);
       if (!item) return;
       item.step = String(val).trim() || "1";
+      pushRecentRecipe(item.subRecipe);
       saveLocallyOnly();
     }
 
@@ -942,6 +980,7 @@
       const cleanName = newNameVal.trim();
       if (cleanName && cleanName !== item.name) {
         item.name = cleanName;
+        pushRecentRecipe(item.subRecipe);
         saveLocallyOnly();
       }
     }
@@ -950,6 +989,7 @@
       const item = items.find(x => x.id === id);
       if (!item) return;
       item[field] = parseFloat(val) || 0;
+      pushRecentRecipe(item.subRecipe);
       const el = document.getElementById("val_" + id);
       if (el) {
         el.value = calcItemValue(item).toFixed(2);
@@ -971,6 +1011,7 @@
         const rateInput = document.getElementById("rate_" + id);
         if (rateInput) rateInput.value = item.ratePerKg;
       }
+      pushRecentRecipe(item.subRecipe);
       saveLocallyOnly();
     }
 
@@ -978,6 +1019,7 @@
       const item = items.find(x => x.id === id);
       if (!item) return;
       item[field] = parseFloat(val) || 0;
+      pushRecentRecipe(item.subRecipe);
       const el = document.getElementById("val_" + id);
       if (el) el.textContent = "₹" + calcItemValue(item).toFixed(2);
       updateSummary();
@@ -988,6 +1030,9 @@
 
     function setFilter(name) {
       activeFilter = name;
+      if (name !== "ALL") {
+        pushRecentRecipe(name);
+      }
       renderList();
     }
 
@@ -1055,6 +1100,7 @@
         });
       }
 
+      pushRecentRecipe(subRecipe);
       if (rawStepEl) rawStepEl.value = "";
       if (nameEl) nameEl.value = "";
       saveLocallyOnly();
@@ -1062,6 +1108,10 @@
 
     function deleteItem(id) {
       if (!confirm("हटाना चाहते हैं?")) return;
+      const item = items.find(x => x.id === id);
+      if (item) {
+        pushRecentRecipe(item.subRecipe);
+      }
       items = items.filter(x => x.id !== id);
       saveLocallyOnly();
     }
