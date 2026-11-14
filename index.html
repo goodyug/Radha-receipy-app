@@ -107,7 +107,7 @@
     <span id="floatingCartCount" class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded-full text-[11px]">0</span>
   </button>
 
-  <!-- Separate Cart View Page / Modal (Fully Editable & Synced) -->
+  <!-- Separate Cart View Page / Modal (Smooth & Fully Editable Without Focus Loss) -->
   <div id="cartModal" class="fixed inset-0 z-50 hidden bg-[#0f172a] overflow-y-auto pb-20">
     <div class="sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 px-4 py-3">
       <div class="max-w-3xl mx-auto flex items-center justify-between">
@@ -115,7 +115,7 @@
           <span class="text-lg">🛒</span>
           <div>
             <h2 class="text-base font-bold text-emerald-400 leading-tight">खरीदारी कार्ट (Editable Cart)</h2>
-            <p class="text-[11px] text-slate-400">यहाँ किया गया बदलाव मुख्य सूची और शीट सेविंग में स्वतः अपडेट होगा</p>
+            <p class="text-[11px] text-slate-400">यहाँ टाइप करते वक्त कीबोर्ड बंद नहीं होगा, सीधे सहज रूप से बदलें</p>
           </div>
         </div>
         <button onclick="closeCartModal()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-amber-300">
@@ -161,7 +161,7 @@
           <button onclick="exportDataCSV()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 transition">
             <span>📤 एक्सपोर्ट (CSV)</span>
           </button>
-          <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 flex items-center gap-1 transition">
+          <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-emerald-500/30 flex items-center gap-1 transition">
             <span>📥 इम्पोर्ट (CSV/JSON)</span>
           </button>
           <input type="file" id="importFileInput" accept=".csv,.json" class="hidden" onchange="handleFileImport(event)" />
@@ -582,7 +582,8 @@
         btn.classList.add("hidden");
       }
       if (!document.getElementById("cartModal").classList.contains("hidden")) {
-        renderCartItems();
+        // Only update cart summary/totals, do NOT rebuild HTML to prevent keyboard focus loss
+        updateCartSummaryOnly();
       }
     }
 
@@ -593,37 +594,60 @@
 
     function closeCartModal() {
       document.getElementById("cartModal").classList.add("hidden");
+      renderList(); // Refresh main list when closing cart
     }
 
     function uncheckFromCart(id) {
       const item = items.find(x => x.id === id);
       if (!item) return;
       item.checked = false;
-      saveLocallyOnly();
+      saveLocallyOnlyWithoutRerenderingCart();
       renderCartItems();
     }
 
-    // --- FULLY SYNCED EDITABLE CART FUNCTIONS ---
+    function saveLocallyOnlyWithoutRerenderingCart() {
+      try {
+        localStorage.setItem("bhog_local_backup", JSON.stringify(items));
+      } catch (e) {}
+      setStatus("बदलाव लोकल सुरक्षित हैं (शीट में भेजने के लिए '☁️ सेव करें' दबाएं)", false);
+    }
+
+    // --- SMOOTH TYPING CART FUNCTIONS (NO KEYBOARD LOSS) ---
     function updateCartField(id, field, val) {
       const item = items.find(x => x.id === id);
       if (!item) return;
-      item[field] = parseFloat(val) || 0;
-      saveLocallyOnly();
-      renderCartItems();
+      item[field] = val === "" ? 0 : parseFloat(val);
+      
+      saveLocallyOnlyWithoutRerenderingCart();
+
+      // Dynamically update only this item's price display without rebuilding DOM
+      const itemVal = calcItemValue(item);
+      const priceEl = document.getElementById("cart_item_val_" + id);
+      if (priceEl) {
+        priceEl.textContent = "₹" + itemVal.toFixed(2);
+      }
+
+      updateCartSummaryOnly();
     }
 
     function updateCartPackingField(id, field, val) {
       const item = items.find(x => x.id === id);
       if (!item) return;
-      item[field] = parseFloat(val) || 0;
-      saveLocallyOnly();
-      renderCartItems();
+      item[field] = val === "" ? 0 : parseFloat(val);
+      
+      saveLocallyOnlyWithoutRerenderingCart();
+
+      const itemVal = calcItemValue(item);
+      const priceEl = document.getElementById("cart_item_val_" + id);
+      if (priceEl) {
+        priceEl.textContent = "₹" + itemVal.toFixed(2);
+      }
+
+      updateCartSummaryOnly();
     }
 
-    function renderCartItems() {
+    function updateCartSummaryOnly() {
       const checkedItems = items.filter(i => i.checked === true);
-      const container = document.getElementById("cartItemsContainer");
-
       let totalCost = 0;
       let totalGrams = 0;
 
@@ -634,10 +658,25 @@
         }
       });
 
-      document.getElementById("cartTotalCost").textContent = "₹" + totalCost.toFixed(2);
-      document.getElementById("cartTotalWeight").textContent = Math.round(totalGrams) + " ग्राम";
-      document.getElementById("cartTotalWeightKg").textContent = (totalGrams / 1000).toFixed(3) + " kg";
-      document.getElementById("cartTotalCount").textContent = checkedItems.length;
+      const costEl = document.getElementById("cartTotalCost");
+      const wtEl = document.getElementById("cartTotalWeight");
+      const wtKgEl = document.getElementById("cartTotalWeightKg");
+      const cntEl = document.getElementById("cartTotalCount");
+
+      if (costEl) costEl.textContent = "₹" + totalCost.toFixed(2);
+      if (wtEl) wtEl.textContent = Math.round(totalGrams) + " ग्राम";
+      if (wtKgEl) wtKgEl.textContent = (totalGrams / 1000).toFixed(3) + " kg";
+      if (cntEl) cntEl.textContent = checkedItems.length;
+
+      updateSummary();
+    }
+
+    function renderCartItems() {
+      const checkedItems = items.filter(i => i.checked === true);
+      const container = document.getElementById("cartItemsContainer");
+      if (!container) return;
+
+      updateCartSummaryOnly();
 
       if (checkedItems.length === 0) {
         container.innerHTML = `<div class="card-dark rounded-2xl p-6 text-center text-sm text-slate-400">कार्ट खाली है। मुख्य लिस्ट से खरीदने वाले आइटम टिक करें।</div>`;
@@ -660,7 +699,7 @@
                   </div>
                 </div>
                 <div class="text-right shrink-0">
-                  <div class="text-base font-bold text-amber-400">₹${val.toFixed(2)}</div>
+                  <div id="cart_item_val_${item.id}" class="text-base font-bold text-amber-400">₹${val.toFixed(2)}</div>
                   <button onclick="uncheckFromCart(${item.id})" class="text-[10px] text-rose-300 underline mt-1">हटाएं</button>
                 </div>
               </div>
@@ -694,7 +733,7 @@
                   </div>
                 </div>
                 <div class="text-right shrink-0">
-                  <div class="text-base font-bold text-amber-400">₹${val.toFixed(2)}</div>
+                  <div id="cart_item_val_${item.id}" class="text-base font-bold text-amber-400">₹${val.toFixed(2)}</div>
                   <button onclick="uncheckFromCart(${item.id})" class="text-[10px] text-rose-300 underline mt-1">हटाएं</button>
                 </div>
               </div>
@@ -1304,7 +1343,7 @@
           } catch (e) {}
           renderList();
           await saveToGoogleSheet();
-          setStatus("✓ रिस्टोर सफल! बैकअप समय (" + (data.timestamp || "") + ") का डेटा वापस आ गया है.", true);
+          setStatus("✓ रिस्टोर सफल! बैकअप समय (" + (data.timestamp || "") + ") का डेटा वापस आ गया है।", true);
           alert("रिस्टोर पूरा हुआ! बैकअप दिनांक/समय: " + (data.timestamp || "") + " का डेटा मुख्य शीट और ऐप में वापस आ गया है।");
         } else {
           setStatus("कोई बैकअप डेटा नहीं मिला।", false);
