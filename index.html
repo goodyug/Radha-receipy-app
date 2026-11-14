@@ -554,12 +554,21 @@
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    // --- SUBMIT SINGLE ITEM FROM CART (FIXED & FULLY FUNCTIONAL) ---
+    // --- SUBMIT SINGLE ITEM FROM CART (INSTANT FEEDBACK & REMOVAL) ---
     function submitSingleCartItem(id) {
       const itemIndex = items.findIndex(x => x.id === id);
       if (itemIndex === -1) return;
 
       const item = items[itemIndex];
+
+      // Instant button feedback
+      const submitBtn = document.getElementById("cart_submit_btn_" + id);
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.className = "px-3.5 py-1.5 rounded-lg bg-emerald-800 text-white text-xs font-bold shadow transition cursor-not-allowed opacity-90";
+        submitBtn.textContent = "✓ सबमिट हो गया";
+      }
+
       item.submittedAt = new Date().toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'medium' });
       submittedHistory.unshift(item);
       items.splice(itemIndex, 1);
@@ -573,36 +582,56 @@
         toast.classList.remove("hidden");
       }
 
-      renderCartItems();
-      renderList();
+      // Smooth instant card fade out and removal
+      const cardEl = document.getElementById("cart_card_" + id);
+      if (cardEl) {
+        cardEl.style.transition = "all 0.25s ease";
+        cardEl.style.opacity = "0";
+        cardEl.style.transform = "scale(0.95)";
+        setTimeout(() => {
+          renderCartItems();
+          renderList();
+        }, 250);
+      } else {
+        renderCartItems();
+        renderList();
+      }
     }
 
-    function updateCartField(id, field, val) {
+    // --- INSTANT CART RECALCULATION HELPERS ---
+    function refreshCartItemCalc(id) {
+      const item = items.find(x => x.id === id);
+      if (!item) return;
+      const val = calcItemValue(item);
+      const priceInputEl = document.getElementById("cart_item_price_input_" + id);
+      if (priceInputEl && document.activeElement !== priceInputEl) {
+        priceInputEl.value = val.toFixed(2);
+      }
+      updateCartSummaryOnly();
+      saveLocallyOnly();
+    }
+
+    function updateCartFieldLive(id, field, val) {
       const item = items.find(x => x.id === id);
       if (!item) return;
       item[field] = val === "" ? 0 : parseFloat(val);
-      saveLocallyOnly();
-      updateCartSummaryOnly();
+      refreshCartItemCalc(id);
     }
 
-    function updateCartPackingField(id, field, val) {
-      const item = items.find(x => x.id === id);
-      if (!item) return;
-      item[field] = val === "" ? 0 : parseFloat(val);
-      saveLocallyOnly();
-      updateCartSummaryOnly();
-    }
-
-    function updateCartTotalRupees(id, totalRupeesVal) {
+    function updateCartTotalRupeesLive(id, totalRupeesVal) {
       const item = items.find(x => x.id === id);
       if (!item) return;
       const rupees = totalRupeesVal === "" ? 0 : parseFloat(totalRupeesVal);
       const gm = parseFloat(item.grams) || 0;
       if (gm > 0) {
         item.ratePerKg = parseFloat(((rupees / gm) * 1000).toFixed(2));
+        const rateInput = document.getElementById("cart_rate_input_" + id);
+        if (rateInput && document.activeElement !== rateInput) {
+          rateInput.value = item.ratePerKg;
+        }
       }
-      saveLocallyOnly();
       updateCartSummaryOnly();
+      saveLocallyOnly();
     }
 
     function updateCartSummaryOnly() {
@@ -614,10 +643,16 @@
         if (item.category !== "packing") totalGrams += (parseFloat(item.grams) || 0);
       });
 
-      document.getElementById("cartTotalCost").textContent = "₹" + totalCost.toFixed(2);
-      document.getElementById("cartTotalWeight").textContent = Math.round(totalGrams) + " ग्राम";
-      document.getElementById("cartTotalWeightKg").textContent = (totalGrams / 1000).toFixed(3) + " kg";
-      document.getElementById("cartTotalCount").textContent = checkedItems.length;
+      const costEl = document.getElementById("cartTotalCost");
+      const wtEl = document.getElementById("cartTotalWeight");
+      const wtKgEl = document.getElementById("cartTotalWeightKg");
+      const cntEl = document.getElementById("cartTotalCount");
+
+      if (costEl) costEl.textContent = "₹" + totalCost.toFixed(2);
+      if (wtEl) wtEl.textContent = Math.round(totalGrams) + " ग्राम";
+      if (wtKgEl) wtKgEl.textContent = (totalGrams / 1000).toFixed(3) + " kg";
+      if (cntEl) cntEl.textContent = checkedItems.length;
+
       updateSummary();
     }
 
@@ -657,7 +692,7 @@
             </div>
             <div class="flex items-center justify-end gap-2 pt-1">
               <button onclick="shareItemWhatsApp(${item.id})" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold shadow transition">📤 WhatsApp</button>
-              <button onclick="submitSingleCartItem(${item.id})" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow transition">✓ सबमिट करें</button>
+              <button id="cart_submit_btn_${item.id}" onclick="submitSingleCartItem(${item.id})" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow transition">✓ सबमिट करें</button>
             </div>
           </div>
         `;
@@ -676,7 +711,7 @@
                 <div class="text-right shrink-0">
                   <div class="flex items-center bg-slate-900/90 border border-sky-500/40 rounded-lg px-2 py-1">
                     <span class="text-xs font-bold text-sky-400 mr-0.5">₹</span>
-                    <input type="number" step="any" value="${val.toFixed(2)}" oninput="updateCartTotalRupees(${item.id}, this.value)" class="w-16 bg-transparent text-right text-xs font-bold text-sky-400 focus:outline-none" />
+                    <input id="cart_item_price_input_${item.id}" type="number" step="any" value="${val.toFixed(2)}" oninput="updateCartFieldLive(${item.id}, 'purchasePrice', this.value)" class="w-16 bg-transparent text-right text-xs font-bold text-sky-400 focus:outline-none" />
                   </div>
                   <button onclick="uncheckFromCart(${item.id})" class="text-[10px] text-rose-300 underline mt-1">हटाएं</button>
                 </div>
@@ -684,15 +719,15 @@
               <div class="grid grid-cols-3 gap-2 pt-1 border-t border-slate-700/50">
                 <div>
                   <label class="text-[10px] text-slate-400 block">खरीद मूल्य (₹)</label>
-                  <input type="number" step="any" value="${item.purchasePrice}" oninput="updateCartPackingField(${item.id}, 'purchasePrice', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-amber-300" />
+                  <input type="number" step="any" value="${item.purchasePrice}" oninput="updateCartFieldLive(${item.id}, 'purchasePrice', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-amber-300" />
                 </div>
                 <div>
                   <label class="text-[10px] text-slate-400 block">कुल पीस मिले</label>
-                  <input type="number" step="any" value="${item.obtainedCount}" oninput="updateCartPackingField(${item.id}, 'obtainedCount', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold" />
+                  <input type="number" step="any" value="${item.obtainedCount}" oninput="updateCartFieldLive(${item.id}, 'obtainedCount', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold" />
                 </div>
                 <div>
                   <label class="text-[10px] text-slate-400 block">आज लगे पीस</label>
-                  <input type="number" step="any" value="${item.usedCount}" oninput="updateCartPackingField(${item.id}, 'usedCount', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-emerald-300" />
+                  <input type="number" step="any" value="${item.usedCount}" oninput="updateCartFieldLive(${item.id}, 'usedCount', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-emerald-300" />
                 </div>
               </div>
               ${metaFieldsBar}
@@ -712,7 +747,7 @@
                 <div class="text-right shrink-0">
                   <div class="flex items-center bg-slate-900/90 border border-amber-500/40 rounded-lg px-2 py-1">
                     <span class="text-xs font-bold text-amber-400 mr-0.5">₹</span>
-                    <input type="number" step="any" value="${val.toFixed(2)}" oninput="updateCartTotalRupees(${item.id}, this.value)" class="w-20 bg-transparent text-right text-xs font-bold text-amber-400 focus:outline-none" />
+                    <input id="cart_item_price_input_${item.id}" type="number" step="any" value="${val.toFixed(2)}" oninput="updateCartTotalRupeesLive(${item.id}, this.value)" class="w-20 bg-transparent text-right text-xs font-bold text-amber-400 focus:outline-none" />
                   </div>
                   <button onclick="uncheckFromCart(${item.id})" class="text-[10px] text-rose-300 underline mt-1">हटाएं</button>
                 </div>
@@ -720,11 +755,11 @@
               <div class="grid grid-cols-2 gap-2.5 pt-1 border-t border-slate-700/50">
                 <div>
                   <label class="text-[10px] text-slate-400 block">मात्रा (ग्राम)</label>
-                  <input type="number" step="any" value="${item.grams}" oninput="updateCartField(${item.id}, 'grams', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-emerald-300" />
+                  <input type="number" step="any" value="${item.grams}" oninput="updateCartFieldLive(${item.id}, 'grams', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-emerald-300" />
                 </div>
                 <div>
                   <label class="text-[10px] text-slate-400 block">रेट (₹ / kg)</label>
-                  <input type="number" step="any" value="${item.ratePerKg}" oninput="updateCartField(${item.id}, 'ratePerKg', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-amber-300" />
+                  <input id="cart_rate_input_${item.id}" type="number" step="any" value="${item.ratePerKg}" oninput="updateCartFieldLive(${item.id}, 'ratePerKg', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-amber-300" />
                 </div>
               </div>
               ${metaFieldsBar}
