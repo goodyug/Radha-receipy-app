@@ -73,7 +73,7 @@
         <button onclick="loadFromGoogleSheet()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow transition" title="Google Sheet से ताज़ा डेटा लोड करें">
           📥 शीट से लोड
         </button>
-        <button onclick="downloadAppsScriptCodeFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="Apps Script कोड डाउनलोड करें">
+        <button onclick="downloadAppsScriptCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="Apps Script कोड डाउनलोड करें">
           📜 AS कोड
         </button>
         <button onclick="downloadHtmlCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML कोड डाउनलोड करें">
@@ -962,7 +962,7 @@
       const item = items.find(x => x.id === id);
       if (!item) return;
       item.checked = status;
-      pushRecentRecipe(item.subRecipe);
+      // टिक करने से रेसिपी रीसेंट में नहीं जाएगी (सिर्फ एडिटिंग पर जाएगी)
       saveLocallyOnly();
     }
 
@@ -1030,9 +1030,7 @@
 
     function setFilter(name) {
       activeFilter = name;
-      if (name !== "ALL") {
-        pushRecentRecipe(name);
-      }
+      // यहाँ से हटा दिया गया है ताकि सिर्फ क्लिक करने पर रेसिपी आगे न भागे
       renderList();
     }
 
@@ -1261,7 +1259,7 @@
       }
     }
 
-    function loadDefaultData() {
+    function loadDefaultDate() {
       if (confirm("क्या आप लोकल कैशे रीसेट करना चाहते हैं?")) {
         localStorage.removeItem("bhog_local_backup");
         items = [];
