@@ -554,24 +554,15 @@
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    // --- SUBMIT SINGLE ITEM FROM CART (INSTANT FEEDBACK & REMOVAL) ---
+    // --- SUBMIT SINGLE ITEM FROM CART (INSTANT REMOVAL FIX) ---
     function submitSingleCartItem(id) {
       const itemIndex = items.findIndex(x => x.id === id);
       if (itemIndex === -1) return;
 
       const item = items[itemIndex];
-
-      // Instant button feedback
-      const submitBtn = document.getElementById("cart_submit_btn_" + id);
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.className = "px-3.5 py-1.5 rounded-lg bg-emerald-800 text-white text-xs font-bold shadow transition cursor-not-allowed opacity-90";
-        submitBtn.textContent = "✓ सबमिट हो गया";
-      }
-
       item.submittedAt = new Date().toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'medium' });
       submittedHistory.unshift(item);
-      items.splice(itemIndex, 1);
+      items.splice(itemIndex, 1); // Remove immediately from active items
 
       saveLocallyOnly();
 
@@ -582,20 +573,9 @@
         toast.classList.remove("hidden");
       }
 
-      // Smooth instant card fade out and removal
-      const cardEl = document.getElementById("cart_card_" + id);
-      if (cardEl) {
-        cardEl.style.transition = "all 0.25s ease";
-        cardEl.style.opacity = "0";
-        cardEl.style.transform = "scale(0.95)";
-        setTimeout(() => {
-          renderCartItems();
-          renderList();
-        }, 250);
-      } else {
-        renderCartItems();
-        renderList();
-      }
+      // Re-render immediately so it vanishes instantly without waiting
+      renderCartItems();
+      renderList();
     }
 
     // --- INSTANT CART RECALCULATION HELPERS ---
