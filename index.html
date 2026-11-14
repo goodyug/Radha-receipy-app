@@ -132,9 +132,9 @@
   <main class="max-w-3xl mx-auto px-4 pt-4 space-y-4">
 
     <!-- Status Bar -->
-    <div id="statusBanner" class="rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-amber-500/10 border border-amber-500/30 text-amber-200">
-      <span id="statusText">Google Sheet से डेटा सिंक हो रहा है...</span>
-      <button onclick="openSheetModal()" class="underline font-semibold text-amber-400 ml-2 shrink-0">लिंक जोड़ें</button>
+    <div id="statusBanner" class="rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 text-emerald-200">
+      <span id="statusText">डेटा लोड हो गया है।</span>
+      <button onclick="openSheetModal()" class="underline font-semibold text-amber-400 ml-2 shrink-0">Google Sheet लिंक</button>
     </div>
 
     <!-- Summary Cards -->
@@ -265,19 +265,21 @@
           कनेक्ट करें और लोड करें
         </button>
         <button onclick="loadDefaultData()" class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs">
-          डिफ़ॉल्ट लोड करें
+          डेटा रीसेट करें
         </button>
       </div>
     </div>
   </div>
 
   <script>
-    let items = [];
+    // Load immediately from LocalStorage backup if available to prevent 0.00 flash
+    let savedLocalData = localStorage.getItem("bhog_local_backup");
+    let items = savedLocalData ? JSON.parse(savedLocalData) : [];
+    
     let activeFilter = "ALL";
     let addMode = "non-packing";
     let sheetWebAppUrl = new URLSearchParams(window.location.search).get("sheet") || localStorage.getItem("bhog_sheet_url") || "";
 
-    // Load custom header & logo on startup
     window.addEventListener("DOMContentLoaded", () => {
       const savedTitle = localStorage.getItem("bhog_custom_title");
       const savedSub = localStorage.getItem("bhog_custom_sub");
@@ -292,9 +294,14 @@
         document.getElementById("logoDefaultIcon").classList.add("hidden");
       }
 
+      // Render whatever we have instantly
+      if (items.length > 0) {
+        renderList();
+      }
+
       if (sheetWebAppUrl) {
         loadFromGoogleSheet();
-      } else {
+      } else if (items.length === 0) {
         openSheetModal();
       }
     });
@@ -304,6 +311,14 @@
       const sub = document.getElementById("editableSubtitle").textContent.trim();
       localStorage.setItem("bhog_custom_title", title);
       localStorage.setItem("bhog_custom_sub", sub);
+    }
+
+    function persistLocalAndSync() {
+      localStorage.setItem("bhog_local_backup", JSON.stringify(items));
+      renderList();
+      if (sheetWebAppUrl) {
+        saveToGoogleSheet();
+      }
     }
 
     // Logo Upload & Closeup Logic
@@ -366,9 +381,8 @@
       const item = items.find(x => x.id === id);
       if (!item) return;
       item.checked = false;
-      renderList();
+      persistLocalAndSync();
       renderCartItems();
-      if (sheetWebAppUrl) saveToGoogleSheet();
     }
 
     function renderCartItems() {
@@ -480,7 +494,7 @@
         });
       }
       setFilter(cleanName);
-      if (sheetWebAppUrl) saveToGoogleSheet();
+      persistLocalAndSync();
     }
 
     function promptRenameRecipe(oldName) {
@@ -492,9 +506,7 @@
         if (i.subRecipe === oldName) i.subRecipe = cleanName;
       });
       if (activeFilter === oldName) activeFilter = cleanName;
-      renderFilterTabs();
-      renderList();
-      if (sheetWebAppUrl) saveToGoogleSheet();
+      persistLocalAndSync();
     }
 
     function duplicateRecipe(recipeName) {
@@ -521,7 +533,7 @@
       });
 
       setFilter(newRecipeName);
-      if (sheetWebAppUrl) saveToGoogleSheet();
+      persistLocalAndSync();
     }
 
     function handleDeleteRecipe(recipeName) {
@@ -530,8 +542,7 @@
       if (activeFilter === recipeName) {
         activeFilter = "ALL";
       }
-      renderList();
-      if (sheetWebAppUrl) saveToGoogleSheet();
+      persistLocalAndSync();
     }
 
     function calcItemValue(item) {
@@ -707,16 +718,14 @@
       const item = items.find(x => x.id === id);
       if (!item) return;
       item.checked = status;
-      renderList();
-      if (sheetWebAppUrl) saveToGoogleSheet();
+      persistLocalAndSync();
     }
 
     function updateStep(id, val) {
       const item = items.find(x => x.id === id);
       if (!item) return;
       item.step = String(val).trim() || "1";
-      renderList();
-      if (sheetWebAppUrl) saveToGoogleSheet();
+      persistLocalAndSync();
     }
 
     function updateName(id, newNameVal) {
@@ -725,7 +734,7 @@
       const cleanName = newNameVal.trim();
       if (cleanName && cleanName !== item.name) {
         item.name = cleanName;
-        if (sheetWebAppUrl) saveToGoogleSheet();
+        persistLocalAndSync();
       }
     }
 
@@ -738,6 +747,7 @@
         el.value = calcItemValue(item).toFixed(2);
       }
       updateSummary();
+      localStorage.setItem("bhog_local_backup", JSON.stringify(items));
       if (sheetWebAppUrl) saveToGoogleSheet();
     }
 
@@ -752,8 +762,7 @@
         const rateInput = document.getElementById("rate_" + id);
         if (rateInput) rateInput.value = item.ratePerKg;
       }
-      updateSummary();
-      if (sheetWebAppUrl) saveToGoogleSheet();
+      persistLocalAndSync();
     }
 
     function updatePackingField(id, field, val) {
@@ -763,6 +772,7 @@
       const el = document.getElementById("val_" + id);
       if (el) el.textContent = "₹" + calcItemValue(item).toFixed(2);
       updateSummary();
+      localStorage.setItem("bhog_local_backup", JSON.stringify(items));
       if (sheetWebAppUrl) saveToGoogleSheet();
     }
 
@@ -834,15 +844,13 @@
 
       document.getElementById("newStep").value = "";
       document.getElementById("newName").value = "";
-      renderList();
-      if (sheetWebAppUrl) saveToGoogleSheet();
+      persistLocalAndSync();
     }
 
     function deleteItem(id) {
       if (!confirm("हटाना चाहते हैं?")) return;
       items = items.filter(x => x.id !== id);
-      renderList();
-      if (sheetWebAppUrl) saveToGoogleSheet();
+      persistLocalAndSync();
     }
 
     function openSheetModal() {
@@ -874,7 +882,7 @@
 
     async function loadFromGoogleSheet() {
       if (!sheetWebAppUrl) return;
-      setStatus("डेटा लोड हो रहा है...", false);
+      setStatus("Google Sheet से डेटा सिंक हो रहा है...", false);
       try {
         const res = await fetch(sheetWebAppUrl);
         const data = await res.json();
@@ -892,18 +900,17 @@
             usedCount: parseFloat(r.usedCount) || 0,
             checked: r.checked === true || r.checked === "true"
           }));
+          localStorage.setItem("bhog_local_backup", JSON.stringify(items));
           renderList();
           setStatus("✓ Google Sheet से लाइव डेटा कनेक्ट है (" + items.length + " आइटम)", true);
-        } else {
-          setStatus("शीट खाली है या डेटा नहीं मिला।", false);
         }
       } catch (err) {
-        setStatus("कनेक्शन त्रुटि। URL जांचें या इंटरनेट देखें।", false);
+        setStatus("ऑफ़लाइन मोड: लोकल बैकअप डेटा लोड है।", true);
       }
     }
 
     async function saveToGoogleSheet() {
-      if (!sheetWebAppUrl) { openSheetModal(); return; }
+      if (!sheetWebAppUrl) return;
       try {
         await fetch(sheetWebAppUrl, {
           method: "POST",
@@ -918,10 +925,13 @@
     }
 
     function loadDefaultData() {
-      items = [];
-      renderList();
-      closeSheetModal();
-      setStatus("डेटा रीसेट कर दिया गया है।", false);
+      if (confirm("क्या आप डेटा रीसेट करना चाहते हैं?")) {
+        localStorage.removeItem("bhog_local_backup");
+        items = [];
+        renderList();
+        closeSheetModal();
+        setStatus("डेटा रीसेट कर दिया गया है।", false);
+      }
     }
   </script>
 </body>
