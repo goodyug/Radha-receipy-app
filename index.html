@@ -58,11 +58,14 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <button onclick="openSheetModal()" id="syncBtn" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 flex items-center gap-1.5 transition">
-          <span>⚙️ Google Sheet</span>
+        <button onclick="openSheetModal()" id="syncBtn" class="px-2.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 flex items-center gap-1 transition" title="Google Sheet सेटिंग्स">
+          <span>⚙️</span>
         </button>
         <button onclick="saveToGoogleSheet()" id="saveSheetBtn" class="px-3 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition">
           ☁️ सेव करें
+        </button>
+        <button onclick="triggerBackup()" class="px-3 py-2 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white shadow transition" title="गूगल शीट में टाइमस्टैम्प के साथ बैकअप लें">
+          🛡️ बैकअप लें
         </button>
       </div>
     </div>
@@ -272,7 +275,6 @@
   </div>
 
   <script>
-    // Load immediately from LocalStorage backup if available to prevent 0.00 flash
     let savedLocalData = localStorage.getItem("bhog_local_backup");
     let items = savedLocalData ? JSON.parse(savedLocalData) : [];
     
@@ -294,7 +296,6 @@
         document.getElementById("logoDefaultIcon").classList.add("hidden");
       }
 
-      // Render whatever we have instantly
       if (items.length > 0) {
         renderList();
       }
@@ -321,7 +322,6 @@
       }
     }
 
-    // Logo Upload & Closeup Logic
     function handleLogoTap() {
       const savedLogo = localStorage.getItem("bhog_custom_logo");
       if (savedLogo) {
@@ -352,7 +352,6 @@
       document.getElementById("imageZoomModal").classList.add("hidden");
     }
 
-    // Cart View Logic
     function updateCartIndicator() {
       const checkedItems = items.filter(i => i.checked === true);
       const btn = document.getElementById("floatingCartBtn");
@@ -462,7 +461,6 @@
       html += `<button onclick="promptAddNewRecipe()" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/40 shrink-0">+ नई रेसिपी</button>`;
       container.innerHTML = html;
 
-      // Update dropdown options
       const select = document.getElementById("newSubRecipe");
       if (select) {
         select.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join("");
@@ -587,7 +585,6 @@
       document.getElementById("packingCost").textContent = "₹" + packCost.toFixed(2);
       document.getElementById("packingCount").textContent = packCnt + " आइटम";
 
-      // SubTotal Banner calculation
       const subBanner = document.getElementById("subTotalBanner");
       if (activeFilter === "ALL") {
         subBanner.classList.add("hidden");
@@ -910,7 +907,7 @@
     }
 
     async function saveToGoogleSheet() {
-      if (!sheetWebAppUrl) return;
+      if (!sheetWebAppUrl) { openSheetModal(); return; }
       try {
         await fetch(sheetWebAppUrl, {
           method: "POST",
@@ -918,9 +915,26 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ items })
         });
-        setStatus("✓ गूगल शीट में डेटा सेव हो गया!", true);
+        setStatus("✓ गूगल शीट और बैकअप में डेटा सेव हो गया!", true);
       } catch (e) {
         setStatus("सेव करने में समस्या आई।", false);
+      }
+    }
+
+    async function triggerBackup() {
+      if (!sheetWebAppUrl) { openSheetModal(); return; }
+      setStatus("बैकअप लिया जा रहा है...", false);
+      try {
+        await fetch(sheetWebAppUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items })
+        });
+        setStatus("✓ गूगल शीट की 'Latest_Backup' शीट में टाइमस्टैम्प के साथ बैकअप अपडेट हो गया!", true);
+        alert("सफल! आपकी Google Sheet के अंदर 'Latest_Backup' नामक टैब में समय के साथ बैकअप अपडेट कर दिया गया है।");
+      } catch (e) {
+        setStatus("बैकअप लेने में त्रुटि।", false);
       }
     }
 
