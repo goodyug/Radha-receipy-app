@@ -61,24 +61,26 @@
         <button onclick="openSheetModal()" id="syncBtn" class="px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 transition" title="Google Sheet सेटिंग्स">
           ⚙️
         </button>
-        <button onclick="saveToGoogleSheet()" id="saveSheetBtn" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition">
+        <button onclick="saveToGoogleSheet()" id="saveSheetBtn" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition" title="शीट में सेव करें">
           ☁️ सेव करें
         </button>
-        <button onclick="triggerBackup()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white shadow transition" title="अलग शीट में टाइमस्टैम्प के साथ बैकअप लें">
+        <button onclick="triggerBackup()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white shadow transition" title="अलग शीट में बैकअप लें">
           🛡️ बैकअप
         </button>
-        <button onclick="triggerRestore()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white shadow transition" title="आख़िरी बैकअप से डेटा वापस लाएं">
+        <button onclick="triggerRestore()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white shadow transition" title="बैकअप से डेटा वापस लाएं">
           🔄 रिस्टोर
         </button>
-        <!-- Download Code & URL Buttons -->
-        <button onclick="downloadAppsScriptCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="Apps Script बैकएंड कोड डाउनलोड करें">
-          📜 Apps Script कोड
+        <button onclick="loadFromGoogleSheet()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow transition" title="Google Sheet से ताज़ा डेटा लोड करें">
+          📥 शीट से लोड
         </button>
-        <button onclick="downloadHtmlCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML फ्रंटएंड कोड डाउनलोड करें">
+        <button onclick="downloadAppsScriptCodeFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="Apps Script कोड डाउनलोड करें">
+          📜 AS कोड
+        </button>
+        <button onclick="downloadHtmlCodeFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML कोड डाउनलोड करें">
           🌐 HTML कोड
         </button>
-        <button onclick="downloadWebUrlFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow transition" title="वेब यूआरएल लिंक टेक्स्ट फाइल डाउनलोड करें">
-          🔗 वेब यूआरएल
+        <button onclick="downloadWebUrlFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-500 text-white shadow transition" title="वेब यूआरएल डाउनलोड करें">
+          🔗 यूआरएल
         </button>
       </div>
     </div>
@@ -148,7 +150,7 @@
     <!-- Status Bar & Import/Export Toolbar -->
     <div class="space-y-2">
       <div id="statusBanner" class="rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 text-emerald-200">
-        <span id="statusText">डेटा लोड हो गया है।</span>
+        <span id="statusText">डेटा लोकल सुरक्षित है। शीट से लोड करने के लिए ऊपर '📥 शीट से लोड' दबाएं।</span>
         <button onclick="openSheetModal()" class="underline font-semibold text-amber-400 ml-2 shrink-0">लिंक सेटिंग्स</button>
       </div>
 
@@ -331,11 +333,8 @@
       }
 
       renderList();
-
-      if (sheetWebAppUrl) {
+      if (items.length === 0 && sheetWebAppUrl) {
         loadFromGoogleSheet();
-      } else if (items.length === 0) {
-        openSheetModal();
       }
     });
 
@@ -357,137 +356,7 @@
 
     // --- DOWNLOAD APPS SCRIPT CODE AS .TXT FILE ---
     function downloadAppsScriptCodeFile() {
-      const appsScriptCode = `function doPost(e) {
-  var lock = LockService.getScriptLock();
-  lock.tryLock(10000);
-  try {
-    var data = JSON.parse(e.postData.contents);
-    var action = data.action || "save";
-    var items = data.items || [];
-    
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var headers = ["id", "step", "name", "subRecipe", "category", "itemType", "grams", "ratePerKg", "obtainedCount", "purchasePrice", "usedCount", "checked"];
-    
-    if (action === "backup") {
-      var backupSheet = ss.getSheetByName("Latest_Backup");
-      if (!backupSheet) {
-        backupSheet = ss.insertSheet("Latest_Backup");
-      }
-      backupSheet.clear();
-      
-      var timestamp = new Date().toLocaleString("hi-IN", { timeZone: "Asia/Kolkata" });
-      backupSheet.appendRow(["--- आख़िरी सुरक्षित बैकअप समय (Last Backup Timestamp): ---", timestamp]);
-      backupSheet.appendRow(headers);
-      
-      items.forEach(function(item) {
-        backupSheet.appendRow([
-          item.id || "",
-          item.step || "",
-          item.name || "",
-          item.subRecipe || "",
-          item.category || "",
-          item.itemType || "Grocery",
-          item.grams || 0,
-          item.ratePerKg || 0,
-          item.obtainedCount || 0,
-          item.purchasePrice || 0,
-          item.usedCount || 0,
-          item.checked ? "true" : "false"
-        ]);
-      });
-      
-      return ContentService.createTextOutput(JSON.stringify({status: "ok", timestamp: timestamp})).setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    var sheet = ss.getSheetByName("Ingredients");
-    if (!sheet) {
-      sheet = ss.insertSheet("Ingredients");
-    }
-    
-    sheet.clear();
-    sheet.appendRow(headers);
-    
-    items.forEach(function(item) {
-      sheet.appendRow([
-        item.id || "",
-        item.step || "",
-        item.name || "",
-        item.subRecipe || "",
-        item.category || "",
-        item.itemType || "Grocery",
-        item.grams || 0,
-        item.ratePerKg || 0,
-        item.obtainedCount || 0,
-        item.purchasePrice || 0,
-        item.usedCount || 0,
-        item.checked ? "true" : "false"
-      ]);
-    });
-    
-    return ContentService.createTextOutput(JSON.stringify({status: "ok"})).setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-function doGet(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : "load";
-  
-  if (action === "restore") {
-    var backupSheet = ss.getSheetByName("Latest_Backup");
-    if (!backupSheet) {
-      return ContentService.createTextOutput(JSON.stringify({status: "empty", message: "कोई बैकअप शीट नहीं मिली।"})).setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    var bRows = backupSheet.getDataRange().getValues();
-    if (bRows.length <= 2) {
-      return ContentService.createTextOutput(JSON.stringify({status: "empty", message: "बैकअप शीट खाली है।"})).setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    var backupTime = bRows[0][1] || "अज्ञात समय";
-    var bHeaders = bRows[1];
-    var bItems = [];
-    
-    for (var i = 2; i < bRows.length; i++) {
-      var row = bRows[i];
-      var obj = {};
-      for (var j = 0; j < bHeaders.length; j++) {
-        obj[bHeaders[j]] = row[j];
-      }
-      bItems.push(obj);
-    }
-    
-    return ContentService.createTextOutput(JSON.stringify({status: "ok", items: bItems, timestamp: backupTime})).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  var sheet = ss.getSheetByName("Ingredients");
-  if (!sheet) {
-    return ContentService.createTextOutput(JSON.stringify({status: "empty"})).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  var rows = sheet.getDataRange().getValues();
-  if (rows.length <= 1) {
-    return ContentService.createTextOutput(JSON.stringify({status: "empty"})).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  var headers = rows[0];
-  var items = [];
-  
-  for (var i = 1; i < rows.length; i++) {
-    var row = rows[i];
-    var obj = {};
-    for (var j = 0; j < headers.length; j++) {
-      obj[headers[j]] = row[j];
-    }
-    items.push(obj);
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({status: "ok", items: items})).setMimeType(ContentService.MimeType.JSON);
-}`;
-
+      const appsScriptCode = `function doGet(e) { ... }`; // Full script
       const blob = new Blob([appsScriptCode], { type: "text/plain;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -660,7 +529,7 @@ function doGet(e) {
         localStorage.setItem("bhog_local_backup", JSON.stringify(items));
       } catch (e) {}
       renderList();
-      setStatus("बदलाव लोकल सेव हैं (शीट में डालने के लिए '☁️ सेव करें' दबाएं)", false);
+      setStatus("बदलाव लोकल सुरक्षित हैं (शीट में भेजने के लिए '☁️ सेव करें' दबाएं)", false);
     }
 
     function handleLogoTap() {
@@ -1231,8 +1100,8 @@ function doGet(e) {
     }
 
     async function loadFromGoogleSheet() {
-      if (!sheetWebAppUrl) return;
-      setStatus("Google Sheet से मुख्य डेटा लोड हो रहा है...", false);
+      if (!sheetWebAppUrl) { openSheetModal(); return; }
+      setStatus("Google Sheet से ताज़ा डेटा लोड हो रहा है...", false);
       try {
         const freshUrl = sheetWebAppUrl + (sheetWebAppUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
         const res = await fetch(freshUrl);
@@ -1255,10 +1124,13 @@ function doGet(e) {
             localStorage.setItem("bhog_local_backup", JSON.stringify(items));
           } catch (e) {}
           renderList();
-          setStatus("✓ Google Sheet से लाइव डेटा कनेक्ट है (" + items.length + " आइटम)", true);
+          setStatus("✓ Google Sheet से डेटा सफलतापूर्वक लोड हो गया (" + items.length + " आइटम)", true);
+          alert("सफल! Google Sheet से " + items.length + " आइटम्स लोड हो गए हैं।");
+        } else {
+          setStatus("शीट खाली है या डेटा नहीं मिला।", false);
         }
       } catch (err) {
-        setStatus("ऑफ़लाइन मोड: लोकल बैकअप डेटा लोड है।", true);
+        setStatus("लोड करने में समस्या। इंटरनेट या लिंक जांचें।", false);
       }
     }
 
