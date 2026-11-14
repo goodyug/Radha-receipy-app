@@ -56,7 +56,7 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-1.5">
+      <div class="flex flex-wrap items-center gap-1.5">
         <button onclick="openSheetModal()" id="syncBtn" class="px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 transition" title="Google Sheet सेटिंग्स">
           ⚙️
         </button>
@@ -134,10 +134,26 @@
 
   <main class="max-w-3xl mx-auto px-4 pt-4 space-y-4">
 
-    <!-- Status Bar -->
-    <div id="statusBanner" class="rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 text-emerald-200">
-      <span id="statusText">डेटा लोड हो गया है।</span>
-      <button onclick="openSheetModal()" class="underline font-semibold text-amber-400 ml-2 shrink-0">लिंक सेटिंग्स</button>
+    <!-- Status Bar & Import/Export Toolbar -->
+    <div class="space-y-2">
+      <div id="statusBanner" class="rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 text-emerald-200">
+        <span id="statusText">डेटा लोड हो गया है।</span>
+        <button onclick="openSheetModal()" class="underline font-semibold text-amber-400 ml-2 shrink-0">लिंक सेटिंग्स</button>
+      </div>
+
+      <!-- Direct File Import & Export Buttons -->
+      <div class="flex items-center justify-between gap-2 bg-slate-900/80 border border-slate-800 rounded-xl p-2">
+        <span class="text-[11px] text-slate-400 pl-1">फाइल बैकअप / लिस्टिंग:</span>
+        <div class="flex items-center gap-2">
+          <button onclick="exportDataCSV()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 transition">
+            <span>📤 एक्सपोर्ट (CSV)</span>
+          </button>
+          <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 flex items-center gap-1 transition">
+            <span>📥 इम्पोर्ट (CSV/JSON)</span>
+          </button>
+          <input type="file" id="importFileInput" accept=".csv,.json" class="hidden" onchange="handleFileImport(event)" />
+        </div>
+      </div>
     </div>
 
     <!-- Summary Cards -->
@@ -311,6 +327,132 @@
         openSheetModal();
       }
     });
+
+    // --- CSV EXPORT FUNCTION ---
+    function exportDataCSV() {
+      if (items.length === 0) {
+        alert("एक्सपोर्ट करने के लिए कोई डेटा नहीं है।");
+        return;
+      }
+      const headers = ["id", "step", "name", "subRecipe", "category", "itemType", "grams", "ratePerKg", "obtainedCount", "purchasePrice", "usedCount", "checked"];
+      const csvRows = [headers.join(",")];
+
+      items.forEach(item => {
+        const row = [
+          item.id || "",
+          `"${String(item.step || "").replace(/"/g, '""')}"`,
+          `"${String(item.name || "").replace(/"/g, '""')}"`,
+          `"${String(item.subRecipe || "").replace(/"/g, '""')}"`,
+          item.category || "non-packing",
+          item.itemType || "Grocery",
+          item.grams || 0,
+          item.ratePerKg || 0,
+          item.obtainedCount || 0,
+          item.purchasePrice || 0,
+          item.usedCount || 0,
+          item.checked ? "true" : "false"
+        ];
+        csvRows.push(row.join(","));
+      });
+
+      const csvContent = "\uFEFF" + csvRows.join("\n"); // BOM for proper Hindi Excel support
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const dateStr = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `Bhog_Prasadi_Backup_${dateStr}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setStatus("✓ CSV फाइल डाउनलोड हो गई है!", true);
+    }
+
+    // --- CSV / JSON IMPORT FUNCTION ---
+    function handleFileImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const content = e.target.result;
+        try {
+          if (file.name.endsWith(".json")) {
+            const parsed = JSON.parse(content);
+            const list = Array.isArray(parsed) ? parsed : (parsed.items || []);
+            if (list.length === 0) throw new Error("खाली फाइल");
+            items = list;
+          } else {
+            // Parse CSV
+            const lines = content.split(/\r?\n/).filter(line => line.trim() !== "");
+            if (lines.length < 2) throw new Error("CSV फाइल में डेटा नहीं है।");
+            
+            const parseCSVLine = (text) => {
+              const result = [];
+              let cell = "";
+              let inQuotes = false;
+              for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                if (char === '"') {
+                  if (inQuotes && text[i+1] === '"') {
+                    cell += '"';
+                    i++;
+                  } else {
+                    inQuotes = !inQuotes;
+                  }
+                } else if (char === ',' && !inQuotes) {
+                  result.push(cell.trim());
+                  cell = "";
+                } else {
+                  cell += char;
+                }
+              }
+              result.push(cell.trim());
+              return result;
+            };
+
+            const headers = parseCSVLine(lines[0]).map(h => h.replace(/^\uFEFF/, '').trim());
+            const importedItems = [];
+
+            for (let i = 1; i < lines.length; i++) {
+              const vals = parseCSVLine(lines[i]);
+              if (vals.length < 3) continue;
+              const obj = {};
+              headers.forEach((h, idx) => {
+                obj[h] = vals[idx] !== undefined ? vals[idx] : "";
+              });
+              importedItems.push({
+                id: Number(obj.id) || i,
+                step: String(obj.step || "1"),
+                name: String(obj.name || "अज्ञात सामग्री"),
+                subRecipe: String(obj.subRecipe || "आलू बड़ा"),
+                category: String(obj.category || "non-packing"),
+                itemType: String(obj.itemType || "Grocery"),
+                grams: parseFloat(obj.grams) || 0,
+                ratePerKg: parseFloat(obj.ratePerKg) || 0,
+                obtainedCount: parseFloat(obj.obtainedCount) || 0,
+                purchasePrice: parseFloat(obj.purchasePrice) || 0,
+                usedCount: parseFloat(obj.usedCount) || 0,
+                checked: String(obj.checked).toLowerCase() === "true"
+              });
+            }
+
+            if (importedItems.length === 0) throw new Error("कोई वैध आइटम नहीं मिला।");
+            if (!confirm(`फाइल से ${importedItems.length} आइटम्स मिले हैं। क्या आप इन्हें ऐप में लोड करना चाहते हैं?`)) return;
+            items = importedItems;
+          }
+
+          saveLocallyOnly();
+          setStatus(`✓ फाइल से ${items.length} आइटम्स इम्पोर्ट हो गए! (शीट में डालने के लिए '☁️ सेव करें' दबाएं)`, true);
+          alert(`सफल! ${items.length} आइटम्स ऐप में लोड हो गए हैं। अब ऊपर हरा '☁️ सेव करें' बटन दबाकर इन्हें Google Sheet में भी पक्का सेव कर लें।`);
+        } catch (err) {
+          alert("फाइल पढ़ने में त्रुटि: " + err.message);
+        }
+        event.target.value = "";
+      };
+      reader.readAsText(file);
+    }
 
     function saveCustomHeader() {
       const title = document.getElementById("editableTitle").textContent.trim();
@@ -898,7 +1040,8 @@
       if (!sheetWebAppUrl) return;
       setStatus("Google Sheet से मुख्य डेटा लोड हो रहा है...", false);
       try {
-        const res = await fetch(sheetWebAppUrl);
+        const freshUrl = sheetWebAppUrl + (sheetWebAppUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
+        const res = await fetch(freshUrl);
         const data = await res.json();
         if (data.status === "ok" && Array.isArray(data.items) && data.items.length > 0) {
           items = data.items.map((r, i) => ({
@@ -943,7 +1086,7 @@
 
     async function triggerBackup() {
       if (!sheetWebAppUrl) { openSheetModal(); return; }
-      if (!confirm("क्या आप अभी के डेटा का अलग 'Latest_Backup' शीट में नया बैकअप बनाना चाहते हैं? (पुराना बैकअप हटकर नया सेव हो जाएगा)")) return;
+      if (!confirm("क्या आप अभी के डेटा का अलग 'Latest_Backup' शीट में नया बैकअप बनाना चाहते हैं?")) return;
       
       setStatus("अलग शीट में बैकअप लिया जा रहा है...", false);
       try {
@@ -963,11 +1106,11 @@
 
     async function triggerRestore() {
       if (!sheetWebAppUrl) { openSheetModal(); return; }
-      if (!confirm("क्या आप वाकई 'Latest_Backup' वाली शीट से डेटा वापस लाना (Restore) चाहते हैं? इससे अभी दिख रहा डेटा बदल जाएगा।")) return;
+      if (!confirm("क्या आप वाकई 'Latest_Backup' वाली शीट से डेटा वापस लाना (Restore) चाहते हैं?")) return;
       
-      setStatus("बैकअप शीट से डेटा रिस्टोर किया जा रहा है...", false);
+      setStatus("बैकअप शीट से ताज़ा डेटा रिस्टोर किया जा रहा है...", false);
       try {
-        const restoreUrl = sheetWebAppUrl + (sheetWebAppUrl.includes("?") ? "&" : "?") + "action=restore";
+        const restoreUrl = sheetWebAppUrl + (sheetWebAppUrl.includes("?") ? "&" : "?") + "action=restore&t=" + Date.now();
         const res = await fetch(restoreUrl);
         const data = await res.json();
         
@@ -993,7 +1136,7 @@
           setStatus("✓ रिस्टोर सफल! बैकअप समय (" + (data.timestamp || "") + ") का डेटा वापस आ गया है।", true);
           alert("रिस्टोर पूरा हुआ! बैकअप दिनांक/समय: " + (data.timestamp || "") + " का डेटा मुख्य शीट और ऐप में वापस आ गया है।");
         } else {
-          setStatus("कोई बैकअप डेटा नहीं मिला। पहले '🛡️ बैकअप' लें।", false);
+          setStatus("कोई बैकअप डेटा नहीं मिला।", false);
           alert(data.message || "बैकअप शीट में कोई डेटा नहीं मिला।");
         }
       } catch (err) {
