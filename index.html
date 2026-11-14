@@ -56,6 +56,7 @@
         </div>
       </div>
 
+      <!-- Action Buttons Toolbar -->
       <div class="flex flex-wrap items-center gap-1.5">
         <button onclick="openSheetModal()" id="syncBtn" class="px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 transition" title="Google Sheet सेटिंग्स">
           ⚙️
@@ -68,6 +69,16 @@
         </button>
         <button onclick="triggerRestore()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white shadow transition" title="आख़िरी बैकअप से डेटा वापस लाएं">
           🔄 रिस्टोर
+        </button>
+        <!-- Download Code & URL Buttons -->
+        <button onclick="downloadAppsScriptCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="Apps Script बैकएंड कोड डाउनलोड करें">
+          📜 Apps Script कोड
+        </button>
+        <button onclick="downloadHtmlCodeFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML फ्रंटएंड कोड डाउनलोड करें">
+          🌐 HTML कोड
+        </button>
+        <button onclick="downloadWebUrlFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow transition" title="वेब यूआरएल लिंक टेक्स्ट फाइल डाउनलोड करें">
+          🔗 वेब यूआरएल
         </button>
       </div>
     </div>
@@ -141,30 +152,17 @@
         <button onclick="openSheetModal()" class="underline font-semibold text-amber-400 ml-2 shrink-0">लिंक सेटिंग्स</button>
       </div>
 
-      <!-- Direct File Import & Export Buttons (Data + Code Backups) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-900/80 border border-slate-800 rounded-xl p-2.5">
-        <div class="flex items-center justify-between gap-1">
-          <span class="text-[11px] text-slate-400 pl-1">डेटा लिस्टिंग:</span>
-          <div class="flex items-center gap-1.5">
-            <button onclick="exportDataCSV()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 transition">
-              📤 एक्सपोर्ट (CSV)
-            </button>
-            <button onclick="document.getElementById('importFileInput').click()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 transition">
-              📥 इम्पोर्ट
-            </button>
-            <input type="file" id="importFileInput" accept=".csv,.json" class="hidden" onchange="handleFileImport(event)" />
-          </div>
-        </div>
-        <div class="flex items-center justify-between gap-1 border-t sm:border-t-0 sm:border-l border-slate-800 pt-2 sm:pt-0 sm:pl-2">
-          <span class="text-[11px] text-slate-400 pl-1">कोडिंग बैकअप:</span>
-          <div class="flex items-center gap-1.5">
-            <button onclick="downloadAppsScriptCode()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-500/30 transition" title="Apps Script कोड डाउनलोड करें">
-              📜 Apps Script.js
-            </button>
-            <button onclick="downloadHtmlCode()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/30 transition" title="HTML कोड डाउनलोड करें">
-              🌐 HTML.html
-            </button>
-          </div>
+      <!-- Direct File Import & Export Buttons -->
+      <div class="flex items-center justify-between gap-2 bg-slate-900/80 border border-slate-800 rounded-xl p-2">
+        <span class="text-[11px] text-slate-400 pl-1">फाइल बैकअप / लिस्टिंग:</span>
+        <div class="flex items-center gap-2">
+          <button onclick="exportDataCSV()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 transition">
+            <span>📤 एक्सपोर्ट (CSV)</span>
+          </button>
+          <button onclick="document.getElementById('importFileInput').click()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 flex items-center gap-1 transition">
+            <span>📥 इम्पोर्ट (CSV/JSON)</span>
+          </button>
+          <input type="file" id="importFileInput" accept=".csv,.json" class="hidden" onchange="handleFileImport(event)" />
         </div>
       </div>
     </div>
@@ -341,8 +339,24 @@
       }
     });
 
-    // --- DOWNLOAD APPS SCRIPT CODE FILE (.js) ---
-    function downloadAppsScriptCode() {
+    // --- DOWNLOAD WEB APP URL AS .TXT FILE ---
+    function downloadWebUrlFile() {
+      const urlContent = "Google Apps Script Web App URL:\n" + sheetWebAppUrl + "\n\nSaved Date & Time: " + new Date().toLocaleString("hi-IN");
+      const blob = new Blob([urlContent], { type: "text/plain;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const dateStr = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `Google_Sheet_WebApp_URL_${dateStr}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setStatus("✓ वेब यूआरएल लिंक फाइल डाउनलोड हो गई!", true);
+    }
+
+    // --- DOWNLOAD APPS SCRIPT CODE AS .TXT FILE ---
+    function downloadAppsScriptCodeFile() {
       const appsScriptCode = `function doPost(e) {
   var lock = LockService.getScriptLock();
   lock.tryLock(10000);
@@ -474,33 +488,33 @@ function doGet(e) {
   return ContentService.createTextOutput(JSON.stringify({status: "ok", items: items})).setMimeType(ContentService.MimeType.JSON);
 }`;
 
-      const blob = new Blob([appsScriptCode], { type: "text/javascript;charset=utf-8;" });
+      const blob = new Blob([appsScriptCode], { type: "text/plain;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       const dateStr = new Date().toISOString().slice(0, 10);
       a.href = url;
-      a.download = `Bhog_AppsScript_Backup_${dateStr}.js`;
+      a.download = `Apps_Script_Backend_Code_${dateStr}.txt`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      setStatus("✓ Apps Script कोड फाइल डाउनलोड हो गई है!", true);
+      setStatus("✓ Apps Script कोड फाइल डाउनलोड हो गई!", true);
     }
 
-    // --- DOWNLOAD HTML / GITHUB CODE FILE (.html) ---
-    function downloadHtmlCode() {
-      const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+    // --- DOWNLOAD HTML/GITHUB CODE AS .HTML FILE ---
+    function downloadHtmlCodeFile() {
+      const htmlContent = document.documentElement.outerHTML;
       const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       const dateStr = new Date().toISOString().slice(0, 10);
       a.href = url;
-      a.download = `Bhog_Prasadi_HTML_Backup_${dateStr}.html`;
+      a.download = `GitHub_Frontend_Code_${dateStr}.html`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      setStatus("✓ HTML (GitHub) कोड फाइल डाउनलोड हो गई है!", true);
+      setStatus("✓ HTML फ्रंटएंड कोड फाइल डाउनलोड हो गई!", true);
     }
 
     // --- CSV EXPORT FUNCTION ---
