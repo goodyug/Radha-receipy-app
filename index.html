@@ -79,7 +79,7 @@
         <button onclick="downloadHtmlCodeFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="HTML कोड डाउनलोड करें">
           🌐 HTML कोड
         </button>
-        <button onclick="downloadWebUrlFile()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-500 text-white shadow transition" title="वेब यूआरएल डाउनलोड करें">
+        <button onclick="downloadWebUrlFile()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-500 text-white shadow transition" title="वेब यूआरएल डाउनलोड करें">
           🔗 यूआरएल
         </button>
       </div>
@@ -107,7 +107,7 @@
     <span id="floatingCartCount" class="bg-slate-950 text-amber-300 px-2 py-0.5 rounded-full text-[11px]">0</span>
   </button>
 
-  <!-- Separate Cart View Page / Modal (Instant DOM Swap Up/Down) -->
+  <!-- Separate Cart View Page / Modal (Clean & Instant Sync) -->
   <div id="cartModal" class="fixed inset-0 z-50 hidden bg-[#0f172a] overflow-y-auto pb-20">
     <div class="sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 px-4 py-3">
       <div class="max-w-3xl mx-auto flex items-center justify-between">
@@ -601,7 +601,7 @@
       return cartOrderIds.map(id => checked.find(i => Number(i.id) === Number(id))).filter(Boolean);
     }
 
-    // --- INSTANT DOM REORDER FOR CART ITEMS (SMOOTH & GUARANTEED) ---
+    // --- INSTANT & CLEAN CART ITEM MOVE FUNCTION ---
     function moveCartItem(id, direction) {
       const numId = Number(id);
       const checked = items.filter(i => isChecked(i));
@@ -631,7 +631,6 @@
         localStorage.setItem("bhog_cart_order", JSON.stringify(cartOrderIds));
       } catch(e) {}
 
-      // Instantly re-render cart items so DOM updates immediately
       renderCartItems();
     }
 
@@ -660,6 +659,7 @@
       renderList();
     }
 
+    // --- CLEAN & INSTANT UNCHECK FIX (NO STUCK/GHOST ELEMENTS) ---
     function uncheckFromCart(id) {
       const item = items.find(x => x.id === Number(id));
       if (!item) return;
@@ -668,21 +668,11 @@
       try {
         localStorage.setItem("bhog_local_backup", JSON.stringify(items));
       } catch (e) {}
+      
       setStatus("बदलाव लोकल सुरक्षित हैं (शीट में भेजने के लिए '☁️ सेव करें' दबाएं)", false);
 
-      const cardEl = document.getElementById("cart_card_" + id);
-      if (cardEl) {
-        cardEl.style.transition = "all 0.2s ease";
-        cardEl.style.opacity = "0";
-        cardEl.style.transform = "scale(0.95)";
-        setTimeout(() => {
-          cardEl.remove();
-          renderCartItems();
-        }, 200);
-      } else {
-        renderCartItems();
-      }
-
+      // Instantly re-render cart and main list without animations to prevent any stuck items
+      renderCartItems();
       updateCartSummaryOnly();
       renderList();
     }
@@ -1456,7 +1446,7 @@
           } catch (e) {}
           renderList();
           await saveToGoogleSheet();
-          setStatus("✓ रिस्टोर सफल! बैकअप समय (" + (data.timestamp || "") + ") का डेटा वापस आ गया है।", true);
+          setStatus("✓ रिस्टोर सफल! बैकअप समय (" + (data.timestamp || "") + ") का डेटा वापस आ गया है.", true);
           alert("रिस्टोर पूरा हुआ! बैकअप दिनांक/समय: " + (data.timestamp || "") + " का डेटा मुख्य शीट और ऐप में वापस आ गया है।");
         } else {
           setStatus("कोई बैकअप डेटा नहीं मिला।", false);
