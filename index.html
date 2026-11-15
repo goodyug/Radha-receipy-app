@@ -50,12 +50,16 @@
         <button onclick="closeSidebar()" class="text-slate-400 hover:text-white text-lg">✕</button>
       </div>
       <div class="space-y-1.5 overflow-y-auto max-h-[72vh] pr-1">
-        <div onclick="openDemoPage('होम स्क्रीन (मुख्य कॉस्टिंग)')" class="w-full text-left px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold cursor-pointer">
-          🏠 होम स्क्रीन
+        <div onclick="closeSidebar()" class="w-full text-left px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold cursor-pointer">
+          🏠 होम स्क्रीन (मुख्य कॉस्टिंग)
         </div>
-        <!-- 10 Demo Pages -->
+        <div onclick="openDashboardModal()" class="w-full text-left px-3 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold cursor-pointer flex items-center justify-between">
+          <span>📊 डैशबोर्ड (कैश & एक्सपेंस)</span>
+          <span class="text-[10px] text-emerald-400">नया</span>
+        </div>
+        <!-- Demo Pages -->
         <script>
-          for (let i = 1; i <= 10; i++) {
+          for (let i = 2; i <= 10; i++) {
             document.write(`
               <div onclick="openDemoPage('डेमो पेज ${i}')" class="w-full text-left px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold cursor-pointer transition flex items-center justify-between">
                 <span>📄 डेमो पेज ${i}</span>
@@ -82,11 +86,106 @@
     <div class="flex-1 flex items-center justify-center p-6 text-center">
       <div class="card-dark rounded-2xl p-8 max-w-md w-full space-y-3">
         <div class="text-3xl">🛠️</div>
-        <h3 class="text-lg font-bold text-amber-400" id="demoMsgTitle">काम प्रगति पर है (Work is Running)</h3>
-        <p class="text-xs text-slate-300 leading-relaxed">इस पेज की रूपरेखा तैयार कर दी गई है। आने वाले समय में यहाँ नए फीचर्स और डेटा लिंक किए जाएंगे।</p>
+        <h3 class="text-lg font-bold text-amber-400" id="demoMsgTitle">काम प्रगति पर है</h3>
+        <p class="text-xs text-slate-300 leading-relaxed">इस पेज की रूपरेखा तैयार कर दी गई है।</p>
         <button onclick="closeDemoPage()" class="mt-2 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs">
           मुख्य होम पर वापस जाएं
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Modal Page -->
+  <div id="dashboardModal" class="fixed inset-0 z-50 hidden bg-[#0f172a] overflow-y-auto pb-24">
+    <div class="sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 px-4 py-3">
+      <div class="max-w-3xl mx-auto flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">📊</span>
+          <div>
+            <h2 class="text-base font-bold text-emerald-400 leading-tight">फाइनेंशियल डैशबोर्ड (कैश, बैंक & एक्सपेंस)</h2>
+            <p class="text-[11px] text-slate-400">कैश कैलकुलेटर, बैंक बैलेंस, और खर्च जोड़कर शुद्ध बैलेंस देखें</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button onclick="exportDashboardCSV()" class="px-2.5 py-1.5 rounded-xl bg-teal-700 hover:bg-teal-600 text-white text-xs font-bold shadow transition">📥 इतिहास एक्सपोर्ट</button>
+          <button onclick="document.getElementById('importDashboardInput').click()" class="px-2.5 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-600 text-white text-xs font-bold shadow transition">📤 इम्पोर्ट</button>
+          <input type="file" id="importDashboardInput" accept=".csv" class="hidden" onchange="handleDashboardFileImport(event)" />
+          <button onclick="closeDashboardModal()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-amber-300">
+            ← वापस जाएं
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="max-w-3xl mx-auto px-4 pt-4 space-y-4">
+      <div id="dashToastBanner" class="hidden rounded-xl px-4 py-2.5 text-xs font-semibold bg-emerald-500/20 border border-emerald-400 text-emerald-200 flex items-center justify-between">
+        <span id="dashToastText"></span>
+        <button onclick="document.getElementById('dashToastBanner').classList.add('hidden')" class="ml-2 text-emerald-300 font-bold">✕</button>
+      </div>
+
+      <!-- Net Balance & Summary -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <div class="card-dark rounded-2xl p-3 border-amber-500/40 bg-amber-950/20 col-span-2">
+          <div class="text-[11px] text-slate-400">✨ शुद्ध बैलेंस अमाउंट (Net Balance)</div>
+          <div id="dashNetBalance" class="text-2xl font-bold text-amber-400 mt-0.5">₹0.00</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">(कुल कलेक्शन - कुल खर्च)</div>
+        </div>
+        <div class="card-dark rounded-2xl p-3 border-emerald-500/40 bg-emerald-950/20">
+          <div class="text-[11px] text-slate-400">💵 कुल कैश इन हैंड</div>
+          <div id="dashTotalCash" class="text-lg font-bold text-emerald-400 mt-0.5">₹0.00</div>
+        </div>
+        <div class="card-dark rounded-2xl p-3 border-sky-500/40 bg-sky-950/20">
+          <div class="text-[11px] text-slate-400">💳 कुल ऑनलाइन / बैंक</div>
+          <div id="dashTotalOnline" class="text-lg font-bold text-sky-400 mt-0.5">₹0.00</div>
+        </div>
+      </div>
+
+      <!-- Section 1: Cash Denomination Calculator -->
+      <div class="card-dark rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+          <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wide">💵 1. कैश डिनोमिनेशन कैलकुलेटर (नोट और सिक्के)</h3>
+          <span id="dashCashSubTotal" class="text-xs font-bold text-amber-300">₹0.00</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <div><label class="text-[10px] text-slate-400 block mb-0.5">₹500 नोट</label><input type="number" id="note_500" min="0" oninput="calcDashboard()" placeholder="संख्या" class="input-dark w-full rounded-lg px-2.5 py-1.5" /></div>
+          <div><label class="text-[10px] text-slate-400 block mb-0.5">₹200 नोट</label><input type="number" id="note_200" min="0" oninput="calcDashboard()" placeholder="संख्या" class="input-dark w-full rounded-lg px-2.5 py-1.5" /></div>
+          <div><label class="text-[10px] text-slate-400 block mb-0.5">₹100 नोट</label><input type="number" id="note_100" min="0" oninput="calcDashboard()" placeholder="संख्या" class="input-dark w-full rounded-lg px-2.5 py-1.5" /></div>
+          <div><label class="text-[10px] text-slate-400 block mb-0.5">₹50 नोट</label><input type="number" id="note_50" min="0" oninput="calcDashboard()" placeholder="संख्या" class="input-dark w-full rounded-lg px-2.5 py-1.5" /></div>
+          <div><label class="text-[10px] text-slate-400 block mb-0.5">₹20 नोट</label><input type="number" id="note_20" min="0" oninput="calcDashboard()" placeholder="संख्या" class="input-dark w-full rounded-lg px-2.5 py-1.5" /></div>
+          <div><label class="text-[10px] text-slate-400 block mb-0.5">₹10 नोट</label><input type="number" id="note_10" min="0" oninput="calcDashboard()" placeholder="संख्या" class="input-dark w-full rounded-lg px-2.5 py-1.5" /></div>
+          <div><label class="text-[10px] text-slate-400 block mb-0.5">खुट्टे सिक्के (Coins Value)</label><input type="number" id="coins_total" min="0" step="any" oninput="calcDashboard()" placeholder="कुल राशि ₹" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-emerald-300 font-semibold" /></div>
+        </div>
+      </div>
+
+      <!-- Section 2: Online / Bank Balances Folders -->
+      <div class="card-dark rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+          <h3 class="text-xs font-bold text-sky-400 uppercase tracking-wide">💳 2. ऑनलाइन / बैंक बैलेंस फोल्डर</h3>
+          <button onclick="addBankFolderPrompt()" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold">+ बैंक जोड़ें</button>
+        </div>
+        <div id="bankFoldersContainer" class="space-y-2"></div>
+      </div>
+
+      <!-- Section 3: Expenses Folders -->
+      <div class="card-dark rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+          <h3 class="text-xs font-bold text-rose-400 uppercase tracking-wide">📉 3. खर्च और परचेसिंग फोल्डर (Expenses)</h3>
+          <button onclick="addExpenseFolderPrompt()" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold">+ खर्च फोल्डर जोड़ें</button>
+        </div>
+        <div id="expenseFoldersContainer" class="space-y-2"></div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="pt-2">
+        <button onclick="submitDashboardTransaction()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-xl transition">
+          ✓ डैशबोर्ड ट्रांजैक्शन सबमिट करें (इतिहास में सुरक्षित करें)
+        </button>
+      </div>
+
+      <!-- Dashboard History Section -->
+      <div class="space-y-2 pt-4 border-t border-slate-700">
+        <h3 class="text-xs font-bold text-teal-400 uppercase tracking-wide">📑 डैशबोर्ड ट्रांजैक्शन इतिहास (Dashboard History)</h3>
+        <div id="dashboardHistoryContainer" class="space-y-2.5"></div>
       </div>
     </div>
   </div>
@@ -95,26 +194,21 @@
   <header class="sticky top-0 z-30 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 px-3 py-2.5">
     <div class="max-w-3xl mx-auto flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2.5">
-        <!-- Hamburger Menu Button -->
-        <button onclick="openSidebar()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center text-amber-300 font-bold text-base shrink-0" title="मेनू खोलें">
-          ☰
-        </button>
-
+        <button onclick="openSidebar()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center text-amber-300 font-bold text-base shrink-0" title="मेनू खोलें">☰</button>
         <div onclick="handleLogoTap()" id="logoContainer" class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg border-2 border-amber-200 shrink-0 cursor-pointer overflow-hidden relative">
-          <img id="logoImg" src="" alt="Logo" class="w-full h-full object-cover hidden" />
+          <img id="logoImg" alt="Logo" class="w-full h-full object-cover hidden" />
           <svg id="logoDefaultIcon" class="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2C9.5 6 7 8.5 7 12c0 2.8 2.2 5 5 5s5-2.2 5-5c0-3.5-2.5-6-5-10zm-7 9c-1.5 1.5-2 3.5-1 5.5 1 2 3.5 3 6 2.5-2.5-1.5-4.2-4.3-5-8zm14 0c-.8 3.7-2.5 6.5-5 8 2.5.5 5-.5 6-2.5 1-2 .5-4-1-5.5zM4 20h16v2H4v-2z"/>
           </svg>
         </div>
         <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)" />
-
         <div>
           <h1 id="editableTitle" contenteditable="true" onblur="saveCustomHeader()" class="text-sm sm:text-base font-bold text-amber-400 leading-tight outline-none focus:ring-1 focus:ring-amber-400 rounded px-1" title="क्लिक करके नाम बदलें">राधा भोग प्रसादी costing</h1>
           <p id="editableSubtitle" contenteditable="true" onblur="saveCustomHeader()" class="text-[10px] text-slate-400 outline-none focus:ring-1 focus:ring-slate-400 rounded px-1" title="क्लिक करके विवरण बदलें">शुद्ध सात्विक भोग प्रसादी • श्री राधे</p>
         </div>
       </div>
 
-      <!-- Action Buttons Toolbar (Main Home) -->
+      <!-- Action Buttons Toolbar -->
       <div class="flex flex-wrap items-center gap-1">
         <button onclick="loadFromSheet()" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-sky-600 hover:bg-sky-500 text-white shadow transition" title="शीट से लोड करें">📥 लोड</button>
         <button onclick="saveToSheet()" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition" title="गूगल शीट पर सेव करें">☁️ सेव</button>
@@ -122,7 +216,7 @@
         <button onclick="restoreFromSheet()" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="बैकअप से रिस्टोर करें">🔄 रिस्टोर</button>
         <button onclick="exportDataCSV()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow transition" title="CSV एक्सपोर्ट">📤 एक्सपोर्ट</button>
         <button onclick="document.getElementById('importFileInput').click()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-violet-600 hover:bg-violet-500 text-white shadow transition" title="CSV इम्पोर्ट">📥 इम्पोर्ट</button>
-        <button onclick="openCartModal()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-600 text-white shadow transition flex items-center gap-1" title="व्यू कार्ट और इतिहास">🛒 कार्ट / इतिहास <span id="headerCartCount" class="bg-slate-950 text-amber-300 px-1.5 py-0.2 rounded-full text-[10px]">0</span></button>
+        <button onclick="openCartModal()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-600 text-white shadow transition flex items-center gap-1" title="व्यू कार्ट और इतिहास">🛒 कार्ट <span id="headerCartCount" class="bg-slate-950 text-amber-300 px-1.5 py-0.2 rounded-full text-[10px]">0</span></button>
         <input type="file" id="importFileInput" accept=".csv,.json" class="hidden" onchange="handleFileImport(event)" />
       </div>
     </div>
@@ -167,54 +261,31 @@
         <button onclick="document.getElementById('cartToastBanner').classList.add('hidden')" class="ml-2 text-emerald-300 font-bold">✕</button>
       </div>
 
-      <!-- Organized Summary Boxes: Cart Side vs Today Side -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <!-- Cart / Selected Summary Box -->
         <div class="card-dark rounded-2xl p-4 border-emerald-500/40 bg-emerald-950/20 space-y-2">
           <div class="text-xs font-bold text-emerald-400 border-b border-emerald-500/20 pb-1.5">🛒 कार्ट (चयनित आइटम) समरी</div>
           <div class="grid grid-cols-3 gap-2 pt-1 text-center">
-            <div class="bg-slate-900/60 rounded-xl p-2">
-              <div class="text-[10px] text-slate-400">कुल खर्च</div>
-              <div id="cartTotalCost" class="text-sm font-bold text-amber-400 mt-0.5">₹0.00</div>
-            </div>
-            <div class="bg-slate-900/60 rounded-xl p-2">
-              <div class="text-[10px] text-slate-400">कुल वजन / पीस</div>
-              <div id="cartTotalWeightPieces" class="text-xs font-bold text-emerald-300 mt-0.5">0 ग्राम</div>
-            </div>
-            <div class="bg-slate-900/60 rounded-xl p-2">
-              <div class="text-[10px] text-slate-400">कुल आइटम</div>
-              <div id="cartTotalCount" class="text-sm font-bold text-sky-400 mt-0.5">0</div>
-            </div>
+            <div class="bg-slate-900/60 rounded-xl p-2"><div class="text-[10px] text-slate-400">कुल खर्च</div><div id="cartTotalCost" class="text-sm font-bold text-amber-400 mt-0.5">₹0.00</div></div>
+            <div class="bg-slate-900/60 rounded-xl p-2"><div class="text-[10px] text-slate-400">कुल वजन / पीस</div><div id="cartTotalWeightPieces" class="text-xs font-bold text-emerald-300 mt-0.5">0 ग्राम</div></div>
+            <div class="bg-slate-900/60 rounded-xl p-2"><div class="text-[10px] text-slate-400">कुल आइटम</div><div id="cartTotalCount" class="text-sm font-bold text-sky-400 mt-0.5">0</div></div>
           </div>
         </div>
 
-        <!-- Today's Summary Box -->
         <div class="card-dark rounded-2xl p-4 border-sky-500/40 bg-sky-950/20 space-y-2">
           <div class="text-xs font-bold text-sky-400 border-b border-sky-500/20 pb-1.5">📅 आज का (Today's) खर्च समरी</div>
           <div class="grid grid-cols-3 gap-2 pt-1 text-center">
-            <div class="bg-slate-900/60 rounded-xl p-2">
-              <div class="text-[10px] text-slate-400">आज का खर्च</div>
-              <div id="cartTodayCost" class="text-sm font-bold text-amber-400 mt-0.5">₹0.00</div>
-            </div>
-            <div class="bg-slate-900/60 rounded-xl p-2">
-              <div class="text-[10px] text-slate-400">आज का वजन / पीस</div>
-              <div id="cartTodayWeightPieces" class="text-xs font-bold text-sky-300 mt-0.5">0 ग्राम</div>
-            </div>
-            <div class="bg-slate-900/60 rounded-xl p-2">
-              <div class="text-[10px] text-slate-400">आज के आइटम</div>
-              <div id="cartTodayCount" class="text-sm font-bold text-sky-400 mt-0.5">0</div>
-            </div>
+            <div class="bg-slate-900/60 rounded-xl p-2"><div class="text-[10px] text-slate-400">आज का खर्च</div><div id="cartTodayCost" class="text-sm font-bold text-amber-400 mt-0.5">₹0.00</div></div>
+            <div class="bg-slate-900/60 rounded-xl p-2"><div class="text-[10px] text-slate-400">आज का वजन / पीस</div><div id="cartTodayWeightPieces" class="text-xs font-bold text-sky-300 mt-0.5">0 ग्राम</div></div>
+            <div class="bg-slate-900/60 rounded-xl p-2"><div class="text-[10px] text-slate-400">आज के आइटम</div><div id="cartTodayCount" class="text-sm font-bold text-sky-400 mt-0.5">0</div></div>
           </div>
         </div>
       </div>
 
-      <!-- Active Cart Items Section -->
       <div class="space-y-2">
         <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wide">📦 टिक किए गए कार्ट आइटम्स (खरीद के लिए)</h3>
         <div id="cartItemsContainer" class="space-y-2.5"></div>
       </div>
 
-      <!-- Submitted History Section -->
       <div class="space-y-2 pt-4 border-t border-slate-700">
         <h3 class="text-xs font-bold text-teal-400 uppercase tracking-wide">📑 सबमिट किया हुआ ट्रांजैक्शन इतिहास (Submitted History)</h3>
         <div id="historyItemsContainer" class="space-y-2.5"></div>
@@ -223,7 +294,6 @@
   </div>
 
   <main class="max-w-3xl mx-auto px-4 pt-4 space-y-4">
-
     <!-- Status Bar -->
     <div class="space-y-2">
       <div id="statusBanner" class="rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 text-emerald-200">
@@ -238,19 +308,16 @@
         <div id="grandTotalCost" class="text-2xl font-bold text-amber-400 mt-1">₹0.00</div>
         <div id="perKgRate" class="text-[11px] text-slate-400 mt-0.5">₹0.00 / kg औसत</div>
       </div>
-
       <div class="card-dark rounded-2xl p-3.5">
         <div class="text-xs text-slate-400">कुल वजन (नॉन-पैकिंग)</div>
         <div id="totalWeightKg" class="text-2xl font-bold text-emerald-400 mt-1">0.00 kg</div>
         <div id="totalWeightGm" class="text-[11px] text-slate-400 mt-0.5">0 ग्राम</div>
       </div>
-
       <div class="card-dark rounded-2xl p-3.5">
         <div class="text-xs text-slate-400">नॉन-पैकिंग खर्च</div>
         <div id="nonPackingCost" class="text-xl font-bold text-slate-100 mt-1">₹0.00</div>
         <div id="nonPackingCount" class="text-[11px] text-slate-400 mt-0.5">0 सामग्री</div>
       </div>
-
       <div class="card-dark rounded-2xl p-3.5">
         <div class="text-xs text-slate-400">पैकिंग खर्च (काउंट)</div>
         <div id="packingCost" class="text-xl font-bold text-sky-400 mt-1">₹0.00</div>
@@ -267,9 +334,7 @@
         <span id="subTotalTitle" class="font-bold text-emerald-400 text-sm">सब टोटल</span>
         <div id="subTotalDesc" class="text-slate-300 text-[11px] mt-0.5">सामग्री: 0 | वजन: 0 ग्राम</div>
       </div>
-      <div class="text-right">
-        <div id="subTotalCost" class="text-lg font-bold text-emerald-300">₹0.00</div>
-      </div>
+      <div class="text-right"><div id="subTotalCost" class="text-lg font-bold text-emerald-300">₹0.00</div></div>
     </div>
 
     <!-- Add New Item Box -->
@@ -283,12 +348,8 @@
       </div>
 
       <div class="grid grid-cols-12 gap-2.5 mb-2.5">
-        <div class="col-span-3 sm:col-span-2">
-          <input id="newStep" type="number" step="any" placeholder="क्रम" class="input-dark w-full rounded-xl px-2.5 py-2 text-sm text-amber-300 font-semibold" title="क्रम संख्या" />
-        </div>
-        <div class="col-span-9 sm:col-span-5">
-          <input id="newName" type="text" placeholder="सामग्री का नाम" class="input-dark w-full rounded-xl px-3 py-2 text-sm" />
-        </div>
+        <div class="col-span-3 sm:col-span-2"><input id="newStep" type="number" step="any" placeholder="क्रम" class="input-dark w-full rounded-xl px-2.5 py-2 text-sm text-amber-300 font-semibold" title="क्रम संख्या" /></div>
+        <div class="col-span-9 sm:col-span-5"><input id="newName" type="text" placeholder="सामग्री का नाम" class="input-dark w-full rounded-xl px-3 py-2 text-sm" /></div>
         <div class="col-span-12 sm:col-span-5 flex gap-1.5">
           <select id="newSubRecipe" class="input-dark w-full rounded-xl px-3 py-2 text-sm"></select>
           <button onclick="promptAddNewRecipe()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl text-amber-300 text-xs font-bold shrink-0" title="नई रेसिपी जोड़ें">+</button>
@@ -296,29 +357,14 @@
       </div>
 
       <div id="nonPackingFields" class="grid grid-cols-2 gap-2.5 mb-3">
-        <div>
-          <label class="text-[11px] text-slate-400 block mb-1">मात्रा (ग्राम / gm)</label>
-          <input id="newGrams" type="number" step="any" placeholder="जैसे: 250" class="input-dark w-full rounded-xl px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label class="text-[11px] text-slate-400 block mb-1">रेट (₹ / kg)</label>
-          <input id="newRate" type="number" step="any" placeholder="जैसे: 120" class="input-dark w-full rounded-xl px-3 py-2 text-sm" />
-        </div>
+        <div><label class="text-[11px] text-slate-400 block mb-1">मात्रा (ग्राम / gm)</label><input id="newGrams" type="number" step="any" placeholder="जैसे: 250" class="input-dark w-full rounded-xl px-3 py-2 text-sm" /></div>
+        <div><label class="text-[11px] text-slate-400 block mb-1">रेट (₹ / kg)</label><input id="newRate" type="number" step="any" placeholder="जैसे: 120" class="input-dark w-full rounded-xl px-3 py-2 text-sm" /></div>
       </div>
 
       <div id="packingFields" class="hidden grid-cols-3 gap-2.5 mb-3">
-        <div>
-          <label class="text-[11px] text-slate-400 block mb-1">खरीद मूल्य (₹)</label>
-          <input id="newPurchasePrice" type="number" step="any" placeholder="जैसे: 50" class="input-dark w-full rounded-xl px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label class="text-[11px] text-slate-400 block mb-1">कुल पीस मिले</label>
-          <input id="newObtainedCount" type="number" step="any" placeholder="जैसे: 80" class="input-dark w-full rounded-xl px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label class="text-[11px] text-slate-400 block mb-1">आज लगे पीस</label>
-          <input id="newUsedCount" type="number" step="any" placeholder="जैसे: 50" class="input-dark w-full rounded-xl px-3 py-2 text-sm" />
-        </div>
+        <div><label class="text-[11px] text-slate-400 block mb-1">खरीद मूल्य (₹)</label><input id="newPurchasePrice" type="number" step="any" placeholder="जैसे: 50" class="input-dark w-full rounded-xl px-3 py-2 text-sm" /></div>
+        <div><label class="text-[11px] text-slate-400 block mb-1">कुल पीस मिले</label><input id="newObtainedCount" type="number" step="any" placeholder="जैसे: 80" class="input-dark w-full rounded-xl px-3 py-2 text-sm" /></div>
+        <div><label class="text-[11px] text-slate-400 block mb-1">आज लगे पीस</label><input id="newUsedCount" type="number" step="any" placeholder="जैसे: 50" class="input-dark w-full rounded-xl px-3 py-2 text-sm" /></div>
       </div>
 
       <button onclick="addNewItem()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition">
@@ -327,13 +373,10 @@
     </div>
 
     <!-- Search -->
-    <div class="relative">
-      <input id="searchInput" oninput="renderList()" type="text" placeholder="सामग्री खोजें..." class="input-dark w-full rounded-xl px-4 py-2.5 text-sm" />
-    </div>
+    <div class="relative"><input id="searchInput" oninput="renderList()" type="text" placeholder="सामग्री खोजें..." class="input-dark w-full rounded-xl px-4 py-2.5 text-sm" /></div>
 
     <!-- List Container -->
     <div id="itemsContainer" class="space-y-2.5"></div>
-
   </main>
 
   <script>
@@ -371,13 +414,14 @@
       return rawId;
     }
 
+    // --- Google Sheet Sync ---
     async function loadFromSheet() {
       setStatus("गूगल शीट से डेटा लोड हो रहा है...", false);
       try {
         const res = await fetch(scriptUrl);
         const data = await res.json();
         if (data.status === "ok" && Array.isArray(data.items)) {
-          items = data.items.map((item, index) => ({
+          items = data.items.map((item) => ({
             id: sanitizeId(item.id),
             step: String(item.step || "1"),
             name: String(item.name || "").trim(),
@@ -471,7 +515,7 @@
         const res = await fetch(scriptUrl + "?action=restore");
         const data = await res.json();
         if (data.status === "ok" && Array.isArray(data.items)) {
-          items = data.items.map((item, index) => ({
+          items = data.items.map((item) => ({
             id: sanitizeId(item.id),
             step: String(item.step || "1"),
             name: String(item.name || "").trim(),
@@ -494,21 +538,15 @@
       }
     }
 
+    // --- Local Data Initialization ---
     let items = [];
     try {
       const savedLocalData = localStorage.getItem("bhog_local_backup");
       if (savedLocalData) {
         const parsed = JSON.parse(savedLocalData);
-        if (Array.isArray(parsed)) {
-          items = parsed.map((item, index) => ({
-            ...item,
-            id: sanitizeId(item.id)
-          }));
-        }
+        if (Array.isArray(parsed)) items = parsed.map(i => ({ ...i, id: sanitizeId(i.id) }));
       }
-    } catch (err) {
-      items = [];
-    }
+    } catch (e) { items = []; }
 
     let submittedHistory = [];
     try {
@@ -517,17 +555,20 @@
         const parsedHist = JSON.parse(savedHist);
         if (Array.isArray(parsedHist)) submittedHistory = parsedHist;
       }
-    } catch (err) {
-      submittedHistory = [];
-    }
-    
+    } catch (e) { submittedHistory = []; }
+
     let activeFilter = "ALL";
     let addMode = "non-packing";
     let recentRecipes = [];
     try {
       const savedRecents = localStorage.getItem("bhog_recent_recipes");
       if (savedRecents) recentRecipes = JSON.parse(savedRecents);
-    } catch(e) {}
+    } catch (e) {}
+
+    // --- Dashboard Data Initialization ---
+    let bankAccounts = JSON.parse(localStorage.getItem("bhog_bank_accounts") || '[{"id":"b1","name":"SBI Bank","balance":0},{"id":"b2","name":"ICICI Bank","balance":0}]');
+    let expenseFolders = JSON.parse(localStorage.getItem("bhog_expense_folders") || '[{"id":"e1","name":"परचेसिंग खर्च (Purchasing)","amount":0},{"id":"e2","name":"अन्य दैनिक खर्च (Misc)","amount":0}]');
+    let dashboardHistory = JSON.parse(localStorage.getItem("bhog_dashboard_history") || "[]");
 
     window.addEventListener("DOMContentLoaded", () => {
       const savedTitle = localStorage.getItem("bhog_custom_title");
@@ -550,17 +591,13 @@
       return item.checked === true || item.checked === "true" || item.checked === 1 || item.checked === "1";
     }
 
-    // --- CSV EXPORT (MAIN DATA) ---
+    // --- CSV EXPORT / IMPORT (MAIN) ---
     function exportDataCSV() {
-      if (items.length === 0) {
-        setStatus("एक्सपोर्ट करने के लिए कोई डेटा नहीं है।", false);
-        return;
-      }
+      if (items.length === 0) { setStatus("एक्सपोर्ट करने के लिए कोई डेटा नहीं है।", false); return; }
       const headers = ["id", "step", "name", "subRecipe", "category", "grams", "ratePerKg", "obtainedCount", "purchasePrice", "usedCount", "checked"];
       const csvRows = [headers.join(",")];
-
       items.forEach(item => {
-        const row = [
+        csvRows.push([
           sanitizeId(item.id),
           `"${String(item.step || "").replace(/"/g, '""')}"`,
           `"${String(item.name || "").replace(/"/g, '""')}"`,
@@ -572,26 +609,71 @@
           item.purchasePrice || 0,
           item.usedCount || 0,
           isChecked(item) ? "true" : "false"
-        ];
-        csvRows.push(row.join(","));
+        ].join(","));
       });
-
       downloadCSVFile(csvRows.join("\n"), `Bhog_Active_Items_${new Date().toISOString().slice(0, 10)}.csv`);
     }
 
-    // --- CSV EXPORT (SUBMITTED HISTORY WITH TIMESTAMP & BOM FOR HINDI) ---
+    function handleFileImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const lines = e.target.result.split(/\r?\n/).filter(l => l.trim() !== "");
+          if (lines.length < 2) throw new Error("CSV फाइल खाली है।");
+          const parseCSVLine = (text) => {
+            const res = []; let cell = ""; let inQ = false;
+            for (let i = 0; i < text.length; i++) {
+              let c = text[i];
+              if (c === '"') { if (inQ && text[i+1] === '"') { cell += '"'; i++; } else { inQ = !inQ; } }
+              else if (c === ',' && !inQ) { res.push(cell.trim()); cell = ""; }
+              else { cell += c; }
+            }
+            res.push(cell.trim()); return res;
+          };
+          const headers = parseCSVLine(lines[0]).map(h => h.replace(/^\uFEFF/, '').trim());
+          const imported = [];
+          for (let i = 1; i < lines.length; i++) {
+            const vals = parseCSVLine(lines[i]);
+            if (vals.length < 3) continue;
+            let obj = {}; headers.forEach((h, idx) => { obj[h] = vals[idx] !== undefined ? vals[idx] : ""; });
+            let name = String(obj.name || "").replace(/^"+|"+$/g, '').trim();
+            if (!name) continue;
+            imported.push({
+              id: sanitizeId(obj.id),
+              step: String(obj.step || "1").replace(/^"+|"+$/g, '').trim(),
+              name: name,
+              subRecipe: String(obj.subRecipe || "आलू बड़ा").replace(/^"+|"+$/g, '').trim(),
+              category: String(obj.category || "non-packing").replace(/^"+|"+$/g, '').trim(),
+              grams: parseFloat(obj.grams) || 0,
+              ratePerKg: parseFloat(obj.ratePerKg) || 0,
+              obtainedCount: parseFloat(obj.obtainedCount) || 0,
+              purchasePrice: parseFloat(obj.purchasePrice) || 0,
+              usedCount: parseFloat(obj.usedCount) || 0,
+              checked: false
+            });
+          }
+          if (imported.length === 0) throw new Error("कोई वैध आइटम नहीं मिला।");
+          if (!confirm(`${imported.length} आइटम्स मिले हैं। लोड करना चाहते हैं?`)) return;
+          items = imported;
+          saveLocallyOnly();
+          setStatus(`✓ सफल! ${imported.length} आइटम्स लोड हो गए।`, true);
+        } catch (err) { setStatus("इम्पोर्ट त्रुटि: " + err.message, false); }
+        event.target.value = "";
+      };
+      reader.readAsText(file);
+    }
+
+    // --- CSV EXPORT / IMPORT (HISTORY) ---
     function exportSubmittedCSV() {
-      if (submittedHistory.length === 0) {
-        setStatus("कोई सबमिट किया हुआ इतिहास उपलब्ध नहीं है।", false);
-        return;
-      }
+      if (submittedHistory.length === 0) { setStatus("कोई इतिहास उपलब्ध नहीं है।", false); return; }
       const headers = ["timestamp", "name", "subRecipe", "category", "quantityOrCount", "totalCost", "paymentMode", "refNum", "otherNotes"];
       const csvRows = [headers.join(",")];
-
       submittedHistory.forEach(item => {
-        const val = calcItemValue(item).toFixed(2);
-        const qtyStr = item.category === "packing" ? `${item.usedCount} pieces (out of ${item.obtainedCount})` : `${item.grams} grams @ ₹${item.ratePerKg}/kg`;
-        const row = [
+        let val = calcItemValue(item).toFixed(2);
+        let qtyStr = item.category === "packing" ? `${item.usedCount} pieces` : `${item.grams} grams @ ₹${item.ratePerKg}/kg`;
+        csvRows.push([
           `"${String(item.submittedAt || "").replace(/"/g, '""')}"`,
           `"${String(item.name || "").replace(/"/g, '""')}"`,
           `"${String(item.subRecipe || "").replace(/"/g, '""')}"`,
@@ -601,58 +683,40 @@
           `"${String(item.paymentMode || "").replace(/"/g, '""')}"`,
           `"${String(item.refNum || "").replace(/"/g, '""')}"`,
           `"${String(item.otherNotes || "").replace(/"/g, '""')}"`
-        ];
-        csvRows.push(row.join(","));
+        ].join(","));
       });
-
       downloadCSVFile(csvRows.join("\n"), `Bhog_Submitted_History_${new Date().toISOString().slice(0, 10)}.csv`);
     }
 
-    // --- HISTORY CSV IMPORT / UPLOAD ---
     function handleHistoryFileImport(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function(e) {
-        const content = e.target.result;
         try {
-          const lines = content.split(/\r?\n/).filter(line => line.trim() !== "");
-          if (lines.length < 2) throw new Error("इतिहास CSV फाइल खाली है।");
-
+          const lines = e.target.result.split(/\r?\n/).filter(l => l.trim() !== "");
+          if (lines.length < 2) throw new Error("फाइल खाली है।");
           const parseCSVLine = (text) => {
-            const result = [];
-            let cell = "";
-            let inQuotes = false;
+            const res = []; let cell = ""; let inQ = false;
             for (let i = 0; i < text.length; i++) {
-              const char = text[i];
-              if (char === '"') {
-                if (inQuotes && text[i+1] === '"') { cell += '"'; i++; }
-                else { inQuotes = !inQuotes; }
-              } else if (char === ',' && !inQuotes) {
-                result.push(cell.trim());
-                cell = "";
-              } else { cell += char; }
+              let c = text[i];
+              if (c === '"') { if (inQ && text[i+1] === '"') { cell += '"'; i++; } else { inQ = !inQ; } }
+              else if (c === ',' && !inQ) { res.push(cell.trim()); cell = ""; }
+              else { cell += c; }
             }
-            result.push(cell.trim());
-            return result;
+            res.push(cell.trim()); return res;
           };
-
           const headers = parseCSVLine(lines[0]).map(h => h.replace(/^\uFEFF/, '').trim());
-          const importedHist = [];
-
+          const imported = [];
           for (let i = 1; i < lines.length; i++) {
             const vals = parseCSVLine(lines[i]);
             if (vals.length < 2) continue;
-            const obj = {};
-            headers.forEach((h, idx) => { obj[h] = vals[idx] !== undefined ? vals[idx] : ""; });
-
-            const itemName = String(obj.name || "").replace(/^"+|"+$/g, '').trim();
-            if (!itemName || itemName === "" || itemName === "undefined") continue;
-
-            importedHist.push({
+            let obj = {}; headers.forEach((h, idx) => { obj[h] = vals[idx] !== undefined ? vals[idx] : ""; });
+            let name = String(obj.name || "").replace(/^"+|"+$/g, '').trim();
+            if (!name) continue;
+            imported.push({
               submittedAt: String(obj.timestamp || new Date().toLocaleString('hi-IN')).replace(/^"+|"+$/g, '').trim(),
-              name: itemName,
+              name: name,
               subRecipe: String(obj.subRecipe || "आलू बड़ा").replace(/^"+|"+$/g, '').trim(),
               category: String(obj.category || "non-packing").replace(/^"+|"+$/g, '').trim(),
               grams: parseFloat(obj.grams) || 100,
@@ -665,17 +729,13 @@
               otherNotes: String(obj.otherNotes || "").replace(/^"+|"+$/g, '').trim()
             });
           }
-
-          if (importedHist.length === 0) throw new Error("कोई वैध इतिहास आइटम नहीं मिला।");
-          if (!confirm(`फाइल से ${importedHist.length} इतिहास रिकॉर्ड मिले हैं। क्या आप इनसे पुराना इतिहास ओवरराइट (अपडेट) करना चाहते हैं?`)) return;
-          
-          submittedHistory = importedHist;
+          if (imported.length === 0) throw new Error("कोई वैध रिकॉर्ड नहीं मिला।");
+          if (!confirm(`${imported.length} इतिहास रिकॉर्ड मिले हैं। ओवरराइट करना चाहते हैं?`)) return;
+          submittedHistory = imported;
           saveLocallyOnly();
           renderCartItems();
-          setStatus(`✓ सफल! ${importedHist.length} इतिहास रिकॉर्ड लोड हो गए।`, true);
-        } catch (err) {
-          setStatus("इतिहास फाइल पढ़ने में त्रुटि: " + err.message, false);
-        }
+          setStatus(`✓ सफल! इतिहास लोड हो गया।`, true);
+        } catch (err) { setStatus("इतिहास इम्पोर्ट त्रुटि: " + err.message, false); }
         event.target.value = "";
       };
       reader.readAsText(file);
@@ -686,83 +746,9 @@
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      setStatus("✓ CSV फाइल सफलतापूर्वक डाउनलोड हो गई है!", true);
-    }
-
-    // --- MAIN CSV IMPORT ---
-    function handleFileImport(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const content = e.target.result;
-        try {
-          const lines = content.split(/\r?\n/).filter(line => line.trim() !== "");
-          if (lines.length < 2) throw new Error("CSV फाइल खाली है।");
-          
-          const parseCSVLine = (text) => {
-            const result = [];
-            let cell = "";
-            let inQuotes = false;
-            for (let i = 0; i < text.length; i++) {
-              const char = text[i];
-              if (char === '"') {
-                if (inQuotes && text[i+1] === '"') { cell += '"'; i++; }
-                else { inQuotes = !inQuotes; }
-              } else if (char === ',' && !inQuotes) {
-                result.push(cell.trim());
-                cell = "";
-              } else { cell += char; }
-            }
-            result.push(cell.trim());
-            return result;
-          };
-
-          const headers = parseCSVLine(lines[0]).map(h => h.replace(/^\uFEFF/, '').trim());
-          const importedItems = [];
-
-          for (let i = 1; i < lines.length; i++) {
-            const vals = parseCSVLine(lines[i]);
-            if (vals.length < 3) continue;
-            const obj = {};
-            headers.forEach((h, idx) => { obj[h] = vals[idx] !== undefined ? vals[idx] : ""; });
-
-            const itemName = String(obj.name || "").replace(/^"+|"+$/g, '').trim();
-            if (!itemName || itemName === "" || itemName === "undefined") continue;
-
-            importedItems.push({
-              id: sanitizeId(obj.id),
-              step: String(obj.step || "1").replace(/^"+|"+$/g, '').trim(),
-              name: itemName,
-              subRecipe: String(obj.subRecipe || "आलू बड़ा").replace(/^"+|"+$/g, '').trim(),
-              category: String(obj.category || "non-packing").replace(/^"+|"+$/g, '').trim(),
-              grams: parseFloat(obj.grams) || 0,
-              ratePerKg: parseFloat(obj.ratePerKg) || 0,
-              obtainedCount: parseFloat(obj.obtainedCount) || 0,
-              purchasePrice: parseFloat(obj.purchasePrice) || 0,
-              usedCount: parseFloat(obj.usedCount) || 0,
-              checked: false
-            });
-          }
-
-          if (importedItems.length === 0) throw new Error("कोई वैध आइटम नहीं मिला।");
-          if (!confirm(`फाइल से ${importedItems.length} वैध आइटम्स मिले हैं। क्या आप इन्हें लोड करना चाहते हैं?`)) return;
-          items = importedItems;
-          saveLocallyOnly();
-          setStatus(`✓ सफल! ${importedItems.length} आइटम्स लोड हो गए।`, true);
-        } catch (err) {
-          setStatus("फाइल पढ़ने में त्रुटि: " + err.message, false);
-        }
-        event.target.value = "";
-      };
-      reader.readAsText(file);
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
     function saveCustomHeader() {
@@ -785,9 +771,7 @@
       if (savedLogo) {
         document.getElementById("zoomedImg").src = savedLogo;
         document.getElementById("imageZoomModal").classList.remove("hidden");
-      } else {
-        document.getElementById("imageUploadInput").click();
-      }
+      } else { document.getElementById("imageUploadInput").click(); }
     }
 
     function handleImageUpload(event) {
@@ -797,8 +781,7 @@
       reader.onload = function(e) {
         localStorage.setItem("bhog_custom_logo", e.target.result);
         const img = document.getElementById("logoImg");
-        img.src = e.target.result;
-        img.classList.remove("hidden");
+        img.src = e.target.result; img.classList.remove("hidden");
         document.getElementById("logoDefaultIcon").classList.add("hidden");
         closeImageZoom();
       };
@@ -811,7 +794,6 @@
       const checkedItems = items.filter(i => isChecked(i));
       const headerCountEl = document.getElementById("headerCartCount");
       if (headerCountEl) headerCountEl.textContent = checkedItems.length;
-
       if (!document.getElementById("cartModal").classList.contains("hidden")) {
         updateCartSummaryOnly();
       }
@@ -873,19 +855,15 @@
         submitBtn.innerText = "✓ सबमिट हो गया";
         submitBtn.className = "px-3.5 py-1.5 rounded-lg bg-emerald-800 text-white text-xs font-bold shadow transition cursor-not-allowed";
       }
-
       const item = items.find(x => String(x.id) === String(id));
       if (!item) return;
-
       const historyEntry = { ...item };
       historyEntry.submittedAt = new Date().toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'medium' });
       submittedHistory.unshift(historyEntry);
-
       item.checked = false;
       saveLocallyOnly();
       renderCartItems();
       renderHistoryItems();
-
       const toast = document.getElementById("cartToastBanner");
       const toastText = document.getElementById("cartToastText");
       if (toast && toastText) {
@@ -906,9 +884,7 @@
       if (!item) return;
       const val = calcItemValue(item);
       const priceInputEl = document.getElementById("cart_item_price_input_" + String(id));
-      if (priceInputEl && document.activeElement !== priceInputEl) {
-        priceInputEl.value = val.toFixed(2);
-      }
+      if (priceInputEl && document.activeElement !== priceInputEl) priceInputEl.value = val.toFixed(2);
       updateCartSummaryOnly();
       saveLocallyOnly();
     }
@@ -928,9 +904,7 @@
       if (gm > 0) {
         item.ratePerKg = parseFloat(((rupees / gm) * 1000).toFixed(2));
         const rateInput = document.getElementById("cart_rate_input_" + String(id));
-        if (rateInput && document.activeElement !== rateInput) {
-          rateInput.value = item.ratePerKg;
-        }
+        if (rateInput && document.activeElement !== rateInput) rateInput.value = item.ratePerKg;
       }
       updateCartSummaryOnly();
       saveLocallyOnly();
@@ -939,40 +913,27 @@
     function updateCartSummaryOnly() {
       const checkedItems = items.filter(i => isChecked(i));
       let totalCost = 0, totalGrams = 0, totalPieces = 0;
-
       checkedItems.forEach(item => {
         totalCost += calcItemValue(item);
-        if (item.category === "packing") {
-          totalPieces += (parseFloat(item.usedCount) || 0);
-        } else {
-          totalGrams += (parseFloat(item.grams) || 0);
-        }
+        if (item.category === "packing") totalPieces += (parseFloat(item.usedCount) || 0);
+        else totalGrams += (parseFloat(item.grams) || 0);
       });
 
-      // Today's summary calculation
       let todayCost = 0, todayGrams = 0, todayPieces = 0, todayCount = 0;
       const todayDateStr = new Date().toLocaleDateString('hi-IN', { dateStyle: 'short' });
       submittedHistory.forEach(h => {
         if (h.submittedAt && h.submittedAt.includes(todayDateStr.slice(0, 8))) {
           todayCost += calcItemValue(h);
           todayCount++;
-          if (h.category === "packing") {
-            todayPieces += (parseFloat(h.usedCount) || 0);
-          } else {
-            todayGrams += (parseFloat(h.grams) || 0);
-          }
+          if (h.category === "packing") todayPieces += (parseFloat(h.usedCount) || 0);
+          else todayGrams += (parseFloat(h.grams) || 0);
         }
       });
 
-      // Format Weight & Pieces string cleanly
       let cartWtStr = `${Math.round(totalGrams)} ग्राम`;
-      if (totalPieces > 0) {
-        cartWtStr += ` / ${totalPieces} पीस`;
-      }
+      if (totalPieces > 0) cartWtStr += ` / ${totalPieces} पीस`;
       let todayWtStr = `${Math.round(todayGrams)} ग्राम`;
-      if (todayPieces > 0) {
-        todayWtStr += ` / ${todayPieces} पीस`;
-      }
+      if (todayPieces > 0) todayWtStr += ` / ${todayPieces} पीस`;
 
       document.getElementById("cartTotalCost").textContent = "₹" + totalCost.toFixed(2);
       document.getElementById("cartTodayCost").textContent = "₹" + todayCost.toFixed(2);
@@ -988,7 +949,6 @@
       const checkedItems = items.filter(i => isChecked(i));
       const container = document.getElementById("cartItemsContainer");
       if (!container) return;
-
       updateCartSummaryOnly();
 
       if (checkedItems.length === 0) {
@@ -1006,18 +966,9 @@
         const metaFieldsBar = `
           <div class="space-y-2 pt-2 border-t border-slate-700/50">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <div>
-                <label class="text-[10px] text-slate-400 block mb-0.5">पेमेंट मोड</label>
-                <input type="text" value="${pModeVal}" oninput="updateCartMeta('${safeId}', 'paymentMode', this.value)" placeholder="Online / Cash" class="input-dark w-full rounded-lg px-2 py-1 text-xs" />
-              </div>
-              <div>
-                <label class="text-[10px] text-slate-400 block mb-0.5">रिफरेंस नंबर</label>
-                <input type="text" value="${rNumVal}" oninput="updateCartMeta('${safeId}', 'refNum', this.value)" placeholder="Utr / Txn No" class="input-dark w-full rounded-lg px-2 py-1 text-xs" />
-              </div>
-              <div>
-                <label class="text-[10px] text-slate-400 block mb-0.5">अन्य नोट्स</label>
-                <input type="text" value="${oNotesVal}" oninput="updateCartMeta('${safeId}', 'otherNotes', this.value)" placeholder="दुकान / ब्रांड" class="input-dark w-full rounded-lg px-2 py-1 text-xs" />
-              </div>
+              <div><label class="text-[10px] text-slate-400 block mb-0.5">पेमेंट मोड</label><input type="text" value="${pModeVal}" oninput="updateCartMeta('${safeId}', 'paymentMode', this.value)" placeholder="Online / Cash" class="input-dark w-full rounded-lg px-2 py-1 text-xs" /></div>
+              <div><label class="text-[10px] text-slate-400 block mb-0.5">रिफरेंस नंबर</label><input type="text" value="${rNumVal}" oninput="updateCartMeta('${safeId}', 'refNum', this.value)" placeholder="Utr / Txn No" class="input-dark w-full rounded-lg px-2 py-1 text-xs" /></div>
+              <div><label class="text-[10px] text-slate-400 block mb-0.5">अन्य नोट्स</label><input type="text" value="${oNotesVal}" oninput="updateCartMeta('${safeId}', 'otherNotes', this.value)" placeholder="दुकान / ब्रांड" class="input-dark w-full rounded-lg px-2 py-1 text-xs" /></div>
             </div>
             <div class="flex items-center justify-end gap-2 pt-1">
               <button onclick="shareItemWhatsApp('${safeId}')" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold shadow transition">📤 WhatsApp</button>
@@ -1027,6 +978,7 @@
         `;
 
         if (item.category === "packing") {
+          const unitRate = item.obtainedCount > 0 ? (item.purchasePrice / item.obtainedCount) : 0;
           return `
             <div id="cart_card_${safeId}" class="card-dark card-checked rounded-2xl p-3.5 space-y-2">
               <div class="flex items-start justify-between gap-2">
@@ -1046,18 +998,9 @@
                 </div>
               </div>
               <div class="grid grid-cols-3 gap-2 pt-1 border-t border-slate-700/50">
-                <div>
-                  <label class="text-[10px] text-slate-400 block">खरीद मूल्य (₹)</label>
-                  <input type="number" step="any" value="${item.purchasePrice}" oninput="updateCartFieldLive('${safeId}', 'purchasePrice', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-amber-300" />
-                </div>
-                <div>
-                  <label class="text-[10px] text-slate-400 block">कुल पीस मिले</label>
-                  <input type="number" step="any" value="${item.obtainedCount}" oninput="updateCartFieldLive('${safeId}', 'obtainedCount', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold" />
-                </div>
-                <div>
-                  <label class="text-[10px] text-slate-400 block">आज लगे पीस</label>
-                  <input type="number" step="any" value="${item.usedCount}" oninput="updateCartFieldLive('${safeId}', 'usedCount', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-emerald-300" />
-                </div>
+                <div><label class="text-[10px] text-slate-400 block">खरीद मूल्य (₹)</label><input type="number" step="any" value="${item.purchasePrice}" oninput="updateCartFieldLive('${safeId}', 'purchasePrice', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-amber-300" /></div>
+                <div><label class="text-[10px] text-slate-400 block">कुल पीस मिले</label><input type="number" step="any" value="${item.obtainedCount}" oninput="updateCartFieldLive('${safeId}', 'obtainedCount', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold" /></div>
+                <div><label class="text-[10px] text-slate-400 block">आज लगे पीस</label><input type="number" step="any" value="${item.usedCount}" oninput="updateCartFieldLive('${safeId}', 'usedCount', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-emerald-300" /></div>
               </div>
               ${metaFieldsBar}
             </div>
@@ -1082,14 +1025,8 @@
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-2.5 pt-1 border-t border-slate-700/50">
-                <div>
-                  <label class="text-[10px] text-slate-400 block">मात्रा (ग्राम)</label>
-                  <input type="number" step="any" value="${item.grams}" oninput="updateCartFieldLive('${safeId}', 'grams', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-emerald-300" />
-                </div>
-                <div>
-                  <label class="text-[10px] text-slate-400 block">रेट (₹ / kg)</label>
-                  <input id="cart_rate_input_${safeId}" type="number" step="any" value="${item.ratePerKg}" oninput="updateCartFieldLive('${safeId}', 'ratePerKg', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-amber-300" />
-                </div>
+                <div><label class="text-[10px] text-slate-400 block">मात्रा (ग्राम)</label><input type="number" step="any" value="${item.grams}" oninput="updateCartFieldLive('${safeId}', 'grams', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-emerald-300" /></div>
+                <div><label class="text-[10px] text-slate-400 block">रेट (₹ / kg)</label><input id="cart_rate_input_${safeId}" type="number" step="any" value="${item.ratePerKg}" oninput="updateCartFieldLive('${safeId}', 'ratePerKg', this.value)" class="input-dark w-full rounded-lg px-2 py-1 text-xs font-semibold text-amber-300" /></div>
               </div>
               ${metaFieldsBar}
             </div>
@@ -1101,12 +1038,10 @@
     function renderHistoryItems() {
       const container = document.getElementById("historyItemsContainer");
       if (!container) return;
-
       if (submittedHistory.length === 0) {
         container.innerHTML = `<div class="card-dark rounded-xl p-4 text-center text-xs text-slate-400">अभी कोई सबमिट किया हुआ इतिहास मौजूद नहीं है।</div>`;
         return;
       }
-
       container.innerHTML = submittedHistory.map((h, idx) => {
         const val = calcItemValue(h);
         const qtyInfo = h.category === "packing" ? `${h.usedCount} पीस (कुल ${h.obtainedCount})` : `${h.grams} ग्राम @ ₹${h.ratePerKg}/kg`;
@@ -1146,15 +1081,13 @@
     function pushRecentRecipe(recipeName) {
       recentRecipes = recentRecipes.filter(r => r !== recipeName);
       recentRecipes.unshift(recipeName);
-      try { localStorage.setItem("bhog_recent_recipes", JSON.stringify(recentRecipes)); } catch(e){}
+      try { localStorage.setItem("bhog_recent_recipes", JSON.stringify(recentRecipes)); } catch (e) {}
     }
 
     function renderFilterTabs() {
       const container = document.getElementById("filterTabs");
       const subs = getSubRecipes();
-      
       let html = `<button onclick="setFilter('ALL')" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold ${activeFilter === 'ALL' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300 border border-slate-700'} shrink-0">सभी</button>`;
-      
       subs.forEach(sub => {
         const isActive = activeFilter === sub;
         html += `<div class="inline-flex items-center gap-1 shrink-0 bg-slate-800 border border-slate-700 rounded-full px-2.5 py-1">
@@ -1164,7 +1097,6 @@
           <button onclick="handleDeleteRecipe('${sub}')" class="text-[10px] text-rose-400 hover:text-rose-300 px-0.5" title="डिलीट करें">🗑️</button>
         </div>`;
       });
-
       html += `<button onclick="promptAddNewRecipe()" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/40 shrink-0">+ नई रेसिपी</button>`;
       container.innerHTML = html;
 
@@ -1181,16 +1113,7 @@
       const cleanName = name.trim();
       const subs = getSubRecipes();
       if (!subs.includes(cleanName)) {
-        items.unshift({
-          id: generateUniqueId(),
-          step: "1",
-          name: "नया आइटम जोड़ें",
-          subRecipe: cleanName,
-          category: "non-packing",
-          grams: 100,
-          ratePerKg: 50,
-          checked: false
-        });
+        items.unshift({ id: generateUniqueId(), step: "1", name: "नया आइटम जोड़ें", subRecipe: cleanName, category: "non-packing", grams: 100, ratePerKg: 50, checked: false });
       }
       pushRecentRecipe(cleanName);
       setFilter(cleanName);
@@ -1241,13 +1164,11 @@
     function updateSummary() {
       let nonPackCost = 0, nonPackWt = 0, nonPackCnt = 0;
       let packCost = 0, packCnt = 0;
-
       items.forEach(item => {
         const val = calcItemValue(item);
         if (item.category === "packing") { packCost += val; packCnt++; }
         else { nonPackCost += val; nonPackWt += (parseFloat(item.grams) || 0); nonPackCnt++; }
       });
-
       const grandTotal = nonPackCost + packCost;
       const totalKg = nonPackWt / 1000;
       const avgPerKg = totalKg > 0 ? (nonPackCost / totalKg) : 0;
@@ -1355,7 +1276,6 @@
           `;
         }
       }).join("");
-
       updateSummary();
     }
 
@@ -1418,11 +1338,7 @@
 
       if (addMode === "packing") {
         items.unshift({
-          id: generateUniqueId(),
-          step,
-          name,
-          subRecipe: "पैकिंग सामग्री",
-          category: "packing",
+          id: generateUniqueId(), step, name, subRecipe: "पैकिंग सामग्री", category: "packing",
           purchasePrice: parseFloat(document.getElementById("newPurchasePrice").value) || 0,
           obtainedCount: parseFloat(document.getElementById("newObtainedCount").value) || 1,
           usedCount: parseFloat(document.getElementById("newUsedCount").value) || 0,
@@ -1430,11 +1346,7 @@
         });
       } else {
         items.unshift({
-          id: generateUniqueId(),
-          step,
-          name,
-          subRecipe,
-          category: "non-packing",
+          id: generateUniqueId(), step, name, subRecipe, category: "non-packing",
           grams: parseFloat(document.getElementById("newGrams").value) || 0,
           ratePerKg: parseFloat(document.getElementById("newRate").value) || 0,
           checked: false
@@ -1455,6 +1367,245 @@
     function setStatus(msg, ok) {
       const textEl = document.getElementById("statusText");
       if (textEl) textEl.textContent = msg;
+    }
+
+    // --- Dashboard Functions ---
+    function openDashboardModal() {
+      closeSidebar();
+      renderBankFolders();
+      renderExpenseFolders();
+      calcDashboard();
+      renderDashboardHistory();
+      document.getElementById("dashboardModal").classList.remove("hidden");
+    }
+
+    function closeDashboardModal() {
+      document.getElementById("dashboardModal").classList.add("hidden");
+    }
+
+    function addBankFolderPrompt() {
+      const name = prompt("बैंक या ऑनलाइन माध्यम का नाम लिखें (जैसे: PhonePe, Paytm, HDFC):");
+      if (!name || !name.trim()) return;
+      bankAccounts.push({ id: 'b_' + Date.now(), name: name.trim(), balance: 0 });
+      saveDashboardDataLocally();
+      renderBankFolders();
+      calcDashboard();
+    }
+
+    function deleteBankFolder(id) {
+      if (!confirm("क्या आप वाकई यह बैंक फोल्डर हटाना चाहते हैं?")) return;
+      bankAccounts = bankAccounts.filter(b => b.id !== id);
+      saveDashboardDataLocally();
+      renderBankFolders();
+      calcDashboard();
+    }
+
+    function updateBankBalance(id, val) {
+      const b = bankAccounts.find(x => x.id === id);
+      if (b) { b.balance = parseFloat(val) || 0; saveDashboardDataLocally(); calcDashboard(); }
+    }
+
+    function addExpenseFolderPrompt() {
+      const name = prompt("खर्च या परचेसिंग का नाम लिखें:");
+      if (!name || !name.trim()) return;
+      expenseFolders.push({ id: 'e_' + Date.now(), name: name.trim(), amount: 0 });
+      saveDashboardDataLocally();
+      renderExpenseFolders();
+      calcDashboard();
+    }
+
+    function deleteExpenseFolder(id) {
+      if (!confirm("क्या आप वाकई यह खर्च फोल्डर हटाना चाहते हैं?")) return;
+      expenseFolders = expenseFolders.filter(e => e.id !== id);
+      saveDashboardDataLocally();
+      renderExpenseFolders();
+      calcDashboard();
+    }
+
+    function updateExpenseAmount(id, val) {
+      const e = expenseFolders.find(x => x.id === id);
+      if (e) { e.amount = parseFloat(val) || 0; saveDashboardDataLocally(); calcDashboard(); }
+    }
+
+    function renderBankFolders() {
+      const container = document.getElementById("bankFoldersContainer");
+      if (!container) return;
+      if (bankAccounts.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400 text-center py-2">कोई बैंक फोल्डर नहीं है।</div>`;
+        return;
+      }
+      container.innerHTML = bankAccounts.map(b => `
+        <div class="flex items-center justify-between gap-2 bg-slate-900/60 p-2 rounded-xl border border-slate-800">
+          <span class="text-xs font-semibold text-sky-300 w-1/2">${b.name}</span>
+          <div class="flex items-center gap-2 w-1/2 justify-end">
+            <div class="flex items-center bg-slate-950 border border-sky-500/40 rounded-lg px-2 py-1">
+              <span class="text-xs text-sky-400 mr-1">₹</span>
+              <input type="number" step="any" value="${b.balance}" oninput="updateBankBalance('${b.id}', this.value)" class="w-20 bg-transparent text-right text-xs font-bold text-sky-400 focus:outline-none" />
+            </div>
+            <button onclick="deleteBankFolder('${b.id}')" class="text-rose-400 hover:text-rose-300 text-xs">🗑️</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderExpenseFolders() {
+      const container = document.getElementById("expenseFoldersContainer");
+      if (!container) return;
+      if (expenseFolders.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400 text-center py-2">कोई खर्च फोल्डर नहीं है।</div>`;
+        return;
+      }
+      container.innerHTML = expenseFolders.map(e => `
+        <div class="flex items-center justify-between gap-2 bg-slate-900/60 p-2 rounded-xl border border-slate-800">
+          <span class="text-xs font-semibold text-rose-300 w-1/2">${e.name}</span>
+          <div class="flex items-center gap-2 w-1/2 justify-end">
+            <div class="flex items-center bg-slate-950 border border-rose-500/40 rounded-lg px-2 py-1">
+              <span class="text-xs text-rose-400 mr-1">₹</span>
+              <input type="number" step="any" value="${e.amount}" oninput="updateExpenseAmount('${e.id}', this.value)" class="w-20 bg-transparent text-right text-xs font-bold text-rose-400 focus:outline-none" />
+            </div>
+            <button onclick="deleteExpenseFolder('${e.id}')" class="text-rose-400 hover:text-rose-300 text-xs">🗑️</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function calcDashboard() {
+      const n500 = parseFloat(document.getElementById("note_500")?.value) || 0;
+      const n200 = parseFloat(document.getElementById("note_200")?.value) || 0;
+      const n100 = parseFloat(document.getElementById("note_100")?.value) || 0;
+      const n50 = parseFloat(document.getElementById("note_50")?.value) || 0;
+      const n20 = parseFloat(document.getElementById("note_20")?.value) || 0;
+      const n10 = parseFloat(document.getElementById("note_10")?.value) || 0;
+      const coins = parseFloat(document.getElementById("coins_total")?.value) || 0;
+
+      const totalCash = (n500 * 500) + (n200 * 200) + (n100 * 100) + (n50 * 50) + (n20 * 20) + (n10 * 10) + coins;
+      let totalOnline = 0;
+      bankAccounts.forEach(b => totalOnline += (parseFloat(b.balance) || 0));
+      let totalExpenses = 0;
+      expenseFolders.forEach(e => totalExpenses += (parseFloat(e.amount) || 0));
+
+      const grandTotalCollection = totalCash + totalOnline;
+      const netBalance = grandTotalCollection - totalExpenses;
+
+      if (document.getElementById("dashCashSubTotal")) document.getElementById("dashCashSubTotal").textContent = "₹" + totalCash.toFixed(2);
+      if (document.getElementById("dashTotalCash")) document.getElementById("dashTotalCash").textContent = "₹" + totalCash.toFixed(2);
+      if (document.getElementById("dashTotalOnline")) document.getElementById("dashTotalOnline").textContent = "₹" + totalOnline.toFixed(2);
+      if (document.getElementById("dashNetBalance")) document.getElementById("dashNetBalance").textContent = "₹" + netBalance.toFixed(2);
+
+      saveDashboardDataLocally();
+    }
+
+    function saveDashboardDataLocally() {
+      try {
+        localStorage.setItem("bhog_bank_accounts", JSON.stringify(bankAccounts));
+        localStorage.setItem("bhog_expense_folders", JSON.stringify(expenseFolders));
+        localStorage.setItem("bhog_dashboard_history", JSON.stringify(dashboardHistory));
+      } catch (e) {}
+    }
+
+    function submitDashboardTransaction() {
+      const n500 = parseFloat(document.getElementById("note_500")?.value) || 0;
+      const n200 = parseFloat(document.getElementById("note_200")?.value) || 0;
+      const n100 = parseFloat(document.getElementById("note_100")?.value) || 0;
+      const n50 = parseFloat(document.getElementById("note_50")?.value) || 0;
+      const n20 = parseFloat(document.getElementById("note_20")?.value) || 0;
+      const n10 = parseFloat(document.getElementById("note_10")?.value) || 0;
+      const coins = parseFloat(document.getElementById("coins_total")?.value) || 0;
+      const totalCash = (n500 * 500) + (n200 * 200) + (n100 * 100) + (n50 * 50) + (n20 * 20) + (n10 * 10) + coins;
+
+      let totalOnline = 0;
+      bankAccounts.forEach(b => totalOnline += (parseFloat(b.balance) || 0));
+      let totalExpenses = 0;
+      expenseFolders.forEach(e => totalExpenses += (parseFloat(e.amount) || 0));
+      const netBalance = (totalCash + totalOnline) - totalExpenses;
+
+      const entry = {
+        submittedAt: new Date().toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'medium' }),
+        totalCash, totalOnline, totalExpenses, netBalance
+      };
+
+      dashboardHistory.unshift(entry);
+      saveDashboardDataLocally();
+      renderDashboardHistory();
+
+      const toast = document.getElementById("dashToastBanner");
+      const toastText = document.getElementById("dashToastText");
+      if (toast && toastText) {
+        toastText.textContent = `✓ डैशबोर्ड ट्रांजैक्शन सबमिट हो गया! (नेट बैलेंस: ₹${netBalance.toFixed(2)})`;
+        toast.classList.remove("hidden");
+      }
+    }
+
+    function renderDashboardHistory() {
+      const container = document.getElementById("dashboardHistoryContainer");
+      if (!container) return;
+      if (dashboardHistory.length === 0) {
+        container.innerHTML = `<div class="card-dark rounded-xl p-4 text-center text-xs text-slate-400">कोई इतिहास नहीं है।</div>`;
+        return;
+      }
+      container.innerHTML = dashboardHistory.map((h, idx) => `
+        <div class="card-dark rounded-xl p-3 text-xs space-y-1.5 bg-slate-900/50 border-slate-700">
+          <div class="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800 pb-1">
+            <span>🕒 ${h.submittedAt}</span>
+            <button onclick="deleteDashboardHistory(${idx})" class="text-rose-400 hover:text-rose-300 font-bold">🗑️ हटाएं</button>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+            <div><span class="text-slate-400">कैश:</span> <b class="text-emerald-400">₹${(h.totalCash||0).toFixed(2)}</b></div>
+            <div><span class="text-slate-400">ऑनलाइन:</span> <b class="text-sky-400">₹${(h.totalOnline||0).toFixed(2)}</b></div>
+            <div><span class="text-slate-400">खर्च:</span> <b class="text-rose-400">₹${(h.totalExpenses||0).toFixed(2)}</b></div>
+            <div><span class="text-slate-400">नेट बैलेंस:</span> <b class="text-amber-400">₹${(h.netBalance||0).toFixed(2)}</b></div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function deleteDashboardHistory(index) {
+      if (!confirm("क्या आप वाकई यह इतिहास रिकॉर्ड हटाना चाहते हैं?")) return;
+      dashboardHistory.splice(index, 1);
+      saveDashboardDataLocally();
+      renderDashboardHistory();
+    }
+
+    function exportDashboardCSV() {
+      if (dashboardHistory.length === 0) { alert("कोई इतिहास नहीं है।"); return; }
+      const headers = ["timestamp", "totalCash", "totalOnline", "totalExpenses", "netBalance"];
+      const csvRows = [headers.join(",")];
+      dashboardHistory.forEach(h => {
+        csvRows.push([`"${h.submittedAt}"`, h.totalCash, h.totalOnline, h.totalExpenses, h.netBalance].join(","));
+      });
+      downloadCSVFile(csvRows.join("\n"), `Dashboard_History_${new Date().toISOString().slice(0, 10)}.csv`);
+    }
+
+    function handleDashboardFileImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const lines = e.target.result.split(/\r?\n/).filter(l => l.trim() !== "");
+          if (lines.length < 2) throw new Error("फाइल खाली है।");
+          const imported = [];
+          for (let i = 1; i < lines.length; i++) {
+            const vals = lines[i].split(",");
+            if (vals.length < 5) continue;
+            imported.push({
+              submittedAt: vals[0].replace(/^"+|"+$/g, ''),
+              totalCash: parseFloat(vals[1]) || 0,
+              totalOnline: parseFloat(vals[2]) || 0,
+              totalExpenses: parseFloat(vals[3]) || 0,
+              netBalance: parseFloat(vals[4]) || 0
+            });
+          }
+          if (imported.length === 0) throw new Error("कोई वैध रिकॉर्ड नहीं मिला।");
+          if (!confirm(`${imported.length} रिकॉर्ड मिले हैं। अपडेट करना चाहते हैं?`)) return;
+          dashboardHistory = imported;
+          saveDashboardDataLocally();
+          renderDashboardHistory();
+          alert("✓ इम्पोर्ट सफल!");
+        } catch (err) { alert("इम्पोर्ट त्रुटि: " + err.message); }
+        event.target.value = "";
+      };
+      reader.readAsText(file);
     }
   </script>
 </body>
