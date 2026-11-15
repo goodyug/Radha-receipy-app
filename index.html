@@ -132,7 +132,7 @@
     <!-- Status Bar -->
     <div class="space-y-2">
       <div id="statusBanner" class="rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 text-emerald-200">
-        <span id="statusText">डेटा लोकल सुरक्षित है। सबमिट करने पर आइटम इतिहास में सेव होकर कार्ट से हट जाएगा (रेट लिस्ट सुरक्षित रहेगी)।</span>
+        <span id="statusText">डेटा लोकल सुरक्षित है। सबमिट करने पर आइटम इतिहास में सेव होकर तुरंत कार्ट से हट जाएगा (रेट लिस्ट सुरक्षित रहेगी)।</span>
       </div>
     </div>
 
@@ -554,7 +554,7 @@
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    // --- SUBMIT SINGLE ITEM FROM CART (SAFE: KEEPS MAIN RATE LIST INTACT, JUST UNCHECKS/REMOVES FROM CART) ---
+    // --- SUBMIT SINGLE ITEM FROM CART (INSTANT REMOVAL & DOM HIDE FIX) ---
     function submitSingleCartItem(id) {
       const submitBtn = document.getElementById("cart_submit_btn_" + id);
       if (submitBtn) {
@@ -563,30 +563,39 @@
         submitBtn.className = "px-3.5 py-1.5 rounded-lg bg-emerald-800 text-white text-xs font-bold shadow transition cursor-not-allowed";
       }
 
-      setTimeout(() => {
-        const item = items.find(x => x.id === id);
-        if (!item) return;
+      const item = items.find(x => x.id === id);
+      if (!item) return;
 
-        // Clone and push to submitted history with timestamp
-        const historyEntry = { ...item };
-        historyEntry.submittedAt = new Date().toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'medium' });
-        submittedHistory.unshift(historyEntry);
+      // 1. Add to history
+      const historyEntry = { ...item };
+      historyEntry.submittedAt = new Date().toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'medium' });
+      submittedHistory.unshift(historyEntry);
 
-        // Crucial fix: DO NOT DELETE from main items! Just uncheck it so it leaves the cart view.
-        item.checked = false;
+      // 2. Uncheck so it leaves cart data
+      item.checked = false;
 
-        saveLocallyOnly();
+      // 3. Save locally
+      saveLocallyOnly();
 
-        const toast = document.getElementById("cartToastBanner");
-        const toastText = document.getElementById("cartToastText");
-        if (toast && toastText) {
-          toastText.textContent = `✓ '${item.name}' सफलतापूर्वक सबमिट हो गया और इतिहास में दर्ज हो गया! (रेट लिस्ट सुरक्षित है)`;
-          toast.classList.remove("hidden");
-        }
-
+      // 4. INSTANT DOM REMOVAL (No lag, vanishes right away!)
+      const cardEl = document.getElementById("cart_card_" + id);
+      if (cardEl) {
+        cardEl.style.transition = "all 0.2s ease";
+        cardEl.style.opacity = "0";
+        cardEl.style.transform = "scale(0.95)";
+        setTimeout(() => {
+          renderCartItems();
+        }, 200);
+      } else {
         renderCartItems();
-        renderList();
-      }, 100);
+      }
+
+      const toast = document.getElementById("cartToastBanner");
+      const toastText = document.getElementById("cartToastText");
+      if (toast && toastText) {
+        toastText.textContent = `✓ '${item.name}' सफलतापूर्वक सबमिट हो गया और इतिहास में दर्ज हो गया!`;
+        toast.classList.remove("hidden");
+      }
     }
 
     // --- INSTANT CART RECALCULATION HELPERS ---
