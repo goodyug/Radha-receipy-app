@@ -132,7 +132,7 @@
     <!-- Status Bar -->
     <div class="space-y-2">
       <div id="statusBanner" class="rounded-xl px-4 py-2.5 text-xs flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 text-emerald-200">
-        <span id="statusText">डेटा लोकल सुरक्षित है। सबमिट करने पर आइटम इतिहास में सेव होकर तुरंत कार्ट से हट जाएगा (रेट लिस्ट सुरक्षित रहेगी)।</span>
+        <span id="statusText">डेटा लोकल सुरक्षित है। सबमिट या अनचेक करने पर आइटम तुरंत कार्ट से हट जाएगा (रेट लिस्ट सुरक्षित रहेगी)।</span>
       </div>
     </div>
 
@@ -305,7 +305,8 @@
     });
 
     function isChecked(item) {
-      return item.checked === true || item.checked === "true" || item.checked === 1;
+      if (!item) return false;
+      return item.checked === true || item.checked === "true" || item.checked === 1 || item.checked === "1";
     }
 
     // --- CSV EXPORT (MAIN DATA) ---
@@ -517,7 +518,7 @@
     }
 
     function uncheckFromCart(id) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => String(x.id) === String(id));
       if (!item) return;
       item.checked = false;
       saveLocallyOnly();
@@ -526,21 +527,21 @@
     }
 
     function updateCartName(id, newNameVal) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => String(x.id) === String(id));
       if (!item) return;
       const cleanName = newNameVal.trim();
       if (cleanName) { item.name = cleanName; saveLocallyOnly(); }
     }
 
     function updateCartMeta(id, field, val) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => String(x.id) === String(id));
       if (!item) return;
       item[field] = val;
       saveLocallyOnly();
     }
 
     function shareItemWhatsApp(id) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => String(x.id) === String(id));
       if (!item) return;
       const val = calcItemValue(item).toFixed(2);
       const qtyInfo = item.category === "packing" ? `${item.usedCount} पीस (कुल ${item.obtainedCount})` : `${item.grams} ग्राम @ ₹${item.ratePerKg}/kg`;
@@ -554,7 +555,7 @@
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    // --- SUBMIT SINGLE ITEM FROM CART (INSTANT REMOVAL & DOM HIDE FIX) ---
+    // --- SUBMIT SINGLE ITEM FROM CART (INSTANT REMOVAL & ROBUST ID MATCH) ---
     function submitSingleCartItem(id) {
       const submitBtn = document.getElementById("cart_submit_btn_" + id);
       if (submitBtn) {
@@ -563,7 +564,7 @@
         submitBtn.className = "px-3.5 py-1.5 rounded-lg bg-emerald-800 text-white text-xs font-bold shadow transition cursor-not-allowed";
       }
 
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => String(x.id) === String(id));
       if (!item) return;
 
       // 1. Add to history
@@ -571,13 +572,13 @@
       historyEntry.submittedAt = new Date().toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'medium' });
       submittedHistory.unshift(historyEntry);
 
-      // 2. Uncheck so it leaves cart data
+      // 2. Uncheck so it leaves cart
       item.checked = false;
 
       // 3. Save locally
       saveLocallyOnly();
 
-      // 4. INSTANT DOM REMOVAL (No lag, vanishes right away!)
+      // 4. INSTANT DOM REMOVAL
       const cardEl = document.getElementById("cart_card_" + id);
       if (cardEl) {
         cardEl.style.transition = "all 0.2s ease";
@@ -600,7 +601,7 @@
 
     // --- INSTANT CART RECALCULATION HELPERS ---
     function refreshCartItemCalc(id) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => String(x.id) === String(id));
       if (!item) return;
       const val = calcItemValue(item);
       const priceInputEl = document.getElementById("cart_item_price_input_" + id);
@@ -612,14 +613,14 @@
     }
 
     function updateCartFieldLive(id, field, val) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => String(x.id) === String(id));
       if (!item) return;
       item[field] = val === "" ? 0 : parseFloat(val);
       refreshCartItemCalc(id);
     }
 
     function updateCartTotalRupeesLive(id, totalRupeesVal) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => String(x.id) === String(id));
       if (!item) return;
       const rupees = totalRupeesVal === "" ? 0 : parseFloat(totalRupeesVal);
       const gm = parseFloat(item.grams) || 0;
@@ -818,7 +819,7 @@
       const cleanName = name.trim();
       const subs = getSubRecipes();
       if (!subs.includes(cleanName)) {
-        const newId = items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1;
+        const newId = items.length > 0 ? Math.max(...items.map(i => Number(i.id) || 0)) + 1 : 1;
         items.unshift({ id: newId, step: "1", name: "नया आइटम जोड़ें", subRecipe: cleanName, category: "non-packing", grams: 100, ratePerKg: 50, checked: false });
       }
       pushRecentRecipe(cleanName);
@@ -840,7 +841,7 @@
       const subs = getSubRecipes();
       let copyNum = 1, newName = `${recipeName} (${copyNum})`;
       while (subs.includes(newName)) { copyNum++; newName = `${recipeName} (${copyNum})`; }
-      let maxId = items.length > 0 ? Math.max(...items.map(i => i.id)) : 0;
+      let maxId = items.length > 0 ? Math.max(...items.map(i => Number(i.id) || 0)) : 0;
       items.filter(i => i.subRecipe === recipeName).forEach(orig => {
         items.push({ ...orig, id: ++maxId, subRecipe: newName, checked: false });
       });
@@ -989,27 +990,27 @@
     }
 
     function toggleCheck(id, status) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => String(x.id) === String(id));
       if (item) { item.checked = status; saveLocallyOnly(); }
     }
 
     function updateStep(id, val) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => String(x.id) === String(id));
       if (item) { item.step = String(val).trim() || "1"; saveLocallyOnly(); }
     }
 
     function updateName(id, val) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => String(x.id) === String(id));
       if (item && val.trim()) { item.name = val.trim(); saveLocallyOnly(); }
     }
 
     function updateField(id, field, val) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => String(x.id) === String(id));
       if (item) { item[field] = parseFloat(val) || 0; saveLocallyOnly(); }
     }
 
     function updateTotalRupees(id, val) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => String(x.id) === String(id));
       if (item && (parseFloat(item.grams) || 0) > 0) {
         item.ratePerKg = parseFloat((((parseFloat(val) || 0) / item.grams) * 1000).toFixed(2));
         saveLocallyOnly();
@@ -1017,7 +1018,7 @@
     }
 
     function updatePackingField(id, field, val) {
-      const item = items.find(x => x.id === id);
+      const item = items.find(x => String(x.id) === String(id));
       if (item) { item[field] = parseFloat(val) || 0; saveLocallyOnly(); }
     }
 
@@ -1044,7 +1045,7 @@
       if (!name) { alert("कृपया नाम लिखें"); return; }
       const subRecipe = addMode === "packing" ? "पैकिंग सामग्री" : document.getElementById("newSubRecipe").value;
       const step = document.getElementById("newStep").value.trim() || "1";
-      const newId = items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1;
+      const newId = items.length > 0 ? Math.max(...items.map(i => Number(i.id) || 0)) + 1 : 1;
 
       if (addMode === "packing") {
         items.unshift({
@@ -1068,7 +1069,7 @@
 
     function deleteItem(id) {
       if (!confirm("हटाना चाहते हैं?")) return;
-      items = items.filter(x => x.id !== id);
+      items = items.filter(x => String(x.id) !== String(id));
       saveLocallyOnly();
     }
 
