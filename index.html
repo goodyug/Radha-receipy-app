@@ -58,9 +58,9 @@
 
       <!-- Action Buttons Toolbar -->
       <div class="flex flex-wrap items-center gap-1.5">
-        <button onclick="openSheetModal()" class="px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 transition" title="शीट सेटिंग्स">⚙️</button>
+        <button onclick="openSheetModal()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-slate-950 shadow transition" title="गूगल शीट सेटिंग्स, बैकअप और रिस्टोर">⚙️ शीट सेटिंग्स</button>
         <button onclick="exportDataCSV()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="मुख्य CSV एक्सपोर्ट">📤 CSV</button>
-        <button onclick="exportSubmittedCSV()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-600 text-white shadow transition" title="सबमिट इतिहास CSV डाउनलोड">📥 सबमिटेड इतिहास</button>
+        <button onclick="exportSubmittedCSV()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-600 text-white shadow transition" title="सबमिट इतिहास CSV डाउनलोड">📥 इतिहास</button>
         <button onclick="document.getElementById('importFileInput').click()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="CSV इम्पोर्ट">📥 इम्पोर्ट</button>
         <input type="file" id="importFileInput" accept=".csv,.json" class="hidden" onchange="handleFileImport(event)" />
       </div>
@@ -241,30 +241,164 @@
 
   </main>
 
-  <!-- Sheet Modal -->
-  <div id="sheetModal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="card-dark rounded-2xl max-w-md w-full p-5 space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-base font-bold text-amber-400">सेटिंग्स और जानकारी</h3>
+  <!-- Google Sheet & Backup Settings Modal -->
+  <div id="sheetModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="card-dark rounded-2xl max-w-lg w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+        <h3 class="text-base font-bold text-amber-400">⚙️ गूगल शीट, बैकअप और रिस्टोर सेटिंग्स</h3>
         <button onclick="closeSheetModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
       </div>
-      <p class="text-xs text-slate-300 leading-relaxed">
-        यह ऐप पूरी तरह लोकल स्टोरेज और CSV पर आधारित है। आप जब चाहें मुख्य CSV या सबमिटेड इतिहास CSV डाउनलोड कर सकते हैं।
-      </p>
-      <button onclick="closeSheetModal()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
-        ठीक है बंद करें
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="text-slate-300 font-semibold block mb-1">Google Apps Script Web App URL:</label>
+          <input id="scriptUrlInput" type="text" placeholder="https://script.google.com/macros/s/.../exec" class="input-dark w-full rounded-xl px-3 py-2 text-xs text-amber-300" />
+        </div>
+        <button onclick="saveScriptUrl()" class="w-full py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition">
+          💾 URL सहेजें और कनेक्ट करें
+        </button>
+
+        <div class="border-t border-slate-700 pt-3 space-y-2">
+          <div class="font-semibold text-slate-200">क्लाउड डेटा सिंक और बैकअप विकल्प:</div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="loadFromSheet()" class="py-2 px-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold transition">
+              📥 शीट से लोड करें
+            </button>
+            <button onclick="saveToSheet()" class="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition">
+              ☁️ गूगल शीट पर सेव करें
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button onclick="backupToSheet()" class="py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition" title="Latest_Backup शीट में नया बैकअप बनाएं">
+              🛡️ बैकअप लें
+            </button>
+            <button onclick="restoreFromSheet()" class="py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition" title="Latest_Backup से डेटा रिस्टोर करें">
+              🔄 बैकअप से रिस्टोर करें
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="closeSheetModal()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-600">
+        बंद करें
       </button>
     </div>
   </div>
 
   <script>
+    let scriptUrl = localStorage.getItem("bhog_script_url") || "";
+
+    function saveScriptUrl() {
+      const url = document.getElementById("scriptUrlInput").value.trim();
+      localStorage.setItem("bhog_script_url", url);
+      scriptUrl = url;
+      alert("✓ URL सफलतापूर्वक सहेज लिया गया!");
+      loadFromSheet();
+    }
+
+    async function loadFromSheet() {
+      if (!scriptUrl) {
+        alert("कृपया पहले Google Sheet का Web App URL दर्ज करें।");
+        return;
+      }
+      setStatus("गूगल शीट से डेटा लोड हो रहा है...", false);
+      try {
+        const res = await fetch(scriptUrl);
+        const data = await res.json();
+        if (data.status === "ok" && Array.isArray(data.items)) {
+          items = data.items.map((item, index) => ({
+            ...item,
+            id: item.id !== undefined && item.id !== null && item.id !== "" ? String(item.id) : ('id_' + Date.now() + '_' + index),
+            checked: item.checked === true || item.checked === "true" || item.checked === 1 || item.checked === "1"
+          }));
+          saveLocallyOnly();
+          setStatus("✓ गूगल शीट से डेटा सफलतापर्वक लोड हो गया!", true);
+        } else {
+          setStatus("शीट खाली है या कोई डेटा नहीं मिला।", true);
+        }
+      } catch (err) {
+        setStatus("लोड करने में त्रुटि: " + err.message, false);
+      }
+    }
+
+    async function saveToSheet() {
+      if (!scriptUrl) {
+        alert("कृपया पहले Google Sheet का Web App URL दर्ज करें।");
+        return;
+      }
+      setStatus("गूगल शीट पर डेटा सेव हो रहा है...", false);
+      try {
+        const res = await fetch(scriptUrl, {
+          method: "POST",
+          body: JSON.stringify({ action: "save", items: items })
+        });
+        const data = await res.json();
+        if (data.status === "ok") {
+          setStatus("✓ डेटा गूगल शीट पर सफलतापूर्वक सेव हो गया!", true);
+        } else {
+          setStatus("सेव करने में त्रुटि: " + (data.message || "अज्ञात त्रुटि"), false);
+        }
+      } catch (err) {
+        setStatus("सेव करने में त्रुटि: " + err.message, false);
+      }
+    }
+
+    async function backupToSheet() {
+      if (!scriptUrl) {
+        alert("कृपया पहले Google Sheet का Web App URL दर्ज करें।");
+        return;
+      }
+      setStatus("गूगल शीट पर बैकअप लिया जा रहा है...", false);
+      try {
+        const res = await fetch(scriptUrl, {
+          method: "POST",
+          body: JSON.stringify({ action: "backup", items: items })
+        });
+        const data = await res.json();
+        if (data.status === "ok") {
+          setStatus("✓ 'Latest_Backup' शीट में बैकअप सुरक्षित ले लिया गया!", true);
+          alert("बैकअप सफल! गूगल शीट में 'Latest_Backup' टैब चेक करें।");
+        } else {
+          setStatus("बैकअप लेने में त्रुटि", false);
+        }
+      } catch (err) {
+        setStatus("बैकअप त्रुटि: " + err.message, false);
+      }
+    }
+
+    async function restoreFromSheet() {
+      if (!scriptUrl) {
+        alert("कृपया पहले Google Sheet का Web App URL दर्ज करें।");
+        return;
+      }
+      if (!confirm("क्या आप वाकई Latest_Backup से पुराना डेटा रिस्टोर करना चाहते हैं?")) return;
+      setStatus("बैकअप से डेटा रिस्टोर हो रहा है...", false);
+      try {
+        const res = await fetch(scriptUrl + "?action=restore");
+        const data = await res.json();
+        if (data.status === "ok" && Array.isArray(data.items)) {
+          items = data.items.map((item, index) => ({
+            ...item,
+            id: item.id !== undefined && item.id !== null && item.id !== "" ? String(item.id) : ('id_' + Date.now() + '_' + index),
+            checked: item.checked === true || item.checked === "true" || item.checked === 1 || item.checked === "1"
+          }));
+          saveLocallyOnly();
+          setStatus(`✓ बैकअप (${data.timestamp || 'सफलता'}) से डेटा रिस्टोर हो गया!`, true);
+          alert(`सफल! बैकअप से डेटा रिस्टोर कर लिया गया है।`);
+        } else {
+          alert("रिस्टोर विफल: " + (data.message || "बैकअप नहीं मिला।"));
+        }
+      } catch (err) {
+        setStatus("रिस्टोर त्रुटि: " + err.message, false);
+      }
+    }
+
     let items = [];
     try {
       const savedLocalData = localStorage.getItem("bhog_local_backup");
       if (savedLocalData) {
         const parsed = JSON.parse(savedLocalData);
         if (Array.isArray(parsed)) {
-          // Assign unique IDs to old records if missing or duplicate
           items = parsed.map((item, index) => ({
             ...item,
             id: item.id !== undefined && item.id !== null && item.id !== "" ? String(item.id) : ('id_' + Date.now() + '_' + index)
@@ -306,6 +440,10 @@
         img.src = savedLogo;
         img.classList.remove("hidden");
         document.getElementById("logoDefaultIcon").classList.add("hidden");
+      }
+      if (scriptUrl) {
+        const urlInput = document.getElementById("scriptUrlInput");
+        if (urlInput) urlInput.value = scriptUrl;
       }
       renderList();
     });
@@ -577,18 +715,12 @@
       const item = items.find(x => String(x.id) === String(id));
       if (!item) return;
 
-      // 1. Add to history
       const historyEntry = { ...item };
       historyEntry.submittedAt = new Date().toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'medium' });
       submittedHistory.unshift(historyEntry);
 
-      // 2. Uncheck so it leaves cart
       item.checked = false;
-
-      // 3. Save locally
       saveLocallyOnly();
-
-      // 4. Instant DOM removal from cart view
       renderCartItems();
 
       const toast = document.getElementById("cartToastBanner");
