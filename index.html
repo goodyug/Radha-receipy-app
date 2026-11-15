@@ -328,7 +328,7 @@
   </div>
 
   <script>
-    let scriptUrl = localStorage.getItem("bhog_script_url") || "";
+    let scriptUrl = localStorage.getItem("bhog_script_url") || "https://script.google.com/macros/s/AKfycbx9-qdmjc2Rivg1NE-MFQADGpx2fwO5Cj4kb3DdnAVOFZD86pzftC8LbDFpWtHzueu5fA/exec";
 
     function openSidebar() {
       document.getElementById("sidebar").style.transform = "translateX(0)";
@@ -382,10 +382,18 @@
         const data = await res.json();
         if (data.status === "ok" && Array.isArray(data.items)) {
           items = data.items.map((item, index) => ({
-            ...item,
             id: sanitizeId(item.id),
+            step: String(item.step || "1"),
+            name: String(item.name || "").trim(),
+            subRecipe: String(item.subRecipe || "आलू बड़ा").trim(),
+            category: String(item.category || "non-packing"),
+            grams: parseFloat(item.grams) || 0,
+            ratePerKg: parseFloat(item.ratePerKg) || 0,
+            obtainedCount: parseFloat(item.obtainedCount) || 0,
+            purchasePrice: parseFloat(item.purchasePrice) || 0,
+            usedCount: parseFloat(item.usedCount) || 0,
             checked: item.checked === true || item.checked === "true" || item.checked === 1 || item.checked === "1"
-          }));
+          })).filter(i => i.name !== "");
           saveLocallyOnly();
           setStatus("✓ गूगल शीट से डेटा सफलतापूर्वक लोड हो गया!", true);
         } else {
@@ -404,9 +412,23 @@
       }
       setStatus("गूगल शीट पर डेटा सेव हो रहा है...", false);
       try {
+        const cleanItems = items.map(item => ({
+          id: sanitizeId(item.id),
+          step: String(item.step || "1"),
+          name: String(item.name || "").trim(),
+          subRecipe: String(item.subRecipe || "आलू बड़ा").trim(),
+          category: String(item.category || "non-packing"),
+          grams: parseFloat(item.grams) || 0,
+          ratePerKg: parseFloat(item.ratePerKg) || 0,
+          obtainedCount: parseFloat(item.obtainedCount) || 0,
+          purchasePrice: parseFloat(item.purchasePrice) || 0,
+          usedCount: parseFloat(item.usedCount) || 0,
+          checked: isChecked(item)
+        }));
+
         const res = await fetch(scriptUrl, {
           method: "POST",
-          body: JSON.stringify({ action: "save", items: items })
+          body: JSON.stringify({ action: "save", items: cleanItems })
         });
         const data = await res.json();
         if (data.status === "ok") {
@@ -427,9 +449,23 @@
       }
       setStatus("गूगल शीट पर बैकअप लिया जा रहा है...", false);
       try {
+        const cleanItems = items.map(item => ({
+          id: sanitizeId(item.id),
+          step: String(item.step || "1"),
+          name: String(item.name || "").trim(),
+          subRecipe: String(item.subRecipe || "आलू बड़ा").trim(),
+          category: String(item.category || "non-packing"),
+          grams: parseFloat(item.grams) || 0,
+          ratePerKg: parseFloat(item.ratePerKg) || 0,
+          obtainedCount: parseFloat(item.obtainedCount) || 0,
+          purchasePrice: parseFloat(item.purchasePrice) || 0,
+          usedCount: parseFloat(item.usedCount) || 0,
+          checked: isChecked(item)
+        }));
+
         const res = await fetch(scriptUrl, {
           method: "POST",
-          body: JSON.stringify({ action: "backup", items: items })
+          body: JSON.stringify({ action: "backup", items: cleanItems })
         });
         const data = await res.json();
         if (data.status === "ok") {
@@ -455,10 +491,18 @@
         const data = await res.json();
         if (data.status === "ok" && Array.isArray(data.items)) {
           items = data.items.map((item, index) => ({
-            ...item,
             id: sanitizeId(item.id),
+            step: String(item.step || "1"),
+            name: String(item.name || "").trim(),
+            subRecipe: String(item.subRecipe || "आलू बड़ा").trim(),
+            category: String(item.category || "non-packing"),
+            grams: parseFloat(item.grams) || 0,
+            ratePerKg: parseFloat(item.ratePerKg) || 0,
+            obtainedCount: parseFloat(item.obtainedCount) || 0,
+            purchasePrice: parseFloat(item.purchasePrice) || 0,
+            usedCount: parseFloat(item.usedCount) || 0,
             checked: item.checked === true || item.checked === "true" || item.checked === 1 || item.checked === "1"
-          }));
+          })).filter(i => i.name !== "");
           saveLocallyOnly();
           setStatus("✓ बैकअप से डेटा रिस्टोर हो गया!", true);
         } else {
