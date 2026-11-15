@@ -167,24 +167,44 @@
         <button onclick="document.getElementById('cartToastBanner').classList.add('hidden')" class="ml-2 text-emerald-300 font-bold">✕</button>
       </div>
 
-      <!-- Summary Cards inside Cart Modal -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        <div class="card-dark rounded-2xl p-3 border-emerald-500/40 bg-emerald-950/20">
-          <div class="text-[11px] text-slate-400">कार्ट कुल खर्च</div>
-          <div id="cartTotalCost" class="text-lg font-bold text-amber-400 mt-0.5">₹0.00</div>
+      <!-- Organized Summary Boxes: Cart Side vs Today Side -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- Cart / Selected Summary Box -->
+        <div class="card-dark rounded-2xl p-4 border-emerald-500/40 bg-emerald-950/20 space-y-2">
+          <div class="text-xs font-bold text-emerald-400 border-b border-emerald-500/20 pb-1.5">🛒 कार्ट (चयनित आइटम) समरी</div>
+          <div class="grid grid-cols-3 gap-2 pt-1 text-center">
+            <div class="bg-slate-900/60 rounded-xl p-2">
+              <div class="text-[10px] text-slate-400">कुल खर्च</div>
+              <div id="cartTotalCost" class="text-sm font-bold text-amber-400 mt-0.5">₹0.00</div>
+            </div>
+            <div class="bg-slate-900/60 rounded-xl p-2">
+              <div class="text-[10px] text-slate-400">कुल वजन / पीस</div>
+              <div id="cartTotalWeightPieces" class="text-xs font-bold text-emerald-300 mt-0.5">0 ग्राम</div>
+            </div>
+            <div class="bg-slate-900/60 rounded-xl p-2">
+              <div class="text-[10px] text-slate-400">कुल आइटम</div>
+              <div id="cartTotalCount" class="text-sm font-bold text-sky-400 mt-0.5">0</div>
+            </div>
+          </div>
         </div>
-        <div class="card-dark rounded-2xl p-3 border-sky-500/40 bg-sky-950/20">
-          <div class="text-[11px] text-slate-400">आज का खर्च (Today's Exp)</div>
-          <div id="cartTodayCost" class="text-lg font-bold text-sky-400 mt-0.5">₹0.00</div>
-        </div>
-        <div class="card-dark rounded-2xl p-3 border-emerald-500/40 bg-emerald-950/20">
-          <div class="text-[11px] text-slate-400">कुल वजन (ग्राम)</div>
-          <div id="cartTotalWeight" class="text-sm font-bold text-emerald-400 mt-0.5">0 ग्राम</div>
-          <div id="cartTotalWeightKg" class="text-[10px] text-slate-400">0.000 kg</div>
-        </div>
-        <div class="card-dark rounded-2xl p-3 border-sky-500/40 bg-sky-950/20">
-          <div class="text-[11px] text-slate-400">चयनित आइटम</div>
-          <div id="cartTotalCount" class="text-lg font-bold text-sky-400 mt-0.5">0</div>
+
+        <!-- Today's Summary Box -->
+        <div class="card-dark rounded-2xl p-4 border-sky-500/40 bg-sky-950/20 space-y-2">
+          <div class="text-xs font-bold text-sky-400 border-b border-sky-500/20 pb-1.5">📅 आज का (Today's) खर्च समरी</div>
+          <div class="grid grid-cols-3 gap-2 pt-1 text-center">
+            <div class="bg-slate-900/60 rounded-xl p-2">
+              <div class="text-[10px] text-slate-400">आज का खर्च</div>
+              <div id="cartTodayCost" class="text-sm font-bold text-amber-400 mt-0.5">₹0.00</div>
+            </div>
+            <div class="bg-slate-900/60 rounded-xl p-2">
+              <div class="text-[10px] text-slate-400">आज का वजन / पीस</div>
+              <div id="cartTodayWeightPieces" class="text-xs font-bold text-sky-300 mt-0.5">0 ग्राम</div>
+            </div>
+            <div class="bg-slate-900/60 rounded-xl p-2">
+              <div class="text-[10px] text-slate-400">आज के आइटम</div>
+              <div id="cartTodayCount" class="text-sm font-bold text-sky-400 mt-0.5">0</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -559,7 +579,7 @@
       downloadCSVFile(csvRows.join("\n"), `Bhog_Active_Items_${new Date().toISOString().slice(0, 10)}.csv`);
     }
 
-    // --- CSV EXPORT (SUBMITTED HISTORY WITH TIMESTAMP) ---
+    // --- CSV EXPORT (SUBMITTED HISTORY WITH TIMESTAMP & BOM FOR HINDI) ---
     function exportSubmittedCSV() {
       if (submittedHistory.length === 0) {
         setStatus("कोई सबमिट किया हुआ इतिहास उपलब्ध नहीं है।", false);
@@ -918,33 +938,48 @@
 
     function updateCartSummaryOnly() {
       const checkedItems = items.filter(i => isChecked(i));
-      let totalCost = 0, totalGrams = 0;
+      let totalCost = 0, totalGrams = 0, totalPieces = 0;
 
       checkedItems.forEach(item => {
         totalCost += calcItemValue(item);
-        if (item.category !== "packing") totalGrams += (parseFloat(item.grams) || 0);
+        if (item.category === "packing") {
+          totalPieces += (parseFloat(item.usedCount) || 0);
+        } else {
+          totalGrams += (parseFloat(item.grams) || 0);
+        }
       });
 
-      // Calculate Today's Expense from submittedHistory based on today's date string
-      let todayCost = 0;
+      // Today's summary calculation
+      let todayCost = 0, todayGrams = 0, todayPieces = 0, todayCount = 0;
       const todayDateStr = new Date().toLocaleDateString('hi-IN', { dateStyle: 'short' });
       submittedHistory.forEach(h => {
         if (h.submittedAt && h.submittedAt.includes(todayDateStr.slice(0, 8))) {
           todayCost += calcItemValue(h);
+          todayCount++;
+          if (h.category === "packing") {
+            todayPieces += (parseFloat(h.usedCount) || 0);
+          } else {
+            todayGrams += (parseFloat(h.grams) || 0);
+          }
         }
       });
 
-      const costEl = document.getElementById("cartTotalCost");
-      const todayCostEl = document.getElementById("cartTodayCost");
-      const wtEl = document.getElementById("cartTotalWeight");
-      const wtKgEl = document.getElementById("cartTotalWeightKg");
-      const cntEl = document.getElementById("cartTotalCount");
+      // Format Weight & Pieces string cleanly
+      let cartWtStr = `${Math.round(totalGrams)} ग्राम`;
+      if (totalPieces > 0) {
+        cartWtStr += ` / ${totalPieces} पीस`;
+      }
+      let todayWtStr = `${Math.round(todayGrams)} ग्राम`;
+      if (todayPieces > 0) {
+        todayWtStr += ` / ${todayPieces} पीस`;
+      }
 
-      if (costEl) costEl.textContent = "₹" + totalCost.toFixed(2);
-      if (todayCostEl) todayCostEl.textContent = "₹" + todayCost.toFixed(2);
-      if (wtEl) wtEl.textContent = Math.round(totalGrams) + " ग्राम";
-      if (wtKgEl) wtKgEl.textContent = (totalGrams / 1000).toFixed(3) + " kg";
-      if (cntEl) cntEl.textContent = checkedItems.length;
+      document.getElementById("cartTotalCost").textContent = "₹" + totalCost.toFixed(2);
+      document.getElementById("cartTodayCost").textContent = "₹" + todayCost.toFixed(2);
+      document.getElementById("cartTotalWeightPieces").textContent = cartWtStr;
+      document.getElementById("cartTodayWeightPieces").textContent = todayWtStr;
+      document.getElementById("cartTotalCount").textContent = checkedItems.length;
+      document.getElementById("cartTodayCount").textContent = todayCount;
 
       updateSummary();
     }
