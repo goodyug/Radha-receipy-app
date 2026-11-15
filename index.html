@@ -123,24 +123,42 @@
         <button onclick="document.getElementById('dashToastBanner').classList.add('hidden')" class="ml-2 text-emerald-300 font-bold">✕</button>
       </div>
 
-      <!-- Net Balance & Expense Summary Cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        <div class="card-dark rounded-2xl p-3 border-amber-500/40 bg-amber-950/20 col-span-2">
-          <div class="text-[11px] text-slate-400">✨ शुद्ध बैलेंस अमाउंट (Net Balance)</div>
-          <div id="dashNetBalance" class="text-2xl font-bold text-amber-400 mt-0.5">₹0.00</div>
-          <div class="text-[10px] text-slate-400 mt-0.5">(कुल कलेक्शन - कुल खर्च)</div>
+      <!-- 1. Top: Net Balance Card (Full Width & Centered) -->
+      <div class="card-dark rounded-2xl p-4 border-amber-500/40 bg-amber-950/20 text-center">
+        <div class="text-xs text-slate-400">✨ शुद्ध बैलेंस अमाउंट (Net Balance)</div>
+        <div id="dashNetBalance" class="text-3xl font-bold text-amber-400 mt-1">₹0.00</div>
+        <div class="text-[11px] text-slate-400 mt-1">(कुल कलेक्शन - कुल खर्च)</div>
+      </div>
+
+      <!-- 2. Second Row: 3 Boxes (Total = Cash + Online) -->
+      <div class="flex flex-col sm:flex-row items-center gap-2">
+        <!-- Box 1: Total Collection -->
+        <div class="card-dark rounded-2xl p-3.5 border-emerald-500/40 bg-emerald-950/20 text-center flex-1 w-full">
+          <div class="text-[10px] text-slate-400">📦 कुल कलेक्शन (Total)</div>
+          <div id="dashTotalCollection" class="text-lg font-bold text-emerald-400 mt-0.5">₹0.00</div>
         </div>
-        <div class="card-dark rounded-2xl p-3 border-rose-500/40 bg-rose-950/20">
-          <div class="text-[11px] text-slate-400">📉 कुल खर्च (Expenses)</div>
-          <div id="dashTotalExpenses" class="text-lg font-bold text-rose-400 mt-0.5">₹0.00</div>
+        <div class="text-amber-400 font-bold text-xl px-1 hidden sm:block">=</div>
+        <!-- Box 2: Total Cash -->
+        <div class="card-dark rounded-2xl p-3.5 border-emerald-500/40 bg-emerald-950/20 text-center flex-1 w-full">
+          <div class="text-[10px] text-slate-400">💵 कुल कैश</div>
+          <div id="dashTotalCash" class="text-lg font-bold text-emerald-300 mt-0.5">₹0.00</div>
         </div>
-        <div class="card-dark rounded-2xl p-3 border-sky-500/40 bg-sky-950/20">
-          <div class="text-[11px] text-slate-400">💳 कुल ऑनलाइन / बैंक</div>
+        <div class="text-amber-400 font-bold text-xl px-1 hidden sm:block">+</div>
+        <!-- Box 3: Total Online -->
+        <div class="card-dark rounded-2xl p-3.5 border-sky-500/40 bg-sky-950/20 text-center flex-1 w-full">
+          <div class="text-[10px] text-slate-400">💳 कुल ऑनलाइन</div>
           <div id="dashTotalOnline" class="text-lg font-bold text-sky-400 mt-0.5">₹0.00</div>
         </div>
       </div>
 
-      <!-- Section 1: Cash Denomination Calculator with 5, 2, 1 Notes & Coins -->
+      <!-- 3. Third Row: Expense Card (Full Width) -->
+      <div class="card-dark rounded-2xl p-4 border-rose-500/40 bg-rose-950/20 text-center">
+        <div class="text-xs text-slate-400">📉 कुल खर्च (Total Expenses)</div>
+        <div id="dashTotalExpenses" class="text-3xl font-bold text-rose-400 mt-1">₹0.00</div>
+        <div class="text-[11px] text-slate-400 mt-1">(सभी खर्च फोल्डर का कुल योग)</div>
+      </div>
+
+      <!-- Section 1: Cash Denomination Calculator with 500 to 1 Notes & Coins -->
       <div class="card-dark rounded-2xl p-4 space-y-3">
         <div class="flex items-center justify-between border-b border-slate-700 pb-2">
           <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wide">💵 1. कैश डिनोमिनेशन कैलकुलेटर (नोट और सिक्के)</h3>
@@ -1516,6 +1534,7 @@
       if (document.getElementById("dashCashSubTotal")) document.getElementById("dashCashSubTotal").textContent = "₹" + totalCash.toFixed(2);
       if (document.getElementById("dashTotalCash")) document.getElementById("dashTotalCash").textContent = "₹" + totalCash.toFixed(2);
       if (document.getElementById("dashTotalOnline")) document.getElementById("dashTotalOnline").textContent = "₹" + totalOnline.toFixed(2);
+      if (document.getElementById("dashTotalCollection")) document.getElementById("dashTotalCollection").textContent = "₹" + grandTotalCollection.toFixed(2);
       if (document.getElementById("dashTotalExpenses")) document.getElementById("dashTotalExpenses").textContent = "₹" + totalExpenses.toFixed(2);
       if (document.getElementById("dashNetBalance")) document.getElementById("dashNetBalance").textContent = "₹" + netBalance.toFixed(2);
 
@@ -1548,11 +1567,12 @@
       bankAccounts.forEach(b => totalOnline += (parseFloat(b.balance) || 0));
       let totalExpenses = 0;
       expenseFolders.forEach(e => totalExpenses += (parseFloat(e.amount) || 0));
-      const netBalance = (totalCash + totalOnline) - totalExpenses;
+      const grandTotalCollection = totalCash + totalOnline;
+      const netBalance = grandTotalCollection - totalExpenses;
 
       const entry = {
         submittedAt: new Date().toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'medium' }),
-        totalCash, totalOnline, totalExpenses, netBalance
+        totalCash, totalOnline, totalExpenses, grandTotalCollection, netBalance
       };
 
       dashboardHistory.unshift(entry);
@@ -1581,8 +1601,7 @@
             <button onclick="deleteDashboardHistory(${idx})" class="text-rose-400 hover:text-rose-300 font-bold">🗑️ हटाएं</button>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-            <div><span class="text-slate-400">कैश:</span> <b class="text-emerald-400">₹${(h.totalCash||0).toFixed(2)}</b></div>
-            <div><span class="text-slate-400">ऑनलाइन:</span> <b class="text-sky-400">₹${(h.totalOnline||0).toFixed(2)}</b></div>
+            <div><span class="text-slate-400">कलेक्शन:</span> <b class="text-emerald-400">₹${(h.grandTotalCollection||0).toFixed(2)}</b></div>
             <div><span class="text-slate-400">खर्च:</span> <b class="text-rose-400">₹${(h.totalExpenses||0).toFixed(2)}</b></div>
             <div><span class="text-slate-400">नेट बैलेंस:</span> <b class="text-amber-400">₹${(h.netBalance||0).toFixed(2)}</b></div>
           </div>
@@ -1599,10 +1618,10 @@
 
     function exportDashboardCSV() {
       if (dashboardHistory.length === 0) { alert("कोई इतिहास नहीं है।"); return; }
-      const headers = ["timestamp", "totalCash", "totalOnline", "totalExpenses", "netBalance"];
+      const headers = ["timestamp", "totalCash", "totalOnline", "totalExpenses", "grandTotalCollection", "netBalance"];
       const csvRows = [headers.join(",")];
       dashboardHistory.forEach(h => {
-        csvRows.push([`"${h.submittedAt}"`, h.totalCash, h.totalOnline, h.totalExpenses, h.netBalance].join(","));
+        csvRows.push([`"${h.submittedAt}"`, h.totalCash, h.totalOnline, h.totalExpenses, h.grandTotalCollection, h.netBalance].join(","));
       });
       downloadCSVFile(csvRows.join("\n"), `Dashboard_History_${new Date().toISOString().slice(0, 10)}.csv`);
     }
@@ -1624,7 +1643,8 @@
               totalCash: parseFloat(vals[1]) || 0,
               totalOnline: parseFloat(vals[2]) || 0,
               totalExpenses: parseFloat(vals[3]) || 0,
-              netBalance: parseFloat(vals[4]) || 0
+              grandTotalCollection: parseFloat(vals[4]) || 0,
+              netBalance: parseFloat(vals[5]) || parseFloat(vals[4]) || 0
             });
           }
           if (imported.length === 0) throw new Error("कोई वैध रिकॉर्ड नहीं मिला।");
