@@ -292,13 +292,12 @@
       const url = document.getElementById("scriptUrlInput").value.trim();
       localStorage.setItem("bhog_script_url", url);
       scriptUrl = url;
-      alert("✓ URL सफलतापूर्वक सहेज लिया गया!");
-      loadFromSheet();
+      setStatus("✓ URL सफलतापूर्वक सहेज लिया गया!", true);
     }
 
     async function loadFromSheet() {
       if (!scriptUrl) {
-        alert("कृपया पहले Google Sheet का Web App URL दर्ज करें।");
+        setStatus("कृपया पहले Google Sheet का Web App URL दर्ज करें।", false);
         return;
       }
       setStatus("गूगल शीट से डेटा लोड हो रहा है...", false);
@@ -312,7 +311,7 @@
             checked: item.checked === true || item.checked === "true" || item.checked === 1 || item.checked === "1"
           }));
           saveLocallyOnly();
-          setStatus("✓ गूगल शीट से डेटा सफलतापर्वक लोड हो गया!", true);
+          setStatus("✓ गूगल शीट से डेटा सफलतापूर्वक लोड हो गया!", true);
         } else {
           setStatus("शीट खाली है या कोई डेटा नहीं मिला।", true);
         }
@@ -323,7 +322,7 @@
 
     async function saveToSheet() {
       if (!scriptUrl) {
-        alert("कृपया पहले Google Sheet का Web App URL दर्ज करें।");
+        setStatus("कृपया पहले Google Sheet का Web App URL दर्ज करें।", false);
         return;
       }
       setStatus("गूगल शीट पर डेटा सेव हो रहा है...", false);
@@ -345,7 +344,7 @@
 
     async function backupToSheet() {
       if (!scriptUrl) {
-        alert("कृपया पहले Google Sheet का Web App URL दर्ज करें।");
+        setStatus("कृपया पहले Google Sheet का Web App URL दर्ज करें।", false);
         return;
       }
       setStatus("गूगल शीट पर बैकअप लिया जा रहा है...", false);
@@ -357,7 +356,6 @@
         const data = await res.json();
         if (data.status === "ok") {
           setStatus("✓ 'Latest_Backup' शीट में बैकअप सुरक्षित ले लिया गया!", true);
-          alert("बैकअप सफल! गूगल शीट में 'Latest_Backup' टैब चेक करें।");
         } else {
           setStatus("बैकअप लेने में त्रुटि", false);
         }
@@ -368,7 +366,7 @@
 
     async function restoreFromSheet() {
       if (!scriptUrl) {
-        alert("कृपया पहले Google Sheet का Web App URL दर्ज करें।");
+        setStatus("कृपया पहले Google Sheet का Web App URL दर्ज करें।", false);
         return;
       }
       if (!confirm("क्या आप वाकई Latest_Backup से पुराना डेटा रिस्टोर करना चाहते हैं?")) return;
@@ -383,10 +381,9 @@
             checked: item.checked === true || item.checked === "true" || item.checked === 1 || item.checked === "1"
           }));
           saveLocallyOnly();
-          setStatus(`✓ बैकअप (${data.timestamp || 'सफलता'}) से डेटा रिस्टोर हो गया!`, true);
-          alert(`सफल! बैकअप से डेटा रिस्टोर कर लिया गया है।`);
+          setStatus(`✓ बैकअप से डेटा रिस्टोर हो गया!`, true);
         } else {
-          alert("रिस्टोर विफल: " + (data.message || "बैकअप नहीं मिला।"));
+          setStatus("रिस्टोर विफल: " + (data.message || "बैकअप नहीं मिला।"), false);
         }
       } catch (err) {
         setStatus("रिस्टोर त्रुटि: " + err.message, false);
@@ -460,7 +457,7 @@
     // --- CSV EXPORT (MAIN DATA) ---
     function exportDataCSV() {
       if (items.length === 0) {
-        alert("एक्सपोर्ट करने के लिए कोई डेटा नहीं है।");
+        setStatus("एक्सपोर्ट करने के लिए कोई डेटा नहीं है।", false);
         return;
       }
       const headers = ["id", "step", "name", "subRecipe", "category", "grams", "ratePerKg", "obtainedCount", "purchasePrice", "usedCount", "checked"];
@@ -489,7 +486,7 @@
     // --- CSV EXPORT (SUBMITTED HISTORY WITH TIMESTAMP) ---
     function exportSubmittedCSV() {
       if (submittedHistory.length === 0) {
-        alert("कोई सबमिट किया हुआ इतिहास उपलब्ध नहीं है।");
+        setStatus("कोई सबमिट किया हुआ इतिहास उपलब्ध नहीं है।", false);
         return;
       }
       const headers = ["timestamp", "name", "subRecipe", "category", "quantityOrCount", "totalCost", "paymentMode", "refNum", "otherNotes"];
@@ -590,9 +587,9 @@
           if (!confirm(`फाइल से ${importedItems.length} वैध आइटम्स मिले हैं। क्या आप इन्हें लोड करना चाहते हैं?`)) return;
           items = importedItems;
           saveLocallyOnly();
-          alert(`सफल! ${importedItems.length} आइटम्स लोड हो गए।`);
+          setStatus(`✓ सफल! ${importedItems.length} आइटम्स लोड हो गए।`, true);
         } catch (err) {
-          alert("फाइल पढ़ने में त्रुटि: " + err.message);
+          setStatus("फाइल पढ़ने में त्रुटि: " + err.message, false);
         }
         event.target.value = "";
       };
@@ -1183,7 +1180,7 @@
 
     function addNewItem() {
       const name = document.getElementById("newName").value.trim();
-      if (!name) { alert("कृपया नाम लिखें"); return; }
+      if (!name) { setStatus("कृपया नाम लिखें", false); return; }
       const subRecipe = addMode === "packing" ? "पैकिंग सामग्री" : document.getElementById("newSubRecipe").value;
       const step = document.getElementById("newStep").value.trim() || "1";
 
