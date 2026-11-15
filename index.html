@@ -34,7 +34,6 @@
       outline: none;
       border-color: #eab308;
     }
-    /* Sidebar Animation */
     #sidebar {
       transition: transform 0.3s ease-in-out;
     }
@@ -124,7 +123,7 @@
         <button onclick="restoreFromSheet()" class="px-2 py-1.5 rounded-xl text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="बैकअप से रिस्टोर करें">🔄 रिस्टोर</button>
         <button onclick="exportDataCSV()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow transition" title="CSV एक्सपोर्ट">📤 एक्सपोर्ट</button>
         <button onclick="document.getElementById('importFileInput').click()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-violet-600 hover:bg-violet-500 text-white shadow transition" title="CSV इम्पोर्ट">📥 इम्पोर्ट</button>
-        <button onclick="exportSubmittedCSV()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-teal-700 hover:bg-teal-600 text-white shadow transition" title="सबमिट इतिहास">📑 इतिहास</button>
+        <button onclick="exportSubmittedCSV()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-teal-700 hover:bg-teal-600 text-white shadow transition" title="सबमिट इतिहास">📑 इतिहास</button>
         <input type="file" id="importFileInput" accept=".csv,.json" class="hidden" onchange="handleFileImport(event)" />
       </div>
     </div>
@@ -360,6 +359,17 @@
       closeSheetModal();
     }
 
+    function generateUniqueId() {
+      return 'id_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    }
+
+    function sanitizeId(rawId) {
+      if (!rawId || typeof rawId !== 'string' || !rawId.startsWith('id_') || rawId.length < 5) {
+        return generateUniqueId();
+      }
+      return rawId;
+    }
+
     async function loadFromSheet() {
       if (!scriptUrl) {
         setStatus("कृपया पहले ऊपर '⚙️ URL' बटन से गूगल शीट का Web App URL दर्ज करें।", false);
@@ -373,7 +383,7 @@
         if (data.status === "ok" && Array.isArray(data.items)) {
           items = data.items.map((item, index) => ({
             ...item,
-            id: item.id !== undefined && item.id !== null && item.id !== "" ? String(item.id) : ('id_' + Date.now() + '_' + index),
+            id: sanitizeId(item.id),
             checked: item.checked === true || item.checked === "true" || item.checked === 1 || item.checked === "1"
           }));
           saveLocallyOnly();
@@ -446,7 +456,7 @@
         if (data.status === "ok" && Array.isArray(data.items)) {
           items = data.items.map((item, index) => ({
             ...item,
-            id: item.id !== undefined && item.id !== null && item.id !== "" ? String(item.id) : ('id_' + Date.now() + '_' + index),
+            id: sanitizeId(item.id),
             checked: item.checked === true || item.checked === "true" || item.checked === 1 || item.checked === "1"
           }));
           saveLocallyOnly();
@@ -467,7 +477,7 @@
         if (Array.isArray(parsed)) {
           items = parsed.map((item, index) => ({
             ...item,
-            id: item.id !== undefined && item.id !== null && item.id !== "" ? String(item.id) : ('id_' + Date.now() + '_' + index)
+            id: sanitizeId(item.id)
           }));
         }
       }
@@ -519,10 +529,6 @@
       return item.checked === true || item.checked === "true" || item.checked === 1 || item.checked === "1";
     }
 
-    function generateUniqueId() {
-      return 'id_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
-    }
-
     // --- CSV EXPORT (MAIN DATA) ---
     function exportDataCSV() {
       if (items.length === 0) {
@@ -534,7 +540,7 @@
 
       items.forEach(item => {
         const row = [
-          item.id || "",
+          sanitizeId(item.id),
           `"${String(item.step || "").replace(/"/g, '""')}"`,
           `"${String(item.name || "").replace(/"/g, '""')}"`,
           `"${String(item.subRecipe || "").replace(/"/g, '""')}"`,
@@ -638,8 +644,8 @@
             if (!itemName || itemName === "" || itemName === "undefined") continue;
 
             importedItems.push({
-              id: generateUniqueId(),
-              step: String(obj.step || "1"),
+              id: sanitizeId(obj.id),
+              step: String(obj.step || "1").replace(/^"+|"+$/g, '').trim(),
               name: itemName,
               subRecipe: String(obj.subRecipe || "आलू बड़ा").replace(/^"+|"+$/g, '').trim(),
               category: String(obj.category || "non-packing").replace(/^"+|"+$/g, '').trim(),
@@ -769,7 +775,6 @@
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    // --- SUBMIT SINGLE ITEM FROM CART (INSTANT REMOVAL & UNIQUE ID MATCH) ---
     function submitSingleCartItem(id) {
       const submitBtn = document.getElementById("cart_submit_btn_" + String(id));
       if (submitBtn) {
@@ -797,7 +802,6 @@
       }
     }
 
-    // --- INSTANT CART RECALCULATION HELPERS ---
     function refreshCartItemCalc(id) {
       const item = items.find(x => String(x.id) === String(id));
       if (!item) return;
