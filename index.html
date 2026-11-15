@@ -123,16 +123,16 @@
         <button onclick="document.getElementById('dashToastBanner').classList.add('hidden')" class="ml-2 text-emerald-300 font-bold">✕</button>
       </div>
 
-      <!-- Net Balance & Summary -->
+      <!-- Net Balance & Expense Summary Cards -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         <div class="card-dark rounded-2xl p-3 border-amber-500/40 bg-amber-950/20 col-span-2">
           <div class="text-[11px] text-slate-400">✨ शुद्ध बैलेंस अमाउंट (Net Balance)</div>
           <div id="dashNetBalance" class="text-2xl font-bold text-amber-400 mt-0.5">₹0.00</div>
           <div class="text-[10px] text-slate-400 mt-0.5">(कुल कलेक्शन - कुल खर्च)</div>
         </div>
-        <div class="card-dark rounded-2xl p-3 border-emerald-500/40 bg-emerald-950/20">
-          <div class="text-[11px] text-slate-400">💵 कुल कैश इन हैंड</div>
-          <div id="dashTotalCash" class="text-lg font-bold text-emerald-400 mt-0.5">₹0.00</div>
+        <div class="card-dark rounded-2xl p-3 border-rose-500/40 bg-rose-950/20">
+          <div class="text-[11px] text-slate-400">📉 कुल खर्च (Expenses)</div>
+          <div id="dashTotalExpenses" class="text-lg font-bold text-rose-400 mt-0.5">₹0.00</div>
         </div>
         <div class="card-dark rounded-2xl p-3 border-sky-500/40 bg-sky-950/20">
           <div class="text-[11px] text-slate-400">💳 कुल ऑनलाइन / बैंक</div>
@@ -140,19 +140,22 @@
         </div>
       </div>
 
-      <!-- Section 1: Cash Denomination Calculator -->
+      <!-- Section 1: Cash Denomination Calculator with 5, 2, 1 Notes & Coins -->
       <div class="card-dark rounded-2xl p-4 space-y-3">
         <div class="flex items-center justify-between border-b border-slate-700 pb-2">
           <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wide">💵 1. कैश डिनोमिनेशन कैलकुलेटर (नोट और सिक्के)</h3>
           <span id="dashCashSubTotal" class="text-xs font-bold text-amber-300">₹0.00</span>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
           <div><label class="text-[10px] text-slate-400 block mb-0.5">₹500 नोट</label><input type="number" id="note_500" min="0" oninput="calcDashboard()" placeholder="संख्या" class="input-dark w-full rounded-lg px-2.5 py-1.5" /></div>
           <div><label class="text-[10px] text-slate-400 block mb-0.5">₹200 नोट</label><input type="number" id="note_200" min="0" oninput="calcDashboard()" placeholder="संख्या" class="input-dark w-full rounded-lg px-2.5 py-1.5" /></div>
           <div><label class="text-[10px] text-slate-400 block mb-0.5">₹100 नोट</label><input type="number" id="note_100" min="0" oninput="calcDashboard()" placeholder="संख्या" class="input-dark w-full rounded-lg px-2.5 py-1.5" /></div>
           <div><label class="text-[10px] text-slate-400 block mb-0.5">₹50 नोट</label><input type="number" id="note_50" min="0" oninput="calcDashboard()" placeholder="संख्या" class="input-dark w-full rounded-lg px-2.5 py-1.5" /></div>
           <div><label class="text-[10px] text-slate-400 block mb-0.5">₹20 नोट</label><input type="number" id="note_20" min="0" oninput="calcDashboard()" placeholder="संख्या" class="input-dark w-full rounded-lg px-2.5 py-1.5" /></div>
           <div><label class="text-[10px] text-slate-400 block mb-0.5">₹10 नोट</label><input type="number" id="note_10" min="0" oninput="calcDashboard()" placeholder="संख्या" class="input-dark w-full rounded-lg px-2.5 py-1.5" /></div>
+          <div><label class="text-[10px] text-slate-400 block mb-0.5">₹5 नोट</label><input type="number" id="note_5" min="0" oninput="calcDashboard()" placeholder="संख्या" class="input-dark w-full rounded-lg px-2.5 py-1.5" /></div>
+          <div><label class="text-[10px] text-slate-400 block mb-0.5">₹2 नोट</label><input type="number" id="note_2" min="0" oninput="calcDashboard()" placeholder="संख्या" class="input-dark w-full rounded-lg px-2.5 py-1.5" /></div>
+          <div><label class="text-[10px] text-slate-400 block mb-0.5">₹1 नोट</label><input type="number" id="note_1" min="0" oninput="calcDashboard()" placeholder="संख्या" class="input-dark w-full rounded-lg px-2.5 py-1.5" /></div>
           <div><label class="text-[10px] text-slate-400 block mb-0.5">खुट्टे सिक्के (Coins Value)</label><input type="number" id="coins_total" min="0" step="any" oninput="calcDashboard()" placeholder="कुल राशि ₹" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-emerald-300 font-semibold" /></div>
         </div>
       </div>
@@ -565,10 +568,12 @@
       if (savedRecents) recentRecipes = JSON.parse(savedRecents);
     } catch (e) {}
 
-    // --- Dashboard Data Initialization ---
+    // --- Dashboard Data Initialization (Persistence) ---
     let bankAccounts = JSON.parse(localStorage.getItem("bhog_bank_accounts") || '[{"id":"b1","name":"SBI Bank","balance":0},{"id":"b2","name":"ICICI Bank","balance":0}]');
     let expenseFolders = JSON.parse(localStorage.getItem("bhog_expense_folders") || '[{"id":"e1","name":"परचेसिंग खर्च (Purchasing)","amount":0},{"id":"e2","name":"अन्य दैनिक खर्च (Misc)","amount":0}]');
     let dashboardHistory = JSON.parse(localStorage.getItem("bhog_dashboard_history") || "[]");
+
+    let cashInputs = JSON.parse(localStorage.getItem("bhog_cash_inputs") || '{"500":0,"200":0,"100":0,"50":0,"20":0,"10":0,"5":0,"2":0,"1":0,"coins":0}');
 
     window.addEventListener("DOMContentLoaded", () => {
       const savedTitle = localStorage.getItem("bhog_custom_title");
@@ -583,7 +588,21 @@
         img.classList.remove("hidden");
         document.getElementById("logoDefaultIcon").classList.add("hidden");
       }
+
+      // Load saved cash calculator values into inputs
+      if(document.getElementById("note_500")) document.getElementById("note_500").value = cashInputs[500] || '';
+      if(document.getElementById("note_200")) document.getElementById("note_200").value = cashInputs[200] || '';
+      if(document.getElementById("note_100")) document.getElementById("note_100").value = cashInputs[100] || '';
+      if(document.getElementById("note_50")) document.getElementById("note_50").value = cashInputs[50] || '';
+      if(document.getElementById("note_20")) document.getElementById("note_20").value = cashInputs[20] || '';
+      if(document.getElementById("note_10")) document.getElementById("note_10").value = cashInputs[10] || '';
+      if(document.getElementById("note_5")) document.getElementById("note_5").value = cashInputs[5] || '';
+      if(document.getElementById("note_2")) document.getElementById("note_2").value = cashInputs[2] || '';
+      if(document.getElementById("note_1")) document.getElementById("note_1").value = cashInputs[1] || '';
+      if(document.getElementById("coins_total")) document.getElementById("coins_total").value = cashInputs.coins || '';
+
       renderList();
+      calcDashboard();
     });
 
     function isChecked(item) {
@@ -1476,9 +1495,16 @@
       const n50 = parseFloat(document.getElementById("note_50")?.value) || 0;
       const n20 = parseFloat(document.getElementById("note_20")?.value) || 0;
       const n10 = parseFloat(document.getElementById("note_10")?.value) || 0;
+      const n5 = parseFloat(document.getElementById("note_5")?.value) || 0;
+      const n2 = parseFloat(document.getElementById("note_2")?.value) || 0;
+      const n1 = parseFloat(document.getElementById("note_1")?.value) || 0;
       const coins = parseFloat(document.getElementById("coins_total")?.value) || 0;
 
-      const totalCash = (n500 * 500) + (n200 * 200) + (n100 * 100) + (n50 * 50) + (n20 * 20) + (n10 * 10) + coins;
+      cashInputs = {
+        500: n500, 200: n200, 100: n100, 50: n50, 20: n20, 10: n10, 5: n5, 2: n2, 1: n1, coins: coins
+      };
+
+      const totalCash = (n500 * 500) + (n200 * 200) + (n100 * 100) + (n50 * 50) + (n20 * 20) + (n10 * 10) + (n5 * 5) + (n2 * 2) + (n1 * 1) + coins;
       let totalOnline = 0;
       bankAccounts.forEach(b => totalOnline += (parseFloat(b.balance) || 0));
       let totalExpenses = 0;
@@ -1490,6 +1516,7 @@
       if (document.getElementById("dashCashSubTotal")) document.getElementById("dashCashSubTotal").textContent = "₹" + totalCash.toFixed(2);
       if (document.getElementById("dashTotalCash")) document.getElementById("dashTotalCash").textContent = "₹" + totalCash.toFixed(2);
       if (document.getElementById("dashTotalOnline")) document.getElementById("dashTotalOnline").textContent = "₹" + totalOnline.toFixed(2);
+      if (document.getElementById("dashTotalExpenses")) document.getElementById("dashTotalExpenses").textContent = "₹" + totalExpenses.toFixed(2);
       if (document.getElementById("dashNetBalance")) document.getElementById("dashNetBalance").textContent = "₹" + netBalance.toFixed(2);
 
       saveDashboardDataLocally();
@@ -1500,6 +1527,7 @@
         localStorage.setItem("bhog_bank_accounts", JSON.stringify(bankAccounts));
         localStorage.setItem("bhog_expense_folders", JSON.stringify(expenseFolders));
         localStorage.setItem("bhog_dashboard_history", JSON.stringify(dashboardHistory));
+        localStorage.setItem("bhog_cash_inputs", JSON.stringify(cashInputs));
       } catch (e) {}
     }
 
@@ -1510,8 +1538,11 @@
       const n50 = parseFloat(document.getElementById("note_50")?.value) || 0;
       const n20 = parseFloat(document.getElementById("note_20")?.value) || 0;
       const n10 = parseFloat(document.getElementById("note_10")?.value) || 0;
+      const n5 = parseFloat(document.getElementById("note_5")?.value) || 0;
+      const n2 = parseFloat(document.getElementById("note_2")?.value) || 0;
+      const n1 = parseFloat(document.getElementById("note_1")?.value) || 0;
       const coins = parseFloat(document.getElementById("coins_total")?.value) || 0;
-      const totalCash = (n500 * 500) + (n200 * 200) + (n100 * 100) + (n50 * 50) + (n20 * 20) + (n10 * 10) + coins;
+      const totalCash = (n500 * 500) + (n200 * 200) + (n100 * 100) + (n50 * 50) + (n20 * 20) + (n10 * 10) + (n5 * 5) + (n2 * 2) + (n1 * 1) + coins;
 
       let totalOnline = 0;
       bankAccounts.forEach(b => totalOnline += (parseFloat(b.balance) || 0));
