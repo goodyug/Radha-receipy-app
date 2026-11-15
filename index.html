@@ -554,28 +554,37 @@
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    // --- SUBMIT SINGLE ITEM FROM CART (INSTANT REMOVAL FIX) ---
+    // --- SUBMIT SINGLE ITEM FROM CART (SMOOTH & INSTANT FEEDBACK FIX) ---
     function submitSingleCartItem(id) {
-      const itemIndex = items.findIndex(x => x.id === id);
-      if (itemIndex === -1) return;
-
-      const item = items[itemIndex];
-      item.submittedAt = new Date().toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'medium' });
-      submittedHistory.unshift(item);
-      items.splice(itemIndex, 1); // Remove immediately from active items
-
-      saveLocallyOnly();
-
-      const toast = document.getElementById("cartToastBanner");
-      const toastText = document.getElementById("cartToastText");
-      if (toast && toastText) {
-        toastText.textContent = `✓ '${item.name}' सफलतापूर्वक सबमिट हो गया और इतिहास में दर्ज हो गया!`;
-        toast.classList.remove("hidden");
+      const submitBtn = document.getElementById("cart_submit_btn_" + id);
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = "✓ सबमिट हो गया";
+        submitBtn.className = "px-3.5 py-1.5 rounded-lg bg-emerald-800 text-white text-xs font-bold shadow transition cursor-not-allowed";
       }
 
-      // Re-render immediately so it vanishes instantly without waiting
-      renderCartItems();
-      renderList();
+      // Small async delay to let the button text paint cleanly without any UI freeze
+      setTimeout(() => {
+        const itemIndex = items.findIndex(x => x.id === id);
+        if (itemIndex === -1) return;
+
+        const item = items[itemIndex];
+        item.submittedAt = new Date().toLocaleString('hi-IN', { dateStyle: 'short', timeStyle: 'medium' });
+        submittedHistory.unshift(item);
+        items.splice(itemIndex, 1);
+
+        saveLocallyOnly();
+
+        const toast = document.getElementById("cartToastBanner");
+        const toastText = document.getElementById("cartToastText");
+        if (toast && toastText) {
+          toastText.textContent = `✓ '${item.name}' सफलतापूर्वक सबमिट हो गया और इतिहास में दर्ज हो गया!`;
+          toast.classList.remove("hidden");
+        }
+
+        renderCartItems();
+        renderList();
+      }, 100);
     }
 
     // --- INSTANT CART RECALCULATION HELPERS ---
