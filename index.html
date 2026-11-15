@@ -34,34 +34,97 @@
       outline: none;
       border-color: #eab308;
     }
+    /* Sidebar Animation */
+    #sidebar {
+      transition: transform 0.3s ease-in-out;
+    }
   </style>
 </head>
 <body class="min-h-screen pb-24">
+
+  <!-- Sidebar Drawer -->
+  <div id="sidebarOverlay" onclick="closeSidebar()" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm"></div>
+  <div id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-[#1e293b] border-r border-slate-700 p-5 transform -translate-x-full flex flex-col justify-between shadow-2xl">
+    <div>
+      <div class="flex items-center justify-between border-b border-slate-700 pb-3 mb-4">
+        <h3 class="text-base font-bold text-amber-400">📋 मेनू और पेज</h3>
+        <button onclick="closeSidebar()" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+      <div class="space-y-1.5 overflow-y-auto max-h-[72vh] pr-1">
+        <div onclick="openDemoPage('होम स्क्रीन (मुख्य कॉस्टिंग)')" class="w-full text-left px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold cursor-pointer">
+          🏠 होम स्क्रीन
+        </div>
+        <!-- 10 Demo Pages -->
+        <script>
+          for (let i = 1; i <= 10; i++) {
+            document.write(`
+              <div onclick="openDemoPage('डेमो पेज ${i}')" class="w-full text-left px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold cursor-pointer transition flex items-center justify-between">
+                <span>📄 डेमो पेज ${i}</span>
+                <span class="text-[10px] text-slate-400">आगामी</span>
+              </div>
+            `);
+          }
+        </script>
+      </div>
+    </div>
+    <button onclick="closeSidebar()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-600">
+      ← वापस होम पर जाएं
+    </button>
+  </div>
+
+  <!-- Demo Page Modal View -->
+  <div id="demoPageModal" class="fixed inset-0 z-40 hidden bg-[#0f172a] flex flex-col">
+    <div class="bg-[#1e293b] border-b border-slate-700 px-4 py-3 flex items-center justify-between">
+      <h2 id="demoPageTitle" class="text-base font-bold text-amber-400">डेमो पेज</h2>
+      <button onclick="closeDemoPage()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-bold border border-slate-600">
+        ← होम पर लौटें
+      </button>
+    </div>
+    <div class="flex-1 flex items-center justify-center p-6 text-center">
+      <div class="card-dark rounded-2xl p-8 max-w-md w-full space-y-3">
+        <div class="text-3xl">🛠️</div>
+        <h3 class="text-lg font-bold text-amber-400" id="demoMsgTitle">काम प्रगति पर है (Work is Running)</h3>
+        <p class="text-xs text-slate-300 leading-relaxed">इस पेज की रूपरेखा तैयार कर दी गई है। आने वाले समय में यहाँ नए फीचर्स और डेटा लिंक किए जाएंगे।</p>
+        <button onclick="closeDemoPage()" class="mt-2 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs">
+          मुख्य होम पर वापस जाएं
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Top Header -->
   <header class="sticky top-0 z-30 bg-[#0f172a]/95 backdrop-blur border-b border-slate-800 px-3 py-2.5">
     <div class="max-w-3xl mx-auto flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2.5">
-        <div onclick="handleLogoTap()" id="logoContainer" class="w-11 h-11 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg border-2 border-amber-200 shrink-0 cursor-pointer overflow-hidden relative">
+        <!-- Hamburger Menu Button -->
+        <button onclick="openSidebar()" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center text-amber-300 font-bold text-base shrink-0" title="मेनू खोलें">
+          ☰
+        </button>
+
+        <div onclick="handleLogoTap()" id="logoContainer" class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg border-2 border-amber-200 shrink-0 cursor-pointer overflow-hidden relative">
           <img id="logoImg" src="" alt="Logo" class="w-full h-full object-cover hidden" />
-          <svg id="logoDefaultIcon" class="w-6 h-6 text-slate-950" viewBox="0 0 24 24" fill="currentColor">
+          <svg id="logoDefaultIcon" class="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2C9.5 6 7 8.5 7 12c0 2.8 2.2 5 5 5s5-2.2 5-5c0-3.5-2.5-6-5-10zm-7 9c-1.5 1.5-2 3.5-1 5.5 1 2 3.5 3 6 2.5-2.5-1.5-4.2-4.3-5-8zm14 0c-.8 3.7-2.5 6.5-5 8 2.5.5 5-.5 6-2.5 1-2 .5-4-1-5.5zM4 20h16v2H4v-2z"/>
           </svg>
         </div>
         <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)" />
 
         <div>
-          <h1 id="editableTitle" contenteditable="true" onblur="saveCustomHeader()" class="text-base sm:text-lg font-bold text-amber-400 leading-tight outline-none focus:ring-1 focus:ring-amber-400 rounded px-1" title="क्लिक करके नाम बदलें">राधा भोग प्रसादी costing</h1>
-          <p id="editableSubtitle" contenteditable="true" onblur="saveCustomHeader()" class="text-[11px] text-slate-400 outline-none focus:ring-1 focus:ring-slate-400 rounded px-1" title="क्लिक करके विवरण बदलें">शुद्ध सात्विक भोग प्रसादी सामग्री • श्री राधे</p>
+          <h1 id="editableTitle" contenteditable="true" onblur="saveCustomHeader()" class="text-sm sm:text-base font-bold text-amber-400 leading-tight outline-none focus:ring-1 focus:ring-amber-400 rounded px-1" title="क्लिक करके नाम बदलें">राधा भोग प्रसादी costing</h1>
+          <p id="editableSubtitle" contenteditable="true" onblur="saveCustomHeader()" class="text-[10px] text-slate-400 outline-none focus:ring-1 focus:ring-slate-400 rounded px-1" title="क्लिक करके विवरण बदलें">शुद्ध सात्विक भोग प्रसादी • श्री राधे</p>
         </div>
       </div>
 
       <!-- Action Buttons Toolbar -->
-      <div class="flex flex-wrap items-center gap-1.5">
-        <button onclick="openSheetModal()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-slate-950 shadow transition" title="गूगल शीट सेटिंग्स, बैकअप और रिस्टोर">⚙️ शीट सेटिंग्स</button>
-        <button onclick="exportDataCSV()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="मुख्य CSV एक्सपोर्ट">📤 CSV</button>
-        <button onclick="exportSubmittedCSV()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-600 text-white shadow transition" title="सबमिट इतिहास CSV डाउनलोड">📥 इतिहास</button>
-        <button onclick="document.getElementById('importFileInput').click()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="CSV इम्पोर्ट">📥 इम्पोर्ट</button>
+      <div class="flex flex-wrap items-center gap-1">
+        <button onclick="openSheetModal()" class="px-2 py-1.5 rounded-xl text-xs font-semibold bg-amber-600 hover:bg-amber-500 text-slate-950 shadow transition" title="गूगल शीट URL सेटिंग्स">⚙️ URL</button>
+        <button onclick="loadFromSheet()" class="px-2 py-1.5 rounded-xl text-xs font-semibold bg-sky-600 hover:bg-sky-500 text-white shadow transition" title="शीट से लोड करें">📥 लोड</button>
+        <button onclick="saveToSheet()" class="px-2 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition" title="गूगल शीट पर सेव करें">☁️ सेव</button>
+        <button onclick="backupToSheet()" class="px-2 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow transition" title="नया बैकअप लें">🛡️ बैकअप</button>
+        <button onclick="restoreFromSheet()" class="px-2 py-1.5 rounded-xl text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white shadow transition" title="बैकअप से रिस्टोर करें">🔄 रिस्टोर</button>
+        <button onclick="exportDataCSV()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow transition" title="CSV एक्सपोर्ट">📤 एक्सपोर्ट</button>
+        <button onclick="document.getElementById('importFileInput').click()" class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-violet-600 hover:bg-violet-500 text-white shadow transition" title="CSV इम्पोर्ट">📥 इम्पोर्ट</button>
+        <button onclick="exportSubmittedCSV()" class="px-2 py-1.5 rounded-xl text-xs font-bold bg-teal-700 hover:bg-teal-600 text-white shadow transition" title="सबमिट इतिहास">📑 इतिहास</button>
         <input type="file" id="importFileInput" accept=".csv,.json" class="hidden" onchange="handleFileImport(event)" />
       </div>
     </div>
@@ -241,11 +304,11 @@
 
   </main>
 
-  <!-- Google Sheet & Backup Settings Modal -->
+  <!-- Google Sheet URL Settings Modal -->
   <div id="sheetModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-    <div class="card-dark rounded-2xl max-w-lg w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+    <div class="card-dark rounded-2xl max-w-md w-full p-5 space-y-4">
       <div class="flex items-center justify-between border-b border-slate-700 pb-3">
-        <h3 class="text-base font-bold text-amber-400">⚙️ गूगल शीट, बैकअप और रिस्टोर सेटिंग्स</h3>
+        <h3 class="text-base font-bold text-amber-400">⚙️ गूगल शीट URL सेटिंग्स</h3>
         <button onclick="closeSheetModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
       </div>
 
@@ -254,29 +317,9 @@
           <label class="text-slate-300 font-semibold block mb-1">Google Apps Script Web App URL:</label>
           <input id="scriptUrlInput" type="text" placeholder="https://script.google.com/macros/s/.../exec" class="input-dark w-full rounded-xl px-3 py-2 text-xs text-amber-300" />
         </div>
-        <button onclick="saveScriptUrl()" class="w-full py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition">
-          💾 URL सहेजें और कनेक्ट करें
+        <button onclick="saveScriptUrl()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition">
+          💾 URL सहेजें
         </button>
-
-        <div class="border-t border-slate-700 pt-3 space-y-2">
-          <div class="font-semibold text-slate-200">क्लाउड डेटा सिंक और बैकअप विकल्प:</div>
-          <div class="grid grid-cols-2 gap-2">
-            <button onclick="loadFromSheet()" class="py-2 px-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold transition">
-              📥 शीट से लोड करें
-            </button>
-            <button onclick="saveToSheet()" class="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition">
-              ☁️ गूगल शीट पर सेव करें
-            </button>
-          </div>
-          <div class="grid grid-cols-2 gap-2 pt-1">
-            <button onclick="backupToSheet()" class="py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition" title="Latest_Backup शीट में नया बैकअप बनाएं">
-              🛡️ बैकअप लें
-            </button>
-            <button onclick="restoreFromSheet()" class="py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition" title="Latest_Backup से डेटा रिस्टोर करें">
-              🔄 बैकअप से रिस्टोर करें
-            </button>
-          </div>
-        </div>
       </div>
 
       <button onclick="closeSheetModal()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-600">
@@ -288,16 +331,39 @@
   <script>
     let scriptUrl = localStorage.getItem("bhog_script_url") || "";
 
+    function openSidebar() {
+      document.getElementById("sidebar").style.transform = "translateX(0)";
+      document.getElementById("sidebarOverlay").classList.remove("hidden");
+    }
+
+    function closeSidebar() {
+      document.getElementById("sidebar").style.transform = "translateX(-100%)";
+      document.getElementById("sidebarOverlay").classList.add("hidden");
+    }
+
+    function openDemoPage(pageName) {
+      closeSidebar();
+      document.getElementById("demoPageTitle").textContent = pageName;
+      document.getElementById("demoMsgTitle").textContent = `${pageName} — काम प्रगति पर है`;
+      document.getElementById("demoPageModal").classList.remove("hidden");
+    }
+
+    function closeDemoPage() {
+      document.getElementById("demoPageModal").classList.add("hidden");
+    }
+
     function saveScriptUrl() {
       const url = document.getElementById("scriptUrlInput").value.trim();
       localStorage.setItem("bhog_script_url", url);
       scriptUrl = url;
       setStatus("✓ URL सफलतापूर्वक सहेज लिया गया!", true);
+      closeSheetModal();
     }
 
     async function loadFromSheet() {
       if (!scriptUrl) {
-        setStatus("कृपया पहले Google Sheet का Web App URL दर्ज करें।", false);
+        setStatus("कृपया पहले ऊपर '⚙️ URL' बटन से गूगल शीट का Web App URL दर्ज करें।", false);
+        openSheetModal();
         return;
       }
       setStatus("गूगल शीट से डेटा लोड हो रहा है...", false);
@@ -322,7 +388,8 @@
 
     async function saveToSheet() {
       if (!scriptUrl) {
-        setStatus("कृपया पहले Google Sheet का Web App URL दर्ज करें।", false);
+        setStatus("कृपया पहले ऊपर '⚙️ URL' बटन से गूगल शीट का Web App URL दर्ज करें।", false);
+        openSheetModal();
         return;
       }
       setStatus("गूगल शीट पर डेटा सेव हो रहा है...", false);
@@ -344,7 +411,8 @@
 
     async function backupToSheet() {
       if (!scriptUrl) {
-        setStatus("कृपया पहले Google Sheet का Web App URL दर्ज करें।", false);
+        setStatus("कृपया पहले ऊपर '⚙️ URL' बटन से गूगल शीट का Web App URL दर्ज करें।", false);
+        openSheetModal();
         return;
       }
       setStatus("गूगल शीट पर बैकअप लिया जा रहा है...", false);
@@ -366,7 +434,8 @@
 
     async function restoreFromSheet() {
       if (!scriptUrl) {
-        setStatus("कृपया पहले Google Sheet का Web App URL दर्ज करें।", false);
+        setStatus("कृपया पहले ऊपर '⚙️ URL' बटन से गूगल शीट का Web App URL दर्ज करें।", false);
+        openSheetModal();
         return;
       }
       if (!confirm("क्या आप वाकई Latest_Backup से पुराना डेटा रिस्टोर करना चाहते हैं?")) return;
@@ -381,7 +450,7 @@
             checked: item.checked === true || item.checked === "true" || item.checked === 1 || item.checked === "1"
           }));
           saveLocallyOnly();
-          setStatus(`✓ बैकअप से डेटा रिस्टोर हो गया!`, true);
+          setStatus("✓ बैकअप से डेटा रिस्टोर हो गया!", true);
         } else {
           setStatus("रिस्टोर विफल: " + (data.message || "बैकअप नहीं मिला।"), false);
         }
