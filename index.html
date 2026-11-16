@@ -1298,14 +1298,14 @@
                 <div class="flex items-center gap-2">
                   <div class="flex items-center bg-slate-900/90 border border-emerald-500/40 rounded-lg px-2 py-1">
                     <span class="text-sm font-bold text-emerald-400 mr-0.5">₹</span>
-                    <input type="number" step="any" value="${val.toFixed(2)}" onchange="updateTotalRupees('${safeId}', this.value)" class="w-16 bg-transparent text-right text-sm font-bold text-emerald-400 focus:outline-none" />
+                    <input type="number" step="any" value="${val.toFixed(2)}" oninput="updateTotalRupeesLiveInput(this, '${safeId}')" class="w-16 bg-transparent text-right text-sm font-bold text-emerald-400 focus:outline-none" />
                   </div>
                   <button onclick="deleteItem('${safeId}')" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 text-xs">🗑️</button>
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-2.5">
-                <div><label class="text-[10px] text-slate-400 block">मात्रा (ग्राम)</label><input type="number" step="any" value="${item.grams}" oninput="updateField('${safeId}', 'grams', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-300" /></div>
-                <div><label class="text-[10px] text-slate-400 block">रेट (₹ / kg)</label><input id="rate_${safeId}" type="number" step="any" value="${item.ratePerKg}" oninput="updateField('${safeId}', 'ratePerKg', this.value)" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300" /></div>
+                <div><label class="text-[10px] text-slate-400 block">मात्रा (ग्राम)</label><input type="number" step="any" value="${item.grams}" oninput="updateFieldLiveInput(this, '${safeId}', 'grams')" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-300" /></div>
+                <div><label class="text-[10px] text-slate-400 block">रेट (₹ / kg)</label><input id="rate_${safeId}" type="number" step="any" value="${item.ratePerKg}" oninput="updateFieldLiveInput(this, '${safeId}', 'ratePerKg')" class="input-dark w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300" /></div>
               </div>
             </div>
           `;
@@ -1329,15 +1329,19 @@
       if (item && val.trim()) { item.name = val.trim(); saveLocallyOnly(); }
     }
 
-    function updateField(id, field, val) {
+    function updateFieldLiveInput(inputEl, id, field) {
       const item = items.find(x => String(x.id) === String(id));
-      if (item) { item[field] = parseFloat(val) || 0; saveLocallyOnly(); }
+      if (item) {
+        item[field] = inputEl.value === "" ? 0 : parseFloat(inputEl.value);
+        saveLocallyOnly();
+      }
     }
 
-    function updateTotalRupees(id, val) {
+    function updateTotalRupeesLiveInput(inputEl, id) {
       const item = items.find(x => String(x.id) === String(id));
       if (item && (parseFloat(item.grams) || 0) > 0) {
-        item.ratePerKg = parseFloat((((parseFloat(val) || 0) / item.grams) * 1000).toFixed(2));
+        const val = inputEl.value === "" ? 0 : parseFloat(inputEl.value);
+        item.ratePerKg = parseFloat(((val / item.grams) * 1000).toFixed(2));
         saveLocallyOnly();
       }
     }
